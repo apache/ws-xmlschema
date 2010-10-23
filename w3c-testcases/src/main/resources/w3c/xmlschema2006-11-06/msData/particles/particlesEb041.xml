@@ -1,6 +1,0 @@
-<f:root xmlns:f="foo">
-<foo/>
-<bar>
-	<foo/>
-</bar>
-</f:root>

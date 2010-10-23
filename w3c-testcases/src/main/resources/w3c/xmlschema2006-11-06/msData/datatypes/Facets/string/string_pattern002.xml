@@ -1,5 +1,0 @@
-<Xml xmlns="TestNamespace">
- <Hex>not_hex</Hex>
- <Hex>00</Hex>
- <Hex>28 FF FD FG</Hex>
-</Xml>
