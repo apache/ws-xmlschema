@@ -1,0 +1,29 @@
+Overview
+  
+   XMLSchema is a lightweight Java object model that can be used to manipulate and
+   generate XML schema representations. You can use it to read XML Schema (xsd) files
+   into memory and analyze or modify them, or to create entirely new schemas from
+   scratch.
+
+   XMLSchema 2.0 is a major revision that takes advantage of the facilities of Java 1.5.
+
+   For information on how to use the XmlSchema API, please
+   see the {{{apidocs/index.html}javadocs}} or the {{{schematutorial.html}tutorial}}.
+
+   XmlSchema eagerly welcomes suggestions, documentation,
+   and most of all code. Please join our dev list, submit JIRA entries, and
+   attach patches.
+
+Confluence
+
+   XmlSchema 2.0 documentation building a new set of documentation on Confluence:
+   {{{http://cwiki.apache.org/confluence/display/WS/XmlSchema}here}}. As with all ASF
+   projects, you must have an iCLA in file to have permission to edit it.
+
+Downloads
+
+    XmlSchema 2.0 has not yet been released. Maven snapshots are available from the ASF
+    snapshot repository: https://repository.apache.org/content/repositories/snapshots.
+
+  
+  -The XMLSchema Development Team (commons-dev at ws.apache.org)
