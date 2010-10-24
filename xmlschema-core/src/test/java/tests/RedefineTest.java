@@ -74,7 +74,7 @@ public class RedefineTest extends Assert {
          * ----------------- <schema xmlns="http://www.w3.org/2001/XMLSchema"
          * xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://soapinterop.org/types"
          * targetNamespace="http://soapinterop.org/types"> <redefine
-         * schemaLocation="src/test/test-resources/redefine1.xsd"> <complexType name="person">
+         * schemaLocation="src/test/resources/redefine1.xsd"> <complexType name="person">
          * <complexContent> <extension base="tns:person"> <sequence> <element name="id" type="string"/>
          * </sequence> </extension> </complexContent> </complexType> </redefine> <element name="vip"
          * type="tns:person"/> </schema>
@@ -149,7 +149,7 @@ public class RedefineTest extends Assert {
          * ----------------- <schema xmlns="http://www.w3.org/2001/XMLSchema"
          * xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://soapinterop.org/types"
          * targetNamespace="http://soapinterop.org/types"> <redefine
-         * schemaLocation="test-resources/redefine3.xsd"> <simpleType name="drinksize"> <restriction
+         * schemaLocation="resources/redefine3.xsd"> <simpleType name="drinksize"> <restriction
          * base="tns:drinksize"> <minInclusive value="1"/> <maxInclusive value="3"/> </restriction>
          * </simpleType> </redefine> <element name="childsizedrink" type="tns:drinksize"/> </schema>
          */
@@ -364,7 +364,7 @@ public class RedefineTest extends Assert {
          * ----------------- <schema xmlns="http://www.w3.org/2001/XMLSchema"
          * xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://soapinterop.org/types"
          * targetNamespace="http://soapinterop.org/types"> <redefine
-         * schemaLocation="src/test/test-resources/redefine9.xsd"> <complexType name="person">
+         * schemaLocation="src/test/resources/redefine9.xsd"> <complexType name="person">
          * <complexContent> <extension base="tns:person"> <sequence> <element name="id" type="string"/>
          * </sequence> </extension> </complexContent> </complexType> </redefine> <element name="vip"
          * type="tns:person"/> </schema>

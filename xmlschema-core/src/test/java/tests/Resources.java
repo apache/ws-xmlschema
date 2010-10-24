@@ -23,7 +23,7 @@ public final class Resources {
     /**
      * Location of the test resources.
      */
-    public static final String TEST_RESOURCES = "src/test/test-resources";
+    public static final String TEST_RESOURCES = "src/test/resources";
     
     private Resources() {
     }
