@@ -72,6 +72,7 @@
         <url>http://www.apache.org/</url>
     </organization>
     <modules>
+        <module>xmlschema-eclipse</module>
         <module>xmlschema-core</module>
         <module>w3c-testcases</module>
     </modules>
@@ -110,11 +111,10 @@
                             <id>validate</id>
                             <phase>validate</phase>
                             <configuration>
-                                <configLocation>${basedir}/../etc/xmlschema-checkstyle.xml</configLocation>
+                                <configLocation>/xmlschema-checkstyle.xml</configLocation>
                                 <consoleOutput>true</consoleOutput>
                                 <failsOnError>true</failsOnError>
                                 <linkXRef>false</linkXRef>
-                                <suppressionsLocation>${basedir}/../etc/xmlschema-checkstyle-suppressions.xml</suppressionsLocation>
                                 <sourceDirectory>${basedir}/src</sourceDirectory>
                             </configuration>
                             <goals>
@@ -122,6 +122,13 @@
                             </goals>
                         </execution>
                     </executions>
+                    <dependencies>
+		      <dependency>
+			<groupId>org.apache.ws.xmlschema</groupId>
+			<artifactId>xmlschema-eclipse</artifactId>
+			<version>${project.version}</version>
+		      </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -158,20 +165,20 @@
             <id>release</id>
             <build>
                 <plugins>
-		  <plugin>
-		    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-site-plugin</artifactId>
-		    <version>3.0-beta-2</version>
-                    <executions>
-                        <execution>
-                            <id>site</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>site</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-site-plugin</artifactId>
+                        <version>3.0-beta-2</version>
+                        <executions>
+                            <execution>
+                                <id>site</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>site</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <!--
     We want to sign the artifact, the POM, and all attached artifacts
 -->
@@ -264,7 +271,7 @@
             </build>
         </profile>
         <profile>
-            <id>setup.eclipse</id>
+            <id>setup.eclipse.workspace</id>
             <properties>
                 <eclipse.workspace.dir>${basedir}/../workspace</eclipse.workspace.dir>
             </properties>
@@ -275,11 +282,11 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-eclipse-plugin</artifactId>
                         <version>2.8</version>
+                        <inherited>false</inherited>
                         <executions>
                             <execution>
                                 <id>setup.eclipse.workspace</id>
                                 <!-- This is the execution that we run only at the top level. -->
-                                <inherited>false</inherited>
                                 <phase>process-test-sources</phase>
                                 <goals>
                                     <goal>configure-workspace</goal>
@@ -287,41 +294,6 @@
                                 <configuration>
                                     <workspace>${eclipse.workspace.dir}</workspace>
                                     <workspaceCodeStylesURL>file:${basedir}/etc/eclipse/XmlSchemaCodeFormatter.xml</workspaceCodeStylesURL>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>setup.project</id>
-                                <inherited>true</inherited>
-                                <goals>
-                                    <goal>eclipse</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${eclipse.outputDirectory}</outputDirectory>
-                                    <buildcommands>
-                                        <java.lang.String>org.eclipse.jdt.core.javabuilder</java.lang.String>
-                                        <java.lang.String>com.atlassw.tools.eclipse.checkstyle.CheckstyleBuilder</java.lang.String>
-                                        <java.lang.String>net.sourceforge.pmd.eclipse.plugin.pmdBuilder</java.lang.String>
-                                    </buildcommands>
-                                    <projectnatures>
-                                        <nature>org.eclipse.jdt.core.javanature</nature>
-                                        <nature>com.atlassw.tools.eclipse.checkstyle.CheckstyleNature</nature>
-                                        <nature>net.sourceforge.pmd.eclipse.plugin.pmdNature</nature>
-                                    </projectnatures>
-                                    <additionalConfig>
-                                        <file>
-                                            <name>.checkstyle</name>
-                                            <location>/xmlschema-eclipse-checkstyle</location>
-                                        </file>
-                                        <file>
-                                            <name>.pmd</name>
-                                            <location>/xmlschema-eclipse-pmd</location>
-                                        </file>
-                                        <file>
-                                            <name>.ruleset</name>
-                                            <location>/etc/xmlschema-pmd-ruleset.xml</location>
-                                        </file>
-                                    </additionalConfig>
-                                    <workspace>${eclipse.workspace.dir}</workspace>
                                 </configuration>
                             </execution>
                         </executions>
@@ -350,21 +322,17 @@
                                     <tasks>
                                         <path id="ecp.ws.path" location="${eclipse.workspace.dir}"/>
                                         <property name="full.eclipse.workspace" refid="ecp.ws.path"/>
-                                        <property name="checkstyle.url" location="etc/xmlschema-checkstyle.xml"/>
+                                        <property name="checkstyle.url" location="xmlschema-eclipse/src/main/resources/xmlschema-checkstyle.xml"/>
                                         <mkdir dir="${full.eclipse.workspace}/.metadata/.plugins/org.eclipse.core.runtime/.settings"/>
-                                        <mkdir dir="${full.eclipse.workspace}/.metadata/.plugins/com.atlassw.tools.eclipse.checkstyle"/>
                                         <mkdir dir="${full.eclipse.workspace}/.metadata/.plugins/net.sourceforge.pmd.eclipse"/>
                                         <get src="file:${checkstyle.url}" dest="${full.eclipse.workspace}/xmlschema-checkstyle.xml"/>
-                                        <!-- Add checkstyle config -->
-                                        <copy file="${basedir}/etc/eclipse/template.checkstyle-config.xml" tofile="${full.eclipse.workspace}/.metadata/.plugins/com.atlassw.tools.eclipse.checkstyle/checkstyle-config.xml" overwrite="no">
+                                        <!-- Add checkstyle config for 5.0 plugin -->
+                                        <copy file="${basedir}/etc/eclipse/template.checkstyle-config.xml" tofile="${full.eclipse.workspace}/.metadata/.plugins/net.sf.eclipsecs.core/checkstyle-config.xml" overwrite="no">
                                             <filterset>
-                                                <filter token="CHECKSTYLE_CONFIG_FILE" value="${full.eclipse.workspace}/xmlschema-checkstyle.xml"/>
+                                                <filter token="CHECKSTYLE_CONFIG_FILE" value="${full.eclipse.workspace}/xmlschema-checkstyle.xml" />
                                             </filterset>
                                         </copy>
-                                        <xslt style="${basedir}/etc/eclipse/addcheckstyle.xsl" in="${full.eclipse.workspace}/.metadata/.plugins/com.atlassw.tools.eclipse.checkstyle/checkstyle-config.xml" out="${full.eclipse.workspace}/.metadata/.plugins/com.atlassw.tools.eclipse.checkstyle/checkstyle-config.xml.new">
-                                            <param name="checkstyleconfig" expression="${full.eclipse.workspace}/xmlschema-checkstyle.xml"/>
-                                        </xslt>
-                                        <copy file="${full.eclipse.workspace}/.metadata/.plugins/com.atlassw.tools.eclipse.checkstyle/checkstyle-config.xml.new" tofile="${full.eclipse.workspace}/.metadata/.plugins/com.atlassw.tools.eclipse.checkstyle/checkstyle-config.xml" overwrite="yes"/>
+
                                         <!-- Add warning flags that we want -->
                                         <propertyfile file="${full.eclipse.workspace}/.metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.jdt.core.prefs">
                                             <entry key="org.eclipse.jdt.core.compiler.problem.missingSerialVersion" value="ignore"/>
@@ -403,6 +371,67 @@
             </build>
         </profile>
         <profile>
+            <id>setup.eclipse.projects</id>
+            <build>
+                <defaultGoal>process-test-sources</defaultGoal>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-eclipse-plugin</artifactId>
+                        <version>2.8</version>
+                        <executions>
+                            <execution>
+                                <id>setup.eclipse.projects</id>
+                                <!-- This is the execution that we run only at the top level. -->
+                                <phase>process-test-sources</phase>
+                                <goals>
+                                    <goal>eclipse</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+			  <workspace>${eclipse.workspace.dir}</workspace>
+			  <workspaceCodeStylesURL>file:${basedir}/etc/eclipse/XmlSchemaCodeFormatter.xml</workspaceCodeStylesURL>
+                            <outputDirectory>${eclipse.outputDirectory}</outputDirectory>
+                            <buildcommands>
+                                <java.lang.String>org.eclipse.jdt.core.javabuilder</java.lang.String>
+                                <java.lang.String>net.sf.eclipsecs.core.CheckstyleBuilder</java.lang.String>
+                                <java.lang.String>net.sourceforge.pmd.eclipse.plugin.pmdBuilder</java.lang.String>
+                            </buildcommands>
+                            <projectnatures>
+                                <nature>org.eclipse.jdt.core.javanature</nature>
+                                <nature>net.sf.eclipsecs.core.CheckstyleNature</nature>
+                                <nature>net.sourceforge.pmd.eclipse.plugin.pmdNature</nature>
+                            </projectnatures>
+                            <ajdtVersion>none</ajdtVersion>
+                            <additionalConfig>
+                                <file>
+                                    <name>.checkstyle</name>
+                                    <location>/xmlschema-eclipse-checkstyle</location>
+                                </file>
+                                <file>
+                                    <name>.pmd</name>
+                                    <location>/xmlschema-eclipse-pmd</location>
+                                </file>
+                                <file>
+                                    <name>.ruleset</name>
+                                    <location>/xmlschema-pmd-ruleset.xml</location>
+                                </file>
+                            </additionalConfig>
+                            <workspace>${eclipse.workspace.dir}</workspace>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.ws.xmlschema</groupId>
+                                <artifactId>xmlschema-eclipse</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>sourcecheck</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -429,6 +458,14 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>fastinstall</id>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+                <pmd.skip>true</pmd.skip>
+                <checkstyle.skip>true</checkstyle.skip>
+            </properties>
         </profile>
     </profiles>
     <dependencyManagement>
