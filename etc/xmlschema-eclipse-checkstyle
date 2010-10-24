@@ -22,6 +22,5 @@
         <file-match-pattern match-pattern="^src[/\\]." include-pattern="true"/>
         <file-match-pattern match-pattern="^src[/\\]main[/\\]generated[/\\]." include-pattern="false"/>
         <file-match-pattern match-pattern="^src[/\\]test[/\\]generated[/\\]." include-pattern="false"/>
-        <file-match-pattern match-pattern="^src[/\\]main[/\\]release[/\\]samples[/\\]jax_rs[/\\]basic_https[/\\]contrib[/\\]." include-pattern="false"/>
     </fileset>
 </fileset-config>
