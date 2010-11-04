@@ -34,7 +34,7 @@
     <url>http://ws.apache.org/commons/XmlSchema</url>
     <issueManagement>
         <system>JIRA</system>
-        <url>http://issues.apache.org/jira/browse/WSCOMMONS</url>
+        <url>http://issues.apache.org/jira/browse/XMLSCHEMA</url>
     </issueManagement>
     <mailingLists>
         <mailingList>
@@ -74,7 +74,7 @@
     <modules>
         <module>xmlschema-eclipse</module>
         <module>xmlschema-core</module>
-	<module>xmlschema-bundle-test</module>
+        <module>xmlschema-bundle-test</module>
         <module>w3c-testcases</module>
     </modules>
     <build>
@@ -85,7 +85,8 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.0</version>
                     <configuration>
-		        <arguments/> <!-- knock out apache parent nonsense -->
+                        <arguments/>
+                        <!-- knock out apache parent nonsense -->
                         <useReleaseProfiles>true</useReleaseProfiles>
                         <goals>deploy</goals>
                     </configuration>
@@ -158,6 +159,25 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
                     <version>1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>2.1.1</version>
+                    <configuration>
+                        <chmod>true</chmod>
+                        <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+                        <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.7</version>
+                    <configuration>
+                        <attach>true</attach>
+                        <quiet>true</quiet>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -300,7 +320,7 @@
                             </execution>
                             <execution>
                                 <id>setup.eclipse.projects</id>
-				<inherited>true</inherited>
+                                <inherited>true</inherited>
                                 <!-- This is the execution that we run only at the top level. -->
                                 <phase>process-test-sources</phase>
                                 <goals>
@@ -453,6 +473,39 @@
                 <pmd.skip>true</pmd.skip>
                 <checkstyle.skip>true</checkstyle.skip>
             </properties>
+        </profile>
+        <profile>
+            <id>maven-3</id>
+            <activation>
+                <file>
+                    <!--  This employs that the basedir expression is only recognized by Maven 3.x (see MNG-2363) -->
+                    <exists>${basedir}</exists>
+                </file>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-site-plugin</artifactId>
+                            <version>3.0-beta-3</version>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-site-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-descriptor</id>
+                                <goals>
+                                    <goal>attach-descriptor</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
     <dependencyManagement>

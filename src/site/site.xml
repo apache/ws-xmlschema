@@ -28,20 +28,11 @@
         <links>
             <item name="Apache" href="http://www.apache.org/"/>
             <item name="WebServices" href="http://ws.apache.org/"/>
-            <item name="XmlSchema" href="http://ws.apache.org/commons/XmlSchema/"/>
         </links>
         <menu name="XML Schema">
             <item name="Home" href="index.html"/>
             <item name="Downloads">
-                <item name="Source Code" href="source-repository.html"/>
-            </item>
-            <item name="Documentation">
-                <item name="Extensions" href="writingExtensions.html"/>
-                <item name="Javadocs" href="/apidocs/index.html"/>
-                <item name="Jxr Reports" href="jxr.html"/>
-                <item name="JDepend Report" href="jdepend-report.html"/>
-                <item name="View Source"
-                      href="http://svn.apache.org/viewvc/webservices/XmlSchema/trunk/?root=Apache-SVN"/>
+                <item name="Source Code" href="xmlschema-core/source-repository.html"/>
             </item>
             <item name="Project Information">
                 <item name="Mailing Lists" href="/mail-lists.html"/>
@@ -50,7 +41,7 @@
             </item>
             <item name="License" href="/license.html"/>
         </menu>
-        <menu ref="reports" />
+        <menu ref="modules" />
     </body>
 </project>
 

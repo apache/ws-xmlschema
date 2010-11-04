@@ -8,7 +8,7 @@ Overview
    XMLSchema 2.0 is a major revision that takes advantage of the facilities of Java 1.5.
 
    For information on how to use the XmlSchema API, please
-   see the {{{apidocs/index.html}javadocs}} or the {{{schematutorial.html}tutorial}}.
+   see the {{{xmlschema-core/apidocs/index.html}javadocs}} or the {{{xmlschema-core/schematutorial.html}tutorial}}.
 
    XmlSchema eagerly welcomes suggestions, documentation,
    and most of all code. Please join our dev list, submit JIRA entries, and
