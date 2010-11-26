@@ -27,3 +27,5 @@ xmlschema-eclipse/.project
 xmlschema-eclipse/.ruleset
 xmlschema-eclipse/.settings/
 xmlschema-eclipse/target/
+.project
+.settings/

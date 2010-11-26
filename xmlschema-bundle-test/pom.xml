@@ -26,9 +26,9 @@
     </parent>
     <groupId>org.apache.ws.xmlschema</groupId>
     <artifactId>xmlschema-bundle-test</artifactId>
+    <version>2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>XmlSchema OSGi bundle test</name>
-    <version>2.0-SNAPSHOT</version>
     <build>
         <defaultGoal>install</defaultGoal>
     </build>
