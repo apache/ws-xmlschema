@@ -72,7 +72,6 @@
         <url>http://www.apache.org/</url>
     </organization>
     <modules>
-        <module>xmlschema-eclipse</module>
         <module>xmlschema-core</module>
         <module>xmlschema-bundle-test</module>
         <module>w3c-testcases</module>
