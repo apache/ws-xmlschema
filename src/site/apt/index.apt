@@ -21,8 +21,7 @@ Issues
 
 Downloads
 
-    XmlSchema 2.0 has not yet been released. Maven snapshots are available from the ASF
-    snapshot repository: https://repository.apache.org/content/repositories/snapshots.
+   Most users incorporate XML Schema via maven. You can also download release packages
+   from {{{http://www.apache.org/dyn/closer.cgi/ws/xmlschema/}downloads}}.
 
-  
-  -The XMLSchema Development Team (commons-dev at ws.apache.org)
+  -The XMLSchema Development Team (dev at ws.apache.org)
