@@ -34,7 +34,6 @@
 	<plugins>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.6</version>
                     <configuration>
                         <systemPropertyVariables>
                         	<org.apache.ws.xmlschema.w3c-testcases>file://${basedir}/w3c-testcases.jar</org.apache.ws.xmlschema.w3c-testcases>
