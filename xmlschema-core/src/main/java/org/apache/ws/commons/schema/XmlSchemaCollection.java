@@ -345,6 +345,9 @@ public final class XmlSchemaCollection {
         addSimpleType(xsd, Constants.XSD_LANGUAGE.getLocalPart());
         addSimpleType(xsd, Constants.XSD_TOKEN.getLocalPart());
 
+        // 2.5.3 setup built-in datatype hierarchy 
+        setupBuiltinDatatypeHierarchy(xsd);
+
         // SchemaKey key = new SchemaKey(XmlSchema.SCHEMA_NS, null);
         // addSchema(key, xsd);
 
@@ -366,6 +369,77 @@ public final class XmlSchemaCollection {
                 System.err.println("The specified extension registry class cannot be accessed!");
             }
         }
+    }
+
+    private void setupBuiltinDatatypeHierarchy(XmlSchema xsd) {
+
+        setDerivationByRestriction(xsd, Constants.XSD_ANYSIMPLETYPE, Constants.XSD_ANYTYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_DURATION, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_DATETIME, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_TIME, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_DATE, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_YEARMONTH, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_YEAR, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_MONTHDAY, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_DAY, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_MONTH, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_BOOLEAN, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_BASE64, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_HEXBIN, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_FLOAT, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_DOUBLE, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_ANYURI, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_QNAME, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_NOTATION, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_NOTATION, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_DECIMAL, Constants.XSD_ANYSIMPLETYPE);
+
+        setDerivationByRestriction(xsd, Constants.XSD_INTEGER, Constants.XSD_DECIMAL);
+        setDerivationByRestriction(xsd, Constants.XSD_NONPOSITIVEINTEGER, Constants.XSD_INTEGER);
+        setDerivationByRestriction(xsd, Constants.XSD_NEGATIVEINTEGER, Constants.XSD_NONPOSITIVEINTEGER);
+        setDerivationByRestriction(xsd, Constants.XSD_LONG, Constants.XSD_INTEGER);
+        setDerivationByRestriction(xsd, Constants.XSD_INT, Constants.XSD_LONG);
+        setDerivationByRestriction(xsd, Constants.XSD_SHORT, Constants.XSD_INT);
+        setDerivationByRestriction(xsd, Constants.XSD_BYTE, Constants.XSD_SHORT);
+        setDerivationByRestriction(xsd, Constants.XSD_NONNEGATIVEINTEGER, Constants.XSD_INTEGER);
+        setDerivationByRestriction(xsd, Constants.XSD_POSITIVEINTEGER, Constants.XSD_NONNEGATIVEINTEGER);
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDLONG, Constants.XSD_NONNEGATIVEINTEGER);
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDINT, Constants.XSD_UNSIGNEDLONG);
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDSHORT, Constants.XSD_UNSIGNEDINT);
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDBYTE, Constants.XSD_UNSIGNEDSHORT);
+
+        setDerivationByRestriction(xsd, Constants.XSD_STRING, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_NORMALIZEDSTRING, Constants.XSD_STRING);
+        setDerivationByRestriction(xsd, Constants.XSD_TOKEN, Constants.XSD_NORMALIZEDSTRING);
+        setDerivationByRestriction(xsd, Constants.XSD_LANGUAGE, Constants.XSD_TOKEN);
+        setDerivationByRestriction(xsd, Constants.XSD_NMTOKEN, Constants.XSD_TOKEN);
+        setDerivationByRestriction(xsd, Constants.XSD_NAME, Constants.XSD_NMTOKEN);
+        setDerivationByRestriction(xsd, Constants.XSD_NCNAME, Constants.XSD_TOKEN);
+        setDerivationByRestriction(xsd, Constants.XSD_ID, Constants.XSD_NCNAME);
+        setDerivationByRestriction(xsd, Constants.XSD_IDREF, Constants.XSD_NCNAME);
+        setDerivationByRestriction(xsd, Constants.XSD_ENTITY, Constants.XSD_NCNAME);
+
+        setDerivationByList(xsd, Constants.XSD_NMTOKENS, Constants.XSD_NMTOKEN);
+        setDerivationByList(xsd, Constants.XSD_IDREFS, Constants.XSD_IDREF);
+        setDerivationByList(xsd, Constants.XSD_ENTITIES, Constants.XSD_ENTITY);
+    }
+
+    private void setDerivationByRestriction(XmlSchema xsd, QName child, QName parent) {
+
+        XmlSchemaSimpleType simple = (XmlSchemaSimpleType)xsd.getTypeByName(child);
+        XmlSchemaSimpleTypeRestriction restriction = new XmlSchemaSimpleTypeRestriction();
+        restriction.setBaseTypeName(parent);
+        restriction.setBaseType((XmlSchemaSimpleType)xsd.getTypeByName(parent));
+        simple.setContent(restriction);
+    }
+
+    private void setDerivationByList(XmlSchema xsd, QName child, QName parent) {
+
+        XmlSchemaSimpleType simple = (XmlSchemaSimpleType)xsd.getTypeByName(child);
+        XmlSchemaSimpleTypeList restriction = new XmlSchemaSimpleTypeList();
+        restriction.setItemTypeName(parent);
+        restriction.setItemType((XmlSchemaSimpleType)xsd.getTypeByName(parent));
+        simple.setContent(restriction);
     }
 
     /**

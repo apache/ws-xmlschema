@@ -51,7 +51,8 @@ public class NamespaceMap extends HashMap<String, Object> implements NamespacePr
     }
 
     public String getNamespaceURI(String prefix) {
-        return get(prefix).toString();
+	Object namespaceURI = get(prefix); 
+	return namespaceURI == null ? null : namespaceURI .toString();
     }
 
     public String getPrefix(String namespaceURI) {
