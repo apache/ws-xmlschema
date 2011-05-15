@@ -21,8 +21,6 @@ package org.apache.ws.commons.schema.resolver;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.xml.sax.InputSource;
@@ -56,10 +54,10 @@ public class DefaultURIResolver implements CollectionURIResolver {
                     }
                 }
 
-                String ref = new URI(baseUri).resolve(new URI(schemaLocation)).toString();
+                String ref = new URL(new URL(baseUri), schemaLocation).toString();
 
                 return new InputSource(ref);
-            } catch (URISyntaxException e1) {
+            } catch (MalformedURLException e1) {
                 throw new RuntimeException(e1);
             }
 

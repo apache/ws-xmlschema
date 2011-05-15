@@ -20,6 +20,7 @@
 package tests;
 
 import java.io.File;
+import java.net.URL;
 import java.util.List;
 
 import javax.xml.namespace.QName;
@@ -112,5 +113,24 @@ public class ImportTest extends Assert {
         assertEquals("http://www.w3.org/XML/1998/namespace", schemaImport.getNamespace());
         XmlSchema schema2 = schemaImport.getSchema();
         assertNotNull(schema2);
+    }
+    
+    /**
+     * Tests that imports are properly resolved when loading a schema from a JAR (as will generally
+     * be the case when loading a schema from the classpath).
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testImportWithJARURL() throws Exception {
+        String basedir = System.getProperty("basedir");
+        if (basedir == null) {
+            basedir = ".";
+        }
+        URL jarUrl = new File(basedir, "target/test-zip.zip").toURL();
+        URL schemaUrl = new URL("jar:" + jarUrl + "!/test-dir/importBase.xsd");
+        XmlSchemaCollection schemaCol = new XmlSchemaCollection();
+        XmlSchema schema = schemaCol.read(new InputSource(schemaUrl.toExternalForm()));
+        assertNotNull(schema);
     }
 }
