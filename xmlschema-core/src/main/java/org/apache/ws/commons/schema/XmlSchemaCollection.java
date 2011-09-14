@@ -21,6 +21,8 @@ package org.apache.ws.commons.schema;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -355,11 +357,10 @@ public final class XmlSchemaCollection {
         // extension registry class. if so we'll instantiate a new one
         // and set it as the extension registry
         // if there is an error, we'll just print out a message and move on.
-
-        if (System.getProperty(Constants.SystemConstants.EXTENSION_REGISTRY_KEY) != null) {
+        String extRegProp = getSystemProperty(Constants.SystemConstants.EXTENSION_REGISTRY_KEY);
+        if (extRegProp != null) {
             try {
-                Class clazz = Class.forName(System
-                    .getProperty(Constants.SystemConstants.EXTENSION_REGISTRY_KEY));
+                Class clazz = Class.forName(extRegProp);
                 this.extReg = (ExtensionRegistry)clazz.newInstance();
             } catch (ClassNotFoundException e) {
                 System.err.println("The specified extension registry class cannot be found!");
@@ -368,6 +369,18 @@ public final class XmlSchemaCollection {
             } catch (IllegalAccessException e) {
                 System.err.println("The specified extension registry class cannot be accessed!");
             }
+        }
+    }
+    
+    private String getSystemProperty(final String s) {
+        try {
+            return AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty(s);
+                }
+            });
+        } catch (SecurityException ex) {
+            return null;
         }
     }
 

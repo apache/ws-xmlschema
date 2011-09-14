@@ -19,6 +19,8 @@
 
 package org.apache.ws.commons.schema.utils;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,7 +41,15 @@ public final class CollectionFactory {
 
         @Override
         protected Boolean initialValue() {
-            return Boolean.parseBoolean(System.getProperty(PROTECT_READ_ONLY_COLLECTIONS_PROP));
+            try {
+                return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
+                    public Boolean run() {
+                        return Boolean.parseBoolean(System.getProperty(PROTECT_READ_ONLY_COLLECTIONS_PROP));
+                    }
+                });
+            } catch (SecurityException ex) {
+                return false;
+            }
         }
     };
 
