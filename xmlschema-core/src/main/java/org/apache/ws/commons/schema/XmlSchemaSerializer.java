@@ -613,13 +613,13 @@ public class XmlSchemaSerializer {
             choice.appendChild(annotation);
         }
 
-        List<XmlSchemaObject> itemColl = choiceObj.getItems();
+        List<XmlSchemaChoiceMember> itemColl = choiceObj.getItems();
 
         if (itemColl != null) {
             int itemLength = itemColl.size();
 
             for (int i = 0; i < itemLength; i++) {
-                XmlSchemaObject obj = itemColl.get(i);
+                XmlSchemaChoiceMember obj = itemColl.get(i);
 
                 if (obj instanceof XmlSchemaElement) {
                     Element el = serializeElement(doc, (XmlSchemaElement)obj, schema);
@@ -2138,6 +2138,29 @@ public class XmlSchemaSerializer {
         if (unionObj.getMemberTypesSource() != null) {
             union.setAttribute("memberTypes", unionObj.getMemberTypesSource());
         }
+        else {
+            QName[] memberTypesQNames = unionObj.getMemberTypesQNames();
+            if (memberTypesQNames != null && memberTypesQNames.length > 0) {
+                StringBuilder memberTypes = new StringBuilder();
+                for (int i = memberTypesQNames.length - 1; i >= 0; i--) {
+                    QName memberTypesQName = memberTypesQNames[i];
+                    String namespace = memberTypesQName.getNamespaceURI();
+                    if (namespace.length() != 0) {
+                        String prefix = schemaNamespace.get(namespace);                        
+                        if (prefix.length() != 0) {
+                            memberTypes.append(prefix).append(':');
+                        }
+                    }
+                    memberTypes.append(memberTypesQName.getLocalPart());
+                    if (i != 0) {
+                      memberTypes.append(' ');
+                    }
+                }
+                
+                union.setAttribute("memberTypes", memberTypes.toString());
+            }
+        }
+
         if (unionObj.getBaseTypes().size() > 0) {
             int baseTypesLength = unionObj.getBaseTypes().size();
             Element baseType;
