@@ -20,11 +20,13 @@
 package tests;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.net.URL;
 import java.util.List;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -95,6 +97,32 @@ public class ImportTest extends Assert {
 
         assertNotNull(schema.getTypeByName(new QName("http://soapinterop.org/xsd2", "SOAPStruct")));
         assertNotNull(schema.getElementByName(new QName("http://soapinterop.org/xsd2", "SOAPWrapper")));
+    } 
+    
+    /**
+     * see whether we can parse the imported schemas using relative 
+     * directories and paths.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testSchemaImport4() throws Exception {
+        //No base works
+        File f = new File(Resources.asURI("XMLSCHEMA-8/a/b/c/s1.xsd"));
+        XmlSchemaCollection schemaCol = new XmlSchemaCollection();
+        FileInputStream is = new FileInputStream(f);
+        XmlSchema schema = schemaCol.read(new StreamSource(is, f.toURI().toString()));
+        is.close();
+        assertNotNull(schema);
+        
+        //XMLSCHEMA-8
+        schemaCol = new XmlSchemaCollection();
+        String base = f.getParentFile().toString();
+        schemaCol.setBaseUri(base);
+        is = new FileInputStream(f);
+        schema = schemaCol.read(new StreamSource(is, f.toURI().toString()));
+        is.close();
+        assertNotNull(schema);
     }
     
     /**

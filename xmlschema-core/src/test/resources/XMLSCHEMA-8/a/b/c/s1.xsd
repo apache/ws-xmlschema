@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://xmlschema.apache.org/XmlSchema8"
+	xmlns:prog="http://xmlschema.apache.org/XmlSchema8"
+	xmlns:com="http://xml.test.com/Commun"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+	<xs:import namespace="http://xmlschema.apache.org/S2" schemaLocation="../../../a/b/s2.xsd" />
+
+	<xs:complexType name="S1Type">
+		<xs:sequence>
+			<xs:element ref="com:S2"></xs:element>
+			<xs:element ref="com:S3"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="S1" type="prog:S1Type"/>
+
+</xs:schema>

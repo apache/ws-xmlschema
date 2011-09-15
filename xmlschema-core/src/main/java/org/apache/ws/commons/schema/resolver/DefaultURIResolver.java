@@ -21,6 +21,8 @@ package org.apache.ws.commons.schema.resolver;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.xml.sax.InputSource;
@@ -44,7 +46,16 @@ public class DefaultURIResolver implements CollectionURIResolver {
 
         if (baseUri != null) {
             try {
-                File baseFile = new File(baseUri);
+                File baseFile = null;
+                try {
+                    URI uri = new URI(baseUri);
+                    baseFile = new File(uri);
+                    if (!baseFile.exists()) {
+                        baseFile = new File(baseUri);
+                    }
+                } catch (Throwable ex) {
+                    baseFile = new File(baseUri);
+                }
                 if (baseFile.exists()) {
                     baseUri = baseFile.toURI().toString();
                 } else if (collectionBaseURI != null) {

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://xmlschema.apache.org/S2" 
+			xmlns:com="http://xmlschema.apache.org/S2" 
+			xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+			elementFormDefault="qualified" attributeFormDefault="qualified" version="1.0">
+
+	<xs:include schemaLocation="s3.xsd"/>
+
+	<xs:complexType name="S2Type">
+		<xs:sequence>
+			<xs:element name="MyString" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="S2" type="com:S2Type"/>
+	
+</xs:schema>

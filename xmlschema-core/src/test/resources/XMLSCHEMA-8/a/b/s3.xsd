@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://xmlschema.apache.org/S2" 
+			xmlns:com="http://xmlschema.apache.org/S2" 
+			xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+			elementFormDefault="qualified" attributeFormDefault="qualified" version="1.0">
+
+	<xs:complexType name="S3Type">
+		<xs:sequence>
+			<xs:element name="AString" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="S3" type="com:S3Type"/>
+
+</xs:schema>
