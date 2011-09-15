@@ -34,6 +34,10 @@
       <selector xpath="tns:manufacturers/tns:location"/>
       <field xpath="@district"/>
     </unique>
+    <unique name="uniqueTest2">
+      <selector xpath="tns:products/tns:productName"/>
+      <field xpath="@id"/>
+    </unique>
 
     <key name="keyTest">
       <selector xpath="tns:products/tns:productName"/>

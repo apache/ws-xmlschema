@@ -21,6 +21,7 @@ package tests;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ import java.util.Set;
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaIdentityConstraint;
@@ -73,7 +75,7 @@ public class ConstraintsTest extends Assert {
         QName elementQName = new QName("http://soapinterop.org/types", "constraintTest");
         InputStream is = new FileInputStream(Resources.asURI("constraints.xsd"));
         XmlSchemaCollection schemaCol = new XmlSchemaCollection();
-        schemaCol.read(new StreamSource(is));
+        XmlSchema schema = schemaCol.read(new StreamSource(is));
 
         XmlSchemaElement elem = schemaCol.getElementByQName(elementQName);
         assertNotNull(elem);
@@ -81,7 +83,7 @@ public class ConstraintsTest extends Assert {
         assertEquals(new QName("http://soapinterop.org/types", "constraintTest"), elem.getQName());
 
         List<XmlSchemaIdentityConstraint> c = elem.getConstraints();
-        assertEquals(3, c.size());
+        assertEquals(4, c.size());
 
         Set<String> s = new HashSet<String>();
         s.add(XmlSchemaKey.class.getName());
@@ -124,18 +126,19 @@ public class ConstraintsTest extends Assert {
             } else if (o instanceof XmlSchemaUnique) {
                 XmlSchemaUnique unique = (XmlSchemaUnique)o;
                 assertNotNull(unique);
-                assertEquals("uniqueTest", unique.getName());
-                XmlSchemaXPath selectorXpath = unique.getSelector();
-                assertEquals("tns:manufacturers/tns:location", selectorXpath.getXPath());
-
-                List<XmlSchemaXPath> fields = unique.getFields();
-                assertEquals(1, fields.size());
-                XmlSchemaXPath fieldXpath = null;
-                for (int j = 0; j < fields.size(); j++) {
-                    fieldXpath = fields.get(j);
+                if ("uniqueTest".equals(unique.getName())) {
+                    XmlSchemaXPath selectorXpath = unique.getSelector();
+                    assertEquals("tns:manufacturers/tns:location", selectorXpath.getXPath());
+    
+                    List<XmlSchemaXPath> fields = unique.getFields();
+                    assertEquals(1, fields.size());
+                    XmlSchemaXPath fieldXpath = null;
+                    for (int j = 0; j < fields.size(); j++) {
+                        fieldXpath = fields.get(j);
+                    }
+                    assertNotNull(fieldXpath);
+                    assertEquals("@district", fieldXpath.getXPath());
                 }
-                assertNotNull(fieldXpath);
-                assertEquals("@district", fieldXpath.getXPath());
             } else {
                 fail("An unexpected constraint of \"" + o.getClass().getName() + "\" was found.");
             }
@@ -143,7 +146,12 @@ public class ConstraintsTest extends Assert {
         }
 
         assertTrue("The set should have been empty, but instead contained: " + s + ".", s.isEmpty());
-
+        
+        StringWriter writer = new StringWriter();
+        schema.write(writer);
+        String str = writer.toString();
+        assertTrue(str.contains("uniqueTest"));
+        assertTrue(str.contains("uniqueTest2"));
     }
 
 }
