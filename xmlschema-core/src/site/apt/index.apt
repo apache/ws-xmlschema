@@ -8,7 +8,7 @@ Overview
    XMLSchema 2.0 is a major revision that takes advantage of the facilities of Java 1.5.
 
    For information on how to use the XmlSchema API, please
-   see the {{{apidocs/index.html}javadocs}} or the {{{schematutorial.html}tutorial}}.
+   see the {{{./apidocs/index.html}javadocs}} or the {{{./schematutorial.html}tutorial}}.
 
    XmlSchema eagerly welcomes suggestions, documentation,
    and most of all code. Please join our dev list, submit JIRA entries, and
@@ -21,8 +21,7 @@ Issues
 
 Downloads
 
-    XmlSchema 2.0 has not yet been released. Maven snapshots are available from the ASF
-    snapshot repository: https://repository.apache.org/content/repositories/snapshots.
+   Most users incorporate XML Schema via maven. You can also download release packages
+   from {{{http://www.apache.org/dyn/closer.cgi/ws/xmlschema/}downloads}}.
 
-  
-  -The XMLSchema Development Team (commons-dev at ws.apache.org)
+  -The XMLSchema Development Team (dev at ws.apache.org)
