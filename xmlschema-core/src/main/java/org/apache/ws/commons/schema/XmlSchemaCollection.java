@@ -708,11 +708,11 @@ public final class XmlSchemaCollection {
             doc = parseDoPriv(inputSource, builder, doc);
             return read(doc, inputSource.getSystemId(), namespaceValidator);
         } catch (ParserConfigurationException e) {
-            throw new XmlSchemaException(e.getMessage());
+            throw new XmlSchemaException(e.getMessage(), e);
         } catch (IOException e) {
-            throw new XmlSchemaException(e.getMessage());
+            throw new XmlSchemaException(e.getMessage(), e);
         } catch (SAXException e) {
-            throw new XmlSchemaException(e.getMessage());
+            throw new XmlSchemaException(e.getMessage(), e);
         }
     }
 
