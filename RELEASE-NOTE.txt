@@ -1,0 +1,32 @@
+ ====================================
+ Apache XMLSchema 2.0.1 Release Notes
+ ====================================
+
+This is the release of Apache XMLSchema 2.0.1.
+
+XMLSchema is a lightweight schema object model that can be used to manipulate 
+and generate XML schema representations. It has few external dependencies
+and can be easily integrated into an existing project.
+
+You are welcome to kick the tires and get XMLSchema on the move.  Any
+contribution in the form of coding, testing, submitting improvements
+to the documentation, and reporting bugs are always welcome.
+
+This release fixes the following defects:
+
+** Bug
+    * [XMLSCHEMA-5] - xs:selector and xs:field are not supported
+    * [XMLSCHEMA-8] - Relative path in multiple import/include failed when reading a schema
+    * [XMLSCHEMA-10] - Serialized xs:restriction puts xs:attribute before xs:simpleType when it should not
+    * [XMLSCHEMA-13] - NullPointerException in NamespaceMap.getNamespaceURI() method
+    * [XMLSCHEMA-17] - incorrect link to tuitorial
+
+** Improvement
+    * [XMLSCHEMA-12] - XmlSchemaCollection.init() should initialize simple types inheritance as specified in the specification.
+    * [XMLSCHEMA-16] - XmlSchemaSerializer doesn't serialize union memberTypesQNames
+
+
+Thanks for your interest in XMLSchema!
+
+- The XMLSchema Development Team (dev@ws.apache.org)
+
