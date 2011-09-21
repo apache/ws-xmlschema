@@ -104,8 +104,6 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>src/main/assembly/bin.xml</descriptor>
-                                <descriptor>src/main/assembly/src.xml</descriptor>
-                                <descriptor>src/main/assembly/doc.xml</descriptor>
                             </descriptors>
                             <tarLongFileMode>gnu</tarLongFileMode>
                         </configuration>
