@@ -72,7 +72,7 @@
         <url>http://www.apache.org/</url>
     </organization>
     <properties>
-      <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
+        <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
     </properties>
     <modules>
         <module>xmlschema-core</module>
@@ -83,17 +83,17 @@
         <defaultGoal>install</defaultGoal>
         <pluginManagement>
             <plugins>
-	        <plugin>
-		  <groupId>org.apache.maven.plugins</groupId>
-		  <artifactId>maven-assembly-plugin</artifactId>
-		  <version>2.2</version>
-		</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-pmd-plugin</artifactId>
                     <version>2.5</version>
                     <dependencies>
-		      <dependency>
+                        <dependency>
                             <groupId>org.apache.ws.xmlschema</groupId>
                             <artifactId>xmlschema-eclipse</artifactId>
                             <version>${xmlschema-eclipse-version}</version>
@@ -210,11 +210,11 @@
                         <quiet>true</quiet>
                     </configuration>
                 </plugin>
-		<plugin>
-		  <groupId>org.apache.maven.plugins</groupId>
-		  <artifactId>maven-site-plugin</artifactId>
-		  <version>3.0-beta-3</version>
-		</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0-beta-3</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -238,8 +238,8 @@
                         </executions>
                     </plugin>
                     <!--
-    We want to sign the artifact, the POM, and all attached artifacts
--->
+                    We want to sign the artifact, the POM, and all attached artifacts
+                    -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -316,11 +316,11 @@
                         <configuration>
                             <systemPropertyVariables>
                                 <!--
-		    The default xalan TransformerFactory on the ibm jdk is
-		    org.apache.xalan.processor.TransformerFactoryImpl which has a
-		    known issue with implicit namespaces. Set this property to use
-		    the xsltc TransformerFactory (which the sun jdk seems to
-		    default to). -->
+                                The default xalan TransformerFactory on the ibm jdk is
+                                org.apache.xalan.processor.TransformerFactoryImpl which has a
+                                known issue with implicit namespaces. Set this property to use
+                                the xsltc TransformerFactory (which the sun jdk seems to
+                                default to). -->
                                 <javax.xml.transform.TransformerFactory>org.apache.xalan.xsltc.trax.TransformerFactoryImpl</javax.xml.transform.TransformerFactory>
                             </systemPropertyVariables>
                         </configuration>
