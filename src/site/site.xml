@@ -31,15 +31,14 @@
         </links>
         <menu name="XML Schema">
             <item name="Home" href="index.html"/>
-            <item name="Downloads">
-                <item name="Source Code" href="xmlschema-core/source-repository.html"/>
+            <item name="Downloads" href="http://www.apache.org/dyn/closer.cgi/ws/xmlschema/">
+                <item name="Source Code" href="source-repository.html"/>
             </item>
-            <item name="Project Information">
-                <item name="Mailing Lists" href="/mail-lists.html"/>
-                <item name="Project Team" href="/team-list.html"/>
+            <item name="Project Information" href="project-info.html">
+                <item name="Mailing Lists" href="mail-lists.html"/>
                 <item name="Issue Tracking" href="issue-tracking.html"/>
             </item>
-            <item name="License" href="/license.html"/>
+            <item name="License" href="license.html"/>
         </menu>
         <menu ref="modules" />
     </body>
