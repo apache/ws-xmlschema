@@ -22,16 +22,15 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>8</version>
+        <version>9</version>
     </parent>
     <groupId>org.apache.ws.xmlschema</groupId>
     <artifactId>xmlschema</artifactId>
     <packaging>pom</packaging>
     <name>XmlSchema</name>
     <version>2.0.1</version>
-    <description>Commons XMLSchema is a light weight schema object model that can be used to manipulate or
-        generate XML schema.</description>
-    <url>http://ws.apache.org/commons/XmlSchema</url>
+    <description>Apache XMLSchema is a light weight schema object model that can be used to manipulate or generate XML schema.</description>
+    <url>http://ws.apache.org/commons/xmlschema20/</url>
     <issueManagement>
         <system>JIRA</system>
         <url>http://issues.apache.org/jira/browse/XMLSCHEMA</url>
@@ -43,6 +42,13 @@
             <unsubscribe>dev-unsubscribe@ws.apache.org</unsubscribe>
             <post>dev@ws.apache.org</post>
             <archive>http://mail-archives.apache.org/mod_mbox/ws-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>WS Users</name>
+            <subscribe>users-subscribe@ws.apache.org</subscribe>
+            <unsubscribe>users-unsubscribe@ws.apache.org</unsubscribe>
+            <post>users@ws.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/ws-users/</archive>
         </mailingList>
     </mailingLists>
     <inceptionYear>2004</inceptionYear>
@@ -72,7 +78,7 @@
         <url>http://www.apache.org/</url>
     </organization>
     <properties>
-      <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
+        <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
     </properties>
     <modules>
         <module>xmlschema-core</module>
@@ -83,17 +89,17 @@
         <defaultGoal>install</defaultGoal>
         <pluginManagement>
             <plugins>
-	        <plugin>
-		  <groupId>org.apache.maven.plugins</groupId>
-		  <artifactId>maven-assembly-plugin</artifactId>
-		  <version>2.2</version>
-		</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-pmd-plugin</artifactId>
                     <version>2.5</version>
                     <dependencies>
-		      <dependency>
+                        <dependency>
                             <groupId>org.apache.ws.xmlschema</groupId>
                             <artifactId>xmlschema-eclipse</artifactId>
                             <version>${xmlschema-eclipse-version}</version>
@@ -127,10 +133,9 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.1</version>
                     <configuration>
-                        <!-- knock out apache parent profile -->
-                        <arguments />
-                        <useReleaseProfiles>true</useReleaseProfiles>
+                        <useReleaseProfile>false</useReleaseProfile>
                         <goals>site:site deploy</goals>
+                        <arguments>-Papache-release,release</arguments>
                         <preparationGoals>site:site install</preparationGoals>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                     </configuration>
@@ -210,11 +215,41 @@
                         <quiet>true</quiet>
                     </configuration>
                 </plugin>
-		<plugin>
-		  <groupId>org.apache.maven.plugins</groupId>
-		  <artifactId>maven-site-plugin</artifactId>
-		  <version>3.0-beta-3</version>
-		</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0</version>
+                     <configuration>
+                         <reportPlugins>
+                             <plugin>
+                                 <groupId>org.apache.maven.plugins</groupId>
+                                 <artifactId>maven-project-info-reports-plugin</artifactId>
+                                 <version>2.4</version>
+                                 <configuration>
+                                     <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+                                     <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+                                 </configuration>
+                                 <!-- simpler configuration without reportSets available for usual cases -->
+                                 <reports>
+                                     <report>summary</report>
+                                     <report>dependencies</report>
+                                     <report>index</report>
+                                     <report>dependencies</report>
+                                     <report>issue-tracking</report>
+                                     <report>scm</report>
+                                     <report>project-team</report>
+                                     <report>mailing-list</report>
+                                     <report>license</report>
+                                 </reports>
+                             </plugin>
+                             <plugin>
+                                 <groupId>org.apache.maven.plugins</groupId>
+                                 <artifactId>maven-javadoc-plugin</artifactId>
+                                 <version>2.8</version>
+                             </plugin>
+                         </reportPlugins>
+                     </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -226,7 +261,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-site-plugin</artifactId>
-                        <version>3.0-beta-3</version>
                         <executions>
                             <execution>
                                 <id>site</id>
@@ -238,8 +272,8 @@
                         </executions>
                     </plugin>
                     <!--
-    We want to sign the artifact, the POM, and all attached artifacts
--->
+                    We want to sign the artifact, the POM, and all attached artifacts
+                    -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -316,11 +350,11 @@
                         <configuration>
                             <systemPropertyVariables>
                                 <!--
-		    The default xalan TransformerFactory on the ibm jdk is
-		    org.apache.xalan.processor.TransformerFactoryImpl which has a
-		    known issue with implicit namespaces. Set this property to use
-		    the xsltc TransformerFactory (which the sun jdk seems to
-		    default to). -->
+                                The default xalan TransformerFactory on the ibm jdk is
+                                org.apache.xalan.processor.TransformerFactoryImpl which has a
+                                known issue with implicit namespaces. Set this property to use
+                                the xsltc TransformerFactory (which the sun jdk seems to
+                                default to). -->
                                 <javax.xml.transform.TransformerFactory>org.apache.xalan.xsltc.trax.TransformerFactoryImpl</javax.xml.transform.TransformerFactory>
                             </systemPropertyVariables>
                         </configuration>
@@ -527,47 +561,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.3.1</version>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>summary</report>
-                            <report>index</report>
-                            <report>dependencies</report>
-                            <report>issue-tracking</report>
-                            <report>scm</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.7</version>
-                <reportSets>
-                    <reportSet>
-                        <id>html</id>
-                        <reports>
-                            <report>javadoc</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jdepend-maven-plugin</artifactId>
-                <version>2.0-beta-2</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>2.2</version>
-            </plugin>
-        </plugins>
-    </reporting>
 </project>

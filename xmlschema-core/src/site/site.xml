@@ -32,24 +32,21 @@
         </links>
         <menu name="XML Schema">
             <item name="Home" href="../index.html"/>
-            <item name="Downloads">
+            <item name="Downloads" href="http://www.apache.org/dyn/closer.cgi/ws/xmlschema/">
                 <item name="Source Code" href="source-repository.html"/>
             </item>
-            <item name="Documentation">
+            <item name="Documentation" href="">
                 <item name="Tutorial" href="schematutorial.html"/>
                 <item name="Extensions" href="writingExtensions.html"/>
-                <item name="Javadocs" href="/apidocs/index.html"/>
-                <item name="Jxr Reports" href="jxr.html"/>
-                <item name="JDepend Report" href="jdepend-report.html"/>
+                <item name="Javadocs" href="apidocs/index.html"/>
                 <item name="View Source"
                       href="http://svn.apache.org/viewvc/webservices/xmlschema/trunk/?root=Apache-SVN"/>
             </item>
-            <item name="Project Information">
-                <item name="Mailing Lists" href="/mail-lists.html"/>
-                <item name="Project Team" href="/team-list.html"/>
+            <item name="Project Information" href="project-info.html">
+                <item name="Mailing Lists" href="mail-lists.html"/>
                 <item name="Issue Tracking" href="issue-tracking.html"/>
             </item>
-            <item name="License" href="/license.html"/>
+            <item name="License" href="license.html"/>
         </menu>
         <menu ref="reports" />
     </body>

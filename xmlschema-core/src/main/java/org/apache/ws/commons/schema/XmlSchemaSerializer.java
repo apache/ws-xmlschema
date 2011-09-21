@@ -2142,7 +2142,7 @@ public class XmlSchemaSerializer {
             QName[] memberTypesQNames = unionObj.getMemberTypesQNames();
             if (memberTypesQNames != null && memberTypesQNames.length > 0) {
                 StringBuilder memberTypes = new StringBuilder();
-                for (int i = memberTypesQNames.length - 1; i >= 0; i--) {
+                for (int i = 0, n = memberTypesQNames.length - 1; i <= n; i++) {
                     QName memberTypesQName = memberTypesQNames[i];
                     String namespace = memberTypesQName.getNamespaceURI();
                     if (namespace.length() != 0) {
@@ -2152,7 +2152,7 @@ public class XmlSchemaSerializer {
                         }
                     }
                     memberTypes.append(memberTypesQName.getLocalPart());
-                    if (i != 0) {
+                    if (i != n) {
                       memberTypes.append(' ');
                     }
                 }
