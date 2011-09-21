@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>8</version>
+        <version>9</version>
     </parent>
     <groupId>org.apache.ws.xmlschema</groupId>
     <artifactId>xmlschema</artifactId>
@@ -133,10 +133,9 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.1</version>
                     <configuration>
-                        <!-- knock out apache parent profile -->
-                        <arguments />
-                        <useReleaseProfiles>true</useReleaseProfiles>
+                        <useReleaseProfile>false</useReleaseProfile>
                         <goals>site:site deploy</goals>
+                        <arguments>-Papache-release,release</arguments>
                         <preparationGoals>site:site install</preparationGoals>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                     </configuration>
