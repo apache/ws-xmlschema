@@ -29,11 +29,7 @@
             <includes>
                 <include>*.txt</include>
             </includes>
-            <excludes>
-               <exclude>README.txt</exclude>
-               <exclude>RELEASE-NOTE.txt</exclude>
-            </excludes>
-     </fileSet>
+        </fileSet>
         <fileSet>
             <directory>target/maven-shared-archive-resources/META-INF</directory>
             <outputDirectory>.</outputDirectory>
@@ -47,12 +43,12 @@
     </fileSets>
     <files>
      <file>
-       <source>README.txt</source>
+       <source>../README.txt</source>
        <outputDirectory>/</outputDirectory>
        <filtered>true</filtered>
      </file>
       <file>
-       <source>RELEASE-NOTE.txt</source>
+       <source>../RELEASE-NOTE.txt</source>
        <outputDirectory>/</outputDirectory>
        <filtered>true</filtered>
      </file>

@@ -29,12 +29,6 @@
             <includes>
                 <include>*.txt</include>
             </includes>
-			<!-- Note that we exclude these txt files and later copy them with
-				 filters -->
- 			<excludes>
-                <exclude>README.txt</exclude>
-			    <exclude>RELEASE-NOTE.txt</exclude>
-            </excludes>
         </fileSet>
         <fileSet>
             <directory>target</directory>
@@ -60,12 +54,12 @@
     </fileSets>
     <files>
 	<file>
-      <source>README.txt</source>
+      <source>../README.txt</source>
       <outputDirectory>/</outputDirectory>
       <filtered>true</filtered>
     </file>
      <file>
-      <source>RELEASE-NOTE.txt</source>
+      <source>../RELEASE-NOTE.txt</source>
       <outputDirectory>/</outputDirectory>
       <filtered>true</filtered>
     </file>

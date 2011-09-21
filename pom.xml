@@ -130,8 +130,9 @@
                         <!-- knock out apache parent profile -->
                         <arguments />
                         <useReleaseProfiles>true</useReleaseProfiles>
-                        <goals>deploy</goals>
-			<autoVersionSubmodules>true</autoVersionSubmodules>
+                        <goals>site:site deploy</goals>
+                        <preparationGoals>site:site install</preparationGoals>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
                     </configuration>
                 </plugin>
                 <plugin>
