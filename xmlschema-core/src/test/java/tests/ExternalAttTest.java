@@ -45,10 +45,11 @@ public class ExternalAttTest extends Assert {
         XmlSchema s = schemaCol.read(doc.getDocumentElement());
 
         // check the meta data
-        Map metaInfoMap = s.getMetaInfoMap();
+        Map<Object, Object> metaInfoMap = s.getMetaInfoMap();
         assertNotNull(metaInfoMap);
 
-        Map extenalAttributeMap = (Map)metaInfoMap.get(Constants.MetaDataConstants.EXTERNAL_ATTRIBUTES);
+        Map<?, ?> extenalAttributeMap 
+            = (Map<?, ?>)metaInfoMap.get(Constants.MetaDataConstants.EXTERNAL_ATTRIBUTES);
         assertNotNull(extenalAttributeMap);
 
         assertEquals(1, extenalAttributeMap.size());

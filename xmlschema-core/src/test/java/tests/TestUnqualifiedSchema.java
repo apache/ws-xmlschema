@@ -58,7 +58,7 @@ public class TestUnqualifiedSchema extends Assert {
 
         XmlSchemaSequence seq = (XmlSchemaSequence)t.getParticle();
         List<XmlSchemaSequenceMember> items = seq.getItems();
-        Iterator iterator = items.iterator();
+        Iterator<XmlSchemaSequenceMember> iterator = items.iterator();
         while (iterator.hasNext()) {
             XmlSchemaElement elt2 = (XmlSchemaElement)iterator.next();
             XmlSchemaType schemaType2 = elt2.getSchemaType();

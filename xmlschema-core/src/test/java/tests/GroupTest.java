@@ -114,7 +114,7 @@ public class GroupTest extends Assert {
         s.add("clearancePrice");
         s.add("freePrice");
         List<XmlSchemaObject> items = xsc.getItems();
-        Iterator iterator = items.iterator();
+        Iterator<XmlSchemaObject> iterator = items.iterator();
         while (iterator.hasNext()) {
             XmlSchemaElement e = (XmlSchemaElement)iterator.next();
             String eName = e.getName();

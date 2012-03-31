@@ -38,9 +38,10 @@ public class ExtensionRegistry {
     /**
      * Maps for the storage of extension serializers /deserializers
      */
-    private Map<Class, ExtensionSerializer> extensionSerializers = new HashMap<Class, ExtensionSerializer>();
-    private Map<QName, ExtensionDeserializer> extensionDeserializers = 
-        new HashMap<QName, ExtensionDeserializer>();
+    private Map<Class<?>, ExtensionSerializer> extensionSerializers 
+        = new HashMap<Class<?>, ExtensionSerializer>();
+    private Map<QName, ExtensionDeserializer> extensionDeserializers 
+        = new HashMap<QName, ExtensionDeserializer>();
 
     /**
      * Default serializer and serializer
@@ -80,7 +81,7 @@ public class ExtensionRegistry {
      * @param classOfType - the class of the object that would be serialized
      * @param serializer - an instance of the deserializer
      */
-    public void registerSerializer(Class classOfType, ExtensionSerializer serializer) {
+    public void registerSerializer(Class<?> classOfType, ExtensionSerializer serializer) {
         extensionSerializers.put(classOfType, serializer);
     }
 
@@ -98,7 +99,7 @@ public class ExtensionRegistry {
      * 
      * @param classOfType - the the deserializer is associated with
      */
-    public void unregisterDeserializer(Class classOfType) {
+    public void unregisterDeserializer(Class<?> classOfType) {
         extensionDeserializers.remove(classOfType);
     }
 
@@ -111,7 +112,7 @@ public class ExtensionRegistry {
      * @param node - the parent DOM Node that will ultimately be serialized. The XMLSchema serialization
      *            mechanism is to create a DOM tree first and serialize it
      */
-    public void serializeExtension(XmlSchemaObject parentSchemaObject, Class classOfType, Node node) {
+    public void serializeExtension(XmlSchemaObject parentSchemaObject, Class<?> classOfType, Node node) {
         Object serializerObject = extensionSerializers.get(classOfType);
         if (serializerObject != null) {
             // perform the serialization

@@ -67,9 +67,9 @@ public class WSCommons378Test extends Assert {
         XmlSchemaEnumerationFacet facet1 = (XmlSchemaEnumerationFacet)facets.get(0);
         XmlSchemaEnumerationFacet facet2 = (XmlSchemaEnumerationFacet)facets.get(1);
 
-        final Map externalAttributes1 = (Map)facet1.getMetaInfoMap()
+        final Map<?, ?> externalAttributes1 = (Map<?, ?>)facet1.getMetaInfoMap()
             .get(Constants.MetaDataConstants.EXTERNAL_ATTRIBUTES);
-        final Map externalAttributes2 = (Map)facet2.getMetaInfoMap()
+        final Map<?, ?> externalAttributes2 = (Map<?, ?>)facet2.getMetaInfoMap()
             .get(Constants.MetaDataConstants.EXTERNAL_ATTRIBUTES);
 
         assertNotNull(externalAttributes1);

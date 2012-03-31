@@ -60,7 +60,7 @@ public class CustomExtDeserializerTest extends Assert {
             // populated
             for (XmlSchemaElement elt : schema.getElements().values()) {
                 assertNotNull(elt);
-                Map metaInfoMap = elt.getMetaInfoMap();
+                Map<Object, Object> metaInfoMap = elt.getMetaInfoMap();
                 assertNotNull(metaInfoMap);
 
                 CustomAttribute customAttrib = (CustomAttribute)metaInfoMap

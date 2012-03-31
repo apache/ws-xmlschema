@@ -38,6 +38,8 @@ import org.apache.ws.commons.schema.constants.Constants;
  * Implementation of {@link NamespaceContext}, which is based on a DOM node.
  */
 public final class NodeNamespaceContext implements NamespacePrefixList, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private static final boolean DOM_LEVEL_3;
     
     private static final Collection<String> XML_NS_PREFIX_COLLECTION = Collections
@@ -52,7 +54,7 @@ public final class NodeNamespaceContext implements NamespacePrefixList, Serializ
     static {
         boolean level3 = false;
         try {
-            Class cls = Class.forName("org.w3c.dom.UserDataHandler", false, Node.class.getClassLoader());
+            Class<?> cls = Class.forName("org.w3c.dom.UserDataHandler", false, Node.class.getClassLoader());
             Node.class.getMethod("getUserData", new Class[] {
                 String.class
             });
@@ -146,10 +148,9 @@ public final class NodeNamespaceContext implements NamespacePrefixList, Serializ
         if (Constants.XMLNS_ATTRIBUTE_NS_URI.equals(pNamespaceURI)) {
             return Constants.XMLNS_ATTRIBUTE;
         }
-        for (Iterator iter = declarations.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
+        for (Map.Entry<String, String> entry : declarations.entrySet()) {
             if (pNamespaceURI.equals(entry.getValue())) {
-                return (String)entry.getKey();
+                return entry.getKey();
             }
         }
         return null;

@@ -110,7 +110,7 @@ public class AttributeGroupTest
             List<XmlSchemaAttributeGroupMember> attributes = group.getAttributes();
             assertNotNull(attributes);
             assertEquals(2, attributes.size());
-            for (Iterator j = attributes.iterator(); j.hasNext();) {
+            for (Iterator<XmlSchemaAttributeGroupMember> j = attributes.iterator(); j.hasNext();) {
                 XmlSchemaAttribute obj2 = (XmlSchemaAttribute)j.next();
                 String name = obj2.getName();
                 if ("id".equals(name)) {

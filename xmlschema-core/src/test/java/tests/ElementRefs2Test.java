@@ -60,7 +60,7 @@ public class ElementRefs2Test extends Assert {
         XmlSchemaComplexType cmplxType = (XmlSchemaComplexType)elem.getSchemaType();
         List<XmlSchemaSequenceMember> items = ((XmlSchemaSequence)cmplxType.getParticle()).getItems();
 
-        Iterator it = items.iterator();
+        Iterator<XmlSchemaSequenceMember> it = items.iterator();
         while (it.hasNext()) {
             XmlSchemaElement innerElement = (XmlSchemaElement)it.next();
             assertNotNull(innerElement.getRef().getTargetQName());

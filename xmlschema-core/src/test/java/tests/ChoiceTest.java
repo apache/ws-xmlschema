@@ -79,7 +79,7 @@ public class ChoiceTest extends Assert {
         s.add("desktop");
         s.add("laptop");
         List<XmlSchemaObject> items = choice.getItems();
-        Iterator iterator = items.iterator();
+        Iterator<XmlSchemaObject> iterator = items.iterator();
         while (iterator.hasNext()) {
             XmlSchemaElement e = (XmlSchemaElement)iterator.next();
             String eName = e.getName();

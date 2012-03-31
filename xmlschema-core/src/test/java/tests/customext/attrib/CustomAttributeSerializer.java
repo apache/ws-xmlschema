@@ -40,8 +40,8 @@ public class CustomAttributeSerializer implements ExtensionSerializer {
      * @param domNode - the parent DOM Node that will ultimately be serialized. The XMLSchema serialization
      *            mechanism is to create a DOM tree first and serialize it
      */
-    public void serialize(XmlSchemaObject schemaObject, Class classOfType, Node domNode) {
-        Map metaInfoMap = schemaObject.getMetaInfoMap();
+    public void serialize(XmlSchemaObject schemaObject, Class<?> classOfType, Node domNode) {
+        Map<Object, Object> metaInfoMap = schemaObject.getMetaInfoMap();
         CustomAttribute att = (CustomAttribute)metaInfoMap.get(CustomAttribute.CUSTOM_ATTRIBUTE_QNAME);
 
         Element elt = (Element)domNode;

@@ -64,7 +64,7 @@ public class NamespaceMap extends HashMap<String, Object> implements NamespacePr
         return null;
     }
 
-    public Iterator getPrefixes(String namespaceURI) {
+    public Iterator<String> getPrefixes(String namespaceURI) {
         List<String> list = new ArrayList<String>();
         for (Map.Entry<String, Object> entry : entrySet()) {
             if (entry.getValue().toString().equals(namespaceURI)) {

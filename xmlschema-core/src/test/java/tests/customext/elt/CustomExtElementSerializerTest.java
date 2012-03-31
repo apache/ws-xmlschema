@@ -78,7 +78,7 @@ public class CustomExtElementSerializerTest extends Assert {
         // get the elements and check whether their annotations are properly
         // populated
         for (XmlSchemaElement elt : schema.getElements().values()) {
-            Map metaInfoMap = elt.getMetaInfoMap();
+            Map<Object, Object> metaInfoMap = elt.getMetaInfoMap();
             assertNotNull(metaInfoMap);
 
             CustomElement customElt = (CustomElement)metaInfoMap.get(CustomElement.CUSTOM_ELT_QNAME);

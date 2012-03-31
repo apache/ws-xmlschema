@@ -28,7 +28,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -219,10 +218,9 @@ public final class XmlSchemaCollection {
      */
     public XmlSchemaType getTypeByQName(QName schemaTypeName) {
         String uri = schemaTypeName.getNamespaceURI();
-        for (Iterator iter = schemas.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            if (((SchemaKey)entry.getKey()).getNamespace().equals(uri)) {
-                XmlSchemaType type = ((XmlSchema)entry.getValue()).getTypeByName(schemaTypeName);
+        for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
+            if (entry.getKey().getNamespace().equals(uri)) {
+                XmlSchemaType type = entry.getValue().getTypeByName(schemaTypeName);
                 if (type != null) {
                     return type;
                 }
@@ -360,7 +358,7 @@ public final class XmlSchemaCollection {
         String extRegProp = getSystemProperty(Constants.SystemConstants.EXTENSION_REGISTRY_KEY);
         if (extRegProp != null) {
             try {
-                Class clazz = Class.forName(extRegProp);
+                Class<?> clazz = Class.forName(extRegProp);
                 this.extReg = (ExtensionRegistry)clazz.newInstance();
             } catch (ClassNotFoundException e) {
                 System.err.println("The specified extension registry class cannot be found!");
@@ -597,10 +595,9 @@ public final class XmlSchemaCollection {
      * @return the schema.
      */
     public XmlSchema schemaForNamespace(String uri) {
-        for (Iterator iter = schemas.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            if (((SchemaKey)entry.getKey()).getNamespace().equals(uri)) {
-                return (XmlSchema)entry.getValue();
+        for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
+            if (entry.getKey().getNamespace().equals(uri)) {
+                return entry.getValue();
             }
         }
         return null;
@@ -686,7 +683,7 @@ public final class XmlSchemaCollection {
      * @return
      */
     XmlSchema getKnownSchema(String namespace) {
-        return (XmlSchema)knownNamespaceMap.get(namespace);
+        return knownNamespaceMap.get(namespace);
     }
 
     /**
@@ -717,12 +714,11 @@ public final class XmlSchemaCollection {
     }
 
     void resolveType(QName typeName, XmlSchemaType type) {
-        List receivers = unresolvedTypes.get(typeName);
+        List<TypeReceiver> receivers = unresolvedTypes.get(typeName);
         if (receivers == null) {
             return;
         }
-        for (Iterator i = receivers.iterator(); i.hasNext();) {
-            TypeReceiver receiver = (TypeReceiver)i.next();
+        for (TypeReceiver receiver : receivers) {
             receiver.setType(type);
         }
         unresolvedTypes.remove(typeName);
@@ -762,10 +758,9 @@ public final class XmlSchemaCollection {
      */
     public XmlSchemaAttribute getAttributeByQName(QName schemaAttributeName) {
         String uri = schemaAttributeName.getNamespaceURI();
-        for (Iterator iter = schemas.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            if (((SchemaKey)entry.getKey()).getNamespace().equals(uri)) {
-                XmlSchemaAttribute attribute = ((XmlSchema)entry.getValue())
+        for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
+            if (entry.getKey().getNamespace().equals(uri)) {
+                XmlSchemaAttribute attribute = entry.getValue()
                     .getAttributeByName(schemaAttributeName);
                 if (attribute != null) {
                     return attribute;
@@ -783,10 +778,9 @@ public final class XmlSchemaCollection {
      */
     public XmlSchemaElement getElementByQName(QName qname) {
         String uri = qname.getNamespaceURI();
-        for (Iterator iter = schemas.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            if (((SchemaKey)entry.getKey()).getNamespace().equals(uri)) {
-                XmlSchemaElement element = ((XmlSchema)entry.getValue()).getElementByName(qname);
+        for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
+            if (entry.getKey().getNamespace().equals(uri)) {
+                XmlSchemaElement element = entry.getValue().getElementByName(qname);
                 if (element != null) {
                     return element;
                 }
@@ -798,10 +792,9 @@ public final class XmlSchemaCollection {
     
     public XmlSchemaAttributeGroup getAttributeGroupByQName(QName name) {
         String uri = name.getNamespaceURI();
-        for (Iterator iter = schemas.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            if (((SchemaKey)entry.getKey()).getNamespace().equals(uri)) {
-                XmlSchemaAttributeGroup group = ((XmlSchema)entry.getValue())
+        for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
+            if (entry.getKey().getNamespace().equals(uri)) {
+                XmlSchemaAttributeGroup group = entry.getValue()
                     .getAttributeGroupByName(name);
                 if (group != null) {
                     return group;
@@ -813,10 +806,9 @@ public final class XmlSchemaCollection {
     
     public XmlSchemaGroup getGroupByQName(QName name) {
         String uri = name.getNamespaceURI();
-        for (Iterator iter = schemas.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            if (((SchemaKey)entry.getKey()).getNamespace().equals(uri)) {
-                XmlSchemaGroup group = ((XmlSchema)entry.getValue())
+        for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
+            if (entry.getKey().getNamespace().equals(uri)) {
+                XmlSchemaGroup group = entry.getValue()
                     .getGroupByName(name);
                 if (group != null) {
                     return group;
@@ -828,10 +820,9 @@ public final class XmlSchemaCollection {
     
     public XmlSchemaNotation getNotationByQName(QName name) {
         String uri = name.getNamespaceURI();
-        for (Iterator iter = schemas.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            if (((SchemaKey)entry.getKey()).getNamespace().equals(uri)) {
-                XmlSchemaNotation notation = ((XmlSchema)entry.getValue())
+        for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
+            if (entry.getKey().getNamespace().equals(uri)) {
+                XmlSchemaNotation notation = entry.getValue()
                     .getNotationByName(name);
                 if (notation != null) {
                     return notation;

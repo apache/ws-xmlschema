@@ -54,7 +54,7 @@ public class PlainExtensionDeserializerTest extends Assert {
         // get the elements and check whether their annotations are properly
         // populated
         for (XmlSchemaElement elt : schema.getElements().values()) {
-            Map metaInfoMap = elt.getMetaInfoMap();
+            Map<Object, Object> metaInfoMap = elt.getMetaInfoMap();
             assertNotNull(metaInfoMap);
 
         }
@@ -77,7 +77,7 @@ public class PlainExtensionDeserializerTest extends Assert {
         // populated
         for (XmlSchemaElement elt : schema.getElements().values()) {
             assertNotNull(elt);
-            Map metaInfoMap = elt.getMetaInfoMap();
+            Map<Object, Object> metaInfoMap = elt.getMetaInfoMap();
             assertNotNull(metaInfoMap);
 
         }

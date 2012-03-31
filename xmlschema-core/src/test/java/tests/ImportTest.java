@@ -155,7 +155,7 @@ public class ImportTest extends Assert {
         if (basedir == null) {
             basedir = ".";
         }
-        URL jarUrl = new File(basedir, "target/test-zip.zip").toURL();
+        URL jarUrl = new File(basedir, "target/test-zip.zip").toURI().toURL();
         URL schemaUrl = new URL("jar:" + jarUrl + "!/test-dir/importBase.xsd");
         XmlSchemaCollection schemaCol = new XmlSchemaCollection();
         XmlSchema schema = schemaCol.read(new InputSource(schemaUrl.toExternalForm()));

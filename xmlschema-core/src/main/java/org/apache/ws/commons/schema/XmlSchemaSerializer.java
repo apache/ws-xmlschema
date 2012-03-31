@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -2281,20 +2280,14 @@ public class XmlSchemaSerializer {
     private void processExtensibilityComponents(XmlSchemaObject schemaObject, Element parentElement) {
 
         if (extReg != null) {
-            Map metaInfoMap = schemaObject.getMetaInfoMap();
+            Map<Object, Object> metaInfoMap = schemaObject.getMetaInfoMap();
             if (metaInfoMap != null && !metaInfoMap.isEmpty()) {
                 // get the extra objects and call the respective deserializers
-                Iterator keysIt = metaInfoMap.keySet().iterator();
-                while (keysIt.hasNext()) {
-                    Object key = keysIt.next();
+                for (Object key : metaInfoMap.keySet()) {
                     extReg.serializeExtension(schemaObject, metaInfoMap.get(key).getClass(), parentElement);
-
                 }
-
             }
-
         }
-
     }
 
     /**

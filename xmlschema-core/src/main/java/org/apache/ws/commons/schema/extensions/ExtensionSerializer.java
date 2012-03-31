@@ -38,5 +38,5 @@ public interface ExtensionSerializer {
      * @param domNode - the parent DOM Node that will ultimately be serialized. The XMLSchema serialization
      *            mechanism is to create a DOM tree first and serialize it
      */
-    void serialize(XmlSchemaObject schemaObject, Class classOfType, Node domNode);
+    void serialize(XmlSchemaObject schemaObject, Class<?> classOfType, Node domNode);
 }

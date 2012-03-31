@@ -260,7 +260,7 @@ public class RedefineTest extends Assert {
         Set<String> s = new HashSet<String>();
         s.add(XmlSchemaGroupRef.class.getName());
         s.add(XmlSchemaElement.class.getName());
-        for (Iterator i = sequenceItems.iterator(); i.hasNext();) {
+        for (Iterator<XmlSchemaSequenceMember> i = sequenceItems.iterator(); i.hasNext();) {
             Object o = i.next();
             assertTrue(s.remove(o.getClass().getName()));
             if (o instanceof XmlSchemaGroupRef) {
@@ -324,7 +324,7 @@ public class RedefineTest extends Assert {
         Set<String> s = new HashSet<String>();
         s.add("type");
         s.add("units");
-        for (Iterator i = attributes.iterator(); i.hasNext();) {
+        for (Iterator<XmlSchemaAttributeGroupMember> i = attributes.iterator(); i.hasNext();) {
             XmlSchemaAttribute xsa = (XmlSchemaAttribute)i.next();
             assertTrue(s.remove(xsa.getName()));
         }

@@ -38,8 +38,8 @@ public class CustomElementSerializer implements ExtensionSerializer {
      * @param domNode - the parent DOM Node that will ultimately be serialized. The XMLSchema serialization
      *            mechanism is to create a DOM tree first and serialize it
      */
-    public void serialize(XmlSchemaObject schemaObject, Class classOfType, Node domNode) {
-        Map metaInfoMap = schemaObject.getMetaInfoMap();
+    public void serialize(XmlSchemaObject schemaObject, Class<?> classOfType, Node domNode) {
+        Map<Object, Object> metaInfoMap = schemaObject.getMetaInfoMap();
         CustomElement customElt = (CustomElement)metaInfoMap.get(CustomElement.CUSTOM_ELT_QNAME);
 
         Element elt = (Element)domNode;
