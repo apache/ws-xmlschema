@@ -37,21 +37,16 @@ public final class CollectionFactory {
     private static final String PROTECT_READ_ONLY_COLLECTIONS_PROP =
         "org.apache.ws.commons.schema.protectReadOnlyCollections";
 
-    private static final ThreadLocal<Boolean> PROTECT_READ_ONLY_COLLECTIONS = new ThreadLocal<Boolean>() {
-
-        @Override
-        protected Boolean initialValue() {
-            try {
-                return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-                    public Boolean run() {
-                        return Boolean.parseBoolean(System.getProperty(PROTECT_READ_ONLY_COLLECTIONS_PROP));
-                    }
-                });
-            } catch (SecurityException ex) {
-                return false;
+    private static final boolean DEFAULT_PROTECT_READ_ONLY_COLLECTIONS;
+    private static final ThreadLocal<Boolean> PROTECT_READ_ONLY_COLLECTIONS = new ThreadLocal<Boolean>();
+    
+    static {
+        DEFAULT_PROTECT_READ_ONLY_COLLECTIONS = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
+            public Boolean run() {
+                return Boolean.parseBoolean(System.getProperty(PROTECT_READ_ONLY_COLLECTIONS_PROP));
             }
-        }
-    };
+        });
+    }
 
     private CollectionFactory() {
     }
@@ -62,6 +57,28 @@ public final class CollectionFactory {
 
     public static <T> Set<T> getSet(Class<T> type) {
         return Collections.synchronizedSet(new HashSet<T>());
+    }
+    
+    private static boolean isProtected() {
+        Boolean b = PROTECT_READ_ONLY_COLLECTIONS.get();
+        if (b == null) {
+            return DEFAULT_PROTECT_READ_ONLY_COLLECTIONS;
+        }
+        return b.booleanValue();
+    }
+    
+    /**
+     * Turns on or off protection of collections for this thread.
+     * Note that this sets a thread local.  If you want to return the
+     * thread to default state, use the clearProtection method.
+     * @param b
+     */
+    public static void setProtected(boolean b) {
+        PROTECT_READ_ONLY_COLLECTIONS.set(b);
+    }
+    
+    public static void clearProtection() {
+        PROTECT_READ_ONLY_COLLECTIONS.remove();
     }
 
     /**
@@ -74,7 +91,7 @@ public final class CollectionFactory {
      * @return
      */
     public static <T> List<T> getProtectedList(List<T> list) {
-        if (PROTECT_READ_ONLY_COLLECTIONS.get().booleanValue()) {
+        if (isProtected()) {
             return Collections.unmodifiableList(list);
         } else {
             return list;
@@ -92,7 +109,7 @@ public final class CollectionFactory {
      * @return
      */
     public static <K, V> Map<K, V> getProtectedMap(Map<K, V> map) {
-        if (PROTECT_READ_ONLY_COLLECTIONS.get().booleanValue()) {
+        if (isProtected()) {
             return Collections.unmodifiableMap(map);
         } else {
             return map;
@@ -105,7 +122,11 @@ public final class CollectionFactory {
             PROTECT_READ_ONLY_COLLECTIONS.set(Boolean.FALSE);
             action.run();
         } finally {
-            PROTECT_READ_ONLY_COLLECTIONS.set(saved);
+            if (saved == null) {
+                PROTECT_READ_ONLY_COLLECTIONS.remove();
+            } else {
+                PROTECT_READ_ONLY_COLLECTIONS.set(saved);
+            }
         }
     }
 }

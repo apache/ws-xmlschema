@@ -115,7 +115,7 @@ public class SchemaBuilder {
         if (threadResolvedSchemas != null) {
             // goose the gc a bit.
             threadResolvedSchemas.clear();
-            resolvedSchemas.set(null);
+            resolvedSchemas.remove();
         }
     }
 
