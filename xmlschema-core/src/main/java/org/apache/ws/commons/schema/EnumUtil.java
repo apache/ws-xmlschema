@@ -19,6 +19,8 @@
 
 package org.apache.ws.commons.schema;
 
+import java.util.Locale;
+
 /**
  * 
  */
@@ -28,7 +30,7 @@ final class EnumUtil {
     }
     
     static <T extends Enum<T>> T valueOf(Class<T> enumClass, String name) {
-        return Enum.valueOf(enumClass, name.toUpperCase());
+        return Enum.valueOf(enumClass, name.toUpperCase(Locale.ENGLISH));
     }
 
 }
