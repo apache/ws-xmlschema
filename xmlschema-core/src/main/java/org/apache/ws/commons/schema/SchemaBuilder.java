@@ -248,7 +248,7 @@ public class SchemaBuilder {
         }
 
         // process extra attributes and elements
-        processExtensibilityComponents(annotation, annotEl);
+        processExtensibilityComponents(annotation, annotEl, true);
         return annotation;
     }
 
@@ -352,7 +352,7 @@ public class SchemaBuilder {
         }
 
         // process extra attributes and elements
-        processExtensibilityComponents(ct, complexEl);
+        processExtensibilityComponents(ct, complexEl, true);
 
         return ct;
     }
@@ -487,7 +487,7 @@ public class SchemaBuilder {
         element.setMaxOccurs(getMaxOccurs(el));
 
         // process extra attributes and elements
-        processExtensibilityComponents(element, el);
+        processExtensibilityComponents(element, el, true);
 
         return element;
     }
@@ -579,7 +579,7 @@ public class SchemaBuilder {
         }
 
         // process extra attributes and elements
-        processExtensibilityComponents(include, includeEl);
+        processExtensibilityComponents(include, includeEl, true);
         return include;
     }
 
@@ -628,7 +628,7 @@ public class SchemaBuilder {
         }
 
         // process extra attributes and elements
-        processExtensibilityComponents(simpleType, simpleEl);
+        processExtensibilityComponents(simpleType, simpleEl, true);
 
         return simpleType;
     }
@@ -660,7 +660,7 @@ public class SchemaBuilder {
         }
 
         // add the extensibility components
-        processExtensibilityComponents(currentSchema, schemaEl);
+        processExtensibilityComponents(currentSchema, schemaEl, false);
 
         return currentSchema;
     }
@@ -1016,7 +1016,7 @@ public class SchemaBuilder {
         }
 
         // process extra attributes and elements
-        processExtensibilityComponents(attr, attrEl);
+        processExtensibilityComponents(attr, attrEl, true);
         return attr;
     }
 
@@ -1653,7 +1653,7 @@ public class SchemaBuilder {
                 }
                 restriction.getFacets().add(facet);
                 // process extra attributes and elements
-                processExtensibilityComponents(facet, el);
+                processExtensibilityComponents(facet, el, true);
             }
         }
         return restriction;
@@ -1737,7 +1737,7 @@ public class SchemaBuilder {
                     facet.setAnnotation(facetAnnotation);
                 }
                 // process extra attributes and elements
-                processExtensibilityComponents(facet, el);
+                processExtensibilityComponents(facet, el, true);
                 restriction.getFacets().add(facet);
             }
 
@@ -1826,7 +1826,9 @@ public class SchemaBuilder {
      * @param schemaObject
      * @param parentElement
      */
-    private void processExtensibilityComponents(XmlSchemaObject schemaObject, Element parentElement) {
+    private void processExtensibilityComponents(XmlSchemaObject schemaObject, 
+                                                Element parentElement,
+                                                boolean namespaces) {
 
         if (extReg != null) {
             // process attributes
@@ -1837,11 +1839,11 @@ public class SchemaBuilder {
                 String namespaceURI = attribute.getNamespaceURI();
                 String name = attribute.getLocalName();
 
-                if (namespaceURI != null && !"".equals(namespaceURI) && // ignore unqualified attributes
-                    !namespaceURI.startsWith(Constants.XMLNS_ATTRIBUTE_NS_URI) && // ignore
-                    // namespaces
-                    !Constants.URI_2001_SCHEMA_XSD.equals(namespaceURI)) {
+                if (namespaceURI != null && !"".equals(namespaceURI) // ignore unqualified attributes
+                    // ignore namespaces
+                    && (namespaces || !namespaceURI.startsWith(Constants.XMLNS_ATTRIBUTE_NS_URI)) 
                     // does not belong to the schema namespace by any chance!
+                    && !Constants.URI_2001_SCHEMA_XSD.equals(namespaceURI)) {
                     QName qName = new QName(namespaceURI, name);
                     extReg.deserializeExtension(schemaObject, qName, attribute);
                 }

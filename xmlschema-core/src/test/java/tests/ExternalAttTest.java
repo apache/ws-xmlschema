@@ -51,9 +51,7 @@ public class ExternalAttTest extends Assert {
         Map<?, ?> extenalAttributeMap 
             = (Map<?, ?>)metaInfoMap.get(Constants.MetaDataConstants.EXTERNAL_ATTRIBUTES);
         assertNotNull(extenalAttributeMap);
-
         assertEquals(1, extenalAttributeMap.size());
-
     }
 
 }

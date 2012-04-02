@@ -22,11 +22,16 @@ import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.NodeList;
 
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
+import org.apache.ws.commons.schema.constants.Constants;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -82,4 +87,41 @@ public class PlainExtensionDeserializerTest extends Assert {
 
         }
     }
+    
+    @Test
+    public void testExtensionAttributeNamespace() throws Exception {
+        //Test for XMLSCHEMA-23.  Need to deserialize the extension attributes and
+        //then serialize it again, but retain the namespace declarations
+        
+        // create a DOM document
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setNamespaceAware(true);
+        Document doc = documentBuilderFactory.newDocumentBuilder()
+            .parse(Resources.asURI("/XMLSCHEMA-23/test.xsd"));
+
+        XmlSchemaCollection schemaCol = new XmlSchemaCollection();
+        XmlSchema schema = schemaCol.read(doc, null);
+        assertNotNull(schema);
+
+        
+        doc = schema.getSchemaDocument();
+        NodeList nl = doc.getDocumentElement()
+                .getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema", "element");
+        assertEquals(1, nl.getLength());
+        Element del = (Element)nl.item(0);
+        NamedNodeMap mp = del.getAttributes();
+        for (int x = 0; x < mp.getLength(); x++) {
+            Attr attr = (Attr)mp.item(x);
+            if (attr.getNamespaceURI() != null 
+                && !"".equals(attr.getNamespaceURI())
+                && !Constants.XMLNS_ATTRIBUTE_NS_URI.equals(attr.getNamespaceURI())) {
+                String ns = del.lookupNamespaceURI(attr.getPrefix());
+                String pfx = del.lookupPrefix(attr.getNamespaceURI());
+                assertEquals(attr.getPrefix(), pfx);
+                assertEquals(attr.getNamespaceURI(), ns);
+            }
+        }
+    }
+    
+    
 }
