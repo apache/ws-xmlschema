@@ -1,0 +1,15 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://example.org/ord" 
+	xmlns="http://example.org/ord">
+
+	<xs:include schemaLocation="test2.xsd" />
+	<xs:import schemaLocation="test3.xsd" />
+
+	<xs:element name="order" type="OrderType" />
+	<xs:complexType name="OrderType">
+		<xs:sequence>
+			<xs:element name="number" type="OrderNumType" />
+		</xs:sequence>
+	</xs:complexType>
+
+</xs:schema>

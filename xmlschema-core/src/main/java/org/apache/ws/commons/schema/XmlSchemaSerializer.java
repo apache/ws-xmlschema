@@ -1392,7 +1392,7 @@ public class XmlSchemaSerializer {
         Element importEl = createNewElement(doc, "import",
                                             schema.getSchemaNamespacePrefix(), XmlSchema.SCHEMA_NS);
 
-        if (importObj.namespace != null) {
+        if (importObj.namespace != null && !"".equals(importObj.namespace)) {
             importEl.setAttributeNS(null, "namespace", importObj.namespace);
         }
 
@@ -1555,10 +1555,13 @@ public class XmlSchemaSerializer {
         schemaElement = serializedSchema;
 
         if (schemaObj.getSyntacticalTargetNamespace() != null) {
-            serializedSchema.setAttributeNS(null, "targetNamespace", schemaObj.getSyntacticalTargetNamespace());
+            String targetNamespace = schemaObj.getSyntacticalTargetNamespace();
+            if (targetNamespace != null && !"".equals(targetNamespace)) {
+                serializedSchema.setAttributeNS(null, "targetNamespace", targetNamespace);
+            }
 
             String targetNS =
-                    (String)schemaNamespace.get(schemaObj.getSyntacticalTargetNamespace());
+                    (String)schemaNamespace.get(targetNamespace);
 
             //if the namespace is not entered then add
             //the targetNamespace

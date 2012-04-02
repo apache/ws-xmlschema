@@ -28,6 +28,9 @@ import java.util.Set;
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import org.xml.sax.InputSource;
 
 import org.apache.ws.commons.schema.XmlSchema;
@@ -35,6 +38,7 @@ import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaExternal;
 import org.apache.ws.commons.schema.XmlSchemaInclude;
+import org.apache.ws.commons.schema.constants.Constants;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -160,5 +164,22 @@ public class IncludeTest extends Assert {
         XmlSchemaCollection schemaCol = new XmlSchemaCollection();
         XmlSchema schema = schemaCol.read(isource);
         assertNotNull(schema);
+    }
+    
+    
+    
+    @Test
+    public void testSerializeSchema() throws Exception { 
+        String uri = Resources.asURI("XMLSCHEMA-20/test.xsd");
+        InputSource isource = new InputSource(new FileInputStream(uri));
+        isource.setSystemId(uri);
+        XmlSchemaCollection schemaCol = new XmlSchemaCollection();
+        XmlSchema schema = schemaCol.read(isource);
+        assertNotNull(schema);
+        Document doc = schema.getSchemaDocument();
+        Element el = (Element)doc.getDocumentElement()
+            .getElementsByTagNameNS(Constants.URI_2001_SCHEMA_XSD, "import").item(0);
+        assertNotNull(el);
+        assertNull(el.getAttributeNodeNS(null, "targetNamespace"));
     }
 }
