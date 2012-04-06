@@ -22,13 +22,13 @@
     <parent>
       <groupId>org.apache.ws.xmlschema</groupId>
       <artifactId>xmlschema</artifactId>
-      <version>2.0.2-SNAPSHOT</version>
+      <version>2.0.2</version>
     </parent>
     <groupId>org.apache.ws.xmlschema</groupId>
     <artifactId>w3c-testcases</artifactId>
     <packaging>jar</packaging>
     <name>XmlSchema W3C tests</name>
-    <version>2.0.2-SNAPSHOT</version>
+    <version>2.0.2</version>
     <build>
         <defaultGoal>install</defaultGoal>
 	<plugins>
@@ -57,7 +57,7 @@
 	<dependency>
 	  <groupId>org.apache.ws.xmlschema</groupId>
 	  <artifactId>xmlschema-core</artifactId>
-	  <version>2.0.2-SNAPSHOT</version>
+	  <version>2.0.2</version>
 	  <scope>test</scope>
 	</dependency>
     </dependencies>
