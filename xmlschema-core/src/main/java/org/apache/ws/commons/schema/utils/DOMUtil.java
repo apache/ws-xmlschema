@@ -118,7 +118,7 @@ public class DOMUtil {
         // search for node
         Node child = parent.getFirstChild();
         while (child != null) {
-            if (child.getNodeType() == Node.ELEMENT_NODE && child.getNodeName().equals(elemName)) {
+            if (child.getNodeType() == Node.ELEMENT_NODE && child.getLocalName().equals(elemName)) {
                 return (Element)child;
             }
             child = child.getNextSibling();
@@ -137,7 +137,7 @@ public class DOMUtil {
         // search for node
         Node child = parent.getLastChild();
         while (child != null) {
-            if (child.getNodeType() == Node.ELEMENT_NODE && child.getNodeName().equals(elemName)) {
+            if (child.getNodeType() == Node.ELEMENT_NODE && child.getLocalName().equals(elemName)) {
                 return (Element)child;
             }
             child = child.getPreviousSibling();
@@ -156,7 +156,7 @@ public class DOMUtil {
         // search for node
         Node sibling = node.getNextSibling();
         while (sibling != null) {
-            if (sibling.getNodeType() == Node.ELEMENT_NODE && sibling.getNodeName().equals(elemName)) {
+            if (sibling.getNodeType() == Node.ELEMENT_NODE && sibling.getLocalName().equals(elemName)) {
                 return (Element)sibling;
             }
             sibling = sibling.getNextSibling();
@@ -244,7 +244,7 @@ public class DOMUtil {
         while (child != null) {
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 for (String elemName : elemNames) {
-                    if (child.getNodeName().equals(elemName)) {
+                    if (child.getLocalName().equals(elemName)) {
                         return (Element)child;
                     }
                 }
@@ -267,7 +267,7 @@ public class DOMUtil {
         while (child != null) {
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 for (String elemName : elemNames) {
-                    if (child.getNodeName().equals(elemName)) {
+                    if (child.getLocalName().equals(elemName)) {
                         return (Element)child;
                     }
                 }
@@ -290,7 +290,7 @@ public class DOMUtil {
         while (sibling != null) {
             if (sibling.getNodeType() == Node.ELEMENT_NODE) {
                 for (String elemName : elemNames) {
-                    if (sibling.getNodeName().equals(elemName)) {
+                    if (sibling.getLocalName().equals(elemName)) {
                         return (Element)sibling;
                     }
                 }
@@ -387,7 +387,7 @@ public class DOMUtil {
         while (child != null) {
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element)child;
-                if (element.getNodeName().equals(elemName)
+                if (element.getLocalName().equals(elemName)
                     && element.getAttribute(attrName).equals(attrValue)) {
                     return element;
                 }
@@ -411,7 +411,7 @@ public class DOMUtil {
         while (child != null) {
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element)child;
-                if (element.getNodeName().equals(elemName)
+                if (element.getLocalName().equals(elemName)
                     && element.getAttribute(attrName).equals(attrValue)) {
                     return element;
                 }
@@ -436,7 +436,7 @@ public class DOMUtil {
         while (sibling != null) {
             if (sibling.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element)sibling;
-                if (element.getNodeName().equals(elemName)
+                if (element.getLocalName().equals(elemName)
                     && element.getAttribute(attrName).equals(attrValue)) {
                     return element;
                 }
@@ -483,7 +483,7 @@ public class DOMUtil {
 
     // return the name of this element
     public static String getName(Node node) {
-        return node.getNodeName();
+        return node.getLocalName();
     } // getLocalName(Element): String
 
     /**
@@ -491,7 +491,7 @@ public class DOMUtil {
      */
     public static String getLocalName(Node node) {
         String name = node.getLocalName();
-        return name != null ? name : node.getNodeName();
+        return name != null ? name : node.getLocalName();
     } // getLocalName(Element): String
 
     public static Element getParent(Element elem) {

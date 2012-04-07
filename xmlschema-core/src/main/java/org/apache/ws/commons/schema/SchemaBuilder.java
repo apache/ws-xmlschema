@@ -425,7 +425,7 @@ public class SchemaBuilder {
         if (keyEl != null) {
             while (keyEl != null) {
                 element.getConstraints().add(handleConstraint(keyEl, XmlSchemaKey.class));
-                keyEl = XDOMUtil.getNextSiblingElement(keyEl, "key");
+                keyEl = XDOMUtil.getNextSiblingElementNS(keyEl, XmlSchema.SCHEMA_NS,  "key");
             }
         }
 
@@ -438,7 +438,7 @@ public class SchemaBuilder {
                     keyRef.refer = getRefQName(name, el);
                 }
                 element.getConstraints().add(keyRef);
-                keyrefEl = XDOMUtil.getNextSiblingElement(keyrefEl, "keyref");
+                keyrefEl = XDOMUtil.getNextSiblingElementNS(keyrefEl, XmlSchema.SCHEMA_NS, "keyref");
             }
         }
 
@@ -446,7 +446,7 @@ public class SchemaBuilder {
         if (uniqueEl != null) {
             while (uniqueEl != null) {
                 element.getConstraints().add(handleConstraint(uniqueEl, XmlSchemaUnique.class));
-                uniqueEl = XDOMUtil.getNextSiblingElement(uniqueEl, "unique");
+                uniqueEl = XDOMUtil.getNextSiblingElementNS(uniqueEl, XmlSchema.SCHEMA_NS, "unique");
             }
         }
 

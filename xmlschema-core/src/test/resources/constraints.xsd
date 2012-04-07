@@ -16,75 +16,84 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-<schema xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         xmlns:tns="http://soapinterop.org/types"
         targetNamespace="http://soapinterop.org/types"
         elementFormDefault="qualified">
 
-  <element name="constraintTest">
-    <complexType>
-      <sequence>
-        <element name="manufacturers" type="tns:ManufacturerType"/>
-        <element name="products" type="tns:ProductType"/>
-      </sequence>
-    </complexType>
+  <xsd:element name="constraintTest">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="manufacturers" type="tns:ManufacturerType"/>
+        <xsd:element name="products" type="tns:ProductType"/>
+      </xsd:sequence>
+    </xsd:complexType>
 
-    <unique name="uniqueTest">
-      <selector xpath="tns:manufacturers/tns:location"/>
-      <field xpath="@district"/>
-    </unique>
-    <unique name="uniqueTest2">
-      <selector xpath="tns:products/tns:productName"/>
-      <field xpath="@id"/>
-    </unique>
+    <xsd:unique name="uniqueTest">
+      <xsd:selector xpath="tns:manufacturers/tns:location"/>
+      <xsd:field xpath="@district"/>
+    </xsd:unique>
+    <xsd:unique name="uniqueTest2">
+      <xsd:selector xpath="tns:products/tns:productName"/>
+      <xsd:field xpath="@productId"/>
+    </xsd:unique>
 
-    <key name="keyTest">
-      <selector xpath="tns:products/tns:productName"/>
-      <field xpath="@productId"/>
-    </key>
+    <xsd:key name="keyTest">
+      <xsd:selector xpath="tns:products/tns:productName"/>
+      <xsd:field xpath="@productId"/>
+    </xsd:key>
 
-    <keyref name="keyRefTest" refer="tns:keyTest">
-      <selector xpath="tns:manufacturers/tns:location/tns:productName"/>
-      <field xpath="@productId"/>
-    </keyref>
+    <xsd:keyref name="keyRefTest" refer="tns:keyTest">
+      <xsd:selector xpath="tns:manufacturers/tns:location/tns:productName"/>
+      <xsd:field xpath="@productId"/>
+    </xsd:keyref>
 
-  </element>
+      <xsd:key name="keyTest2">
+          <xsd:selector xpath="tns:products/tns:productName"/>
+          <xsd:field xpath="@productId"/>
+      </xsd:key>
 
-  <complexType name="ManufacturerType">
-    <sequence>
-      <element name="location" maxOccurs="unbounded">
-        <complexType>
-          <sequence>
-            <element name="productName" maxOccurs="unbounded">
-              <complexType>
-                <complexContent>
-                  <extension base="string">
-                    <attribute name="productId" type="integer"/>
-                    <attribute name="units" type="integer"/>
-                  </extension>
-                </complexContent>
-              </complexType>
-            </element>
-          </sequence>
-          <attribute name="district" type="integer"/>
-        </complexType>
-      </element>
-    </sequence>
-  </complexType>
+      <xsd:keyref name="keyRefTest2" refer="tns:keyTest2">
+          <xsd:selector xpath="tns:manufacturers/tns:location/tns:productName"/>
+          <xsd:field xpath="@productId"/>
+      </xsd:keyref>
 
-  <complexType name="ProductType">
-    <sequence>
-      <element name="productName" maxOccurs="unbounded">
-        <complexType>
-          <simpleContent>
-            <extension base="string">
-              <attribute name="productId" type="integer"/>
-            </extension>
-          </simpleContent>
-        </complexType>
-      </element>
-    </sequence>
-  </complexType>
+  </xsd:element>
 
-</schema>
+  <xsd:complexType name="ManufacturerType">
+    <xsd:sequence>
+      <xsd:element name="location" maxOccurs="unbounded">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="productName" maxOccurs="unbounded">
+              <xsd:complexType>
+                <xsd:complexContent>
+                  <xsd:extension base="string">
+                    <xsd:attribute name="productId" type="integer"/>
+                    <xsd:attribute name="units" type="integer"/>
+                  </xsd:extension>
+                </xsd:complexContent>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+          <xsd:attribute name="district" type="integer"/>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ProductType">
+    <xsd:sequence>
+      <xsd:element name="productName" maxOccurs="unbounded">
+        <xsd:complexType>
+          <xsd:simpleContent>
+            <xsd:extension base="string">
+              <xsd:attribute name="productId" type="integer"/>
+            </xsd:extension>
+          </xsd:simpleContent>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+
+</xsd:schema>
