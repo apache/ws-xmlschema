@@ -19,33 +19,22 @@
 
 package tests;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import org.apache.ws.commons.schema.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
-
-import org.apache.ws.commons.schema.XmlSchema;
-import org.apache.ws.commons.schema.XmlSchemaCollection;
-import org.apache.ws.commons.schema.XmlSchemaElement;
-import org.apache.ws.commons.schema.XmlSchemaIdentityConstraint;
-import org.apache.ws.commons.schema.XmlSchemaKey;
-import org.apache.ws.commons.schema.XmlSchemaKeyref;
-import org.apache.ws.commons.schema.XmlSchemaUnique;
-import org.apache.ws.commons.schema.XmlSchemaXPath;
-
-import org.junit.Assert;
-import org.junit.Test;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.List;
 
 public class ConstraintsTest extends Assert {
 
     /**
      * This method will test the unique, key, and keyref constaints.
-     * 
+     *
      * @throws Exception Any exception encountered
      */
     @Test
@@ -83,75 +72,121 @@ public class ConstraintsTest extends Assert {
         assertEquals(new QName("http://soapinterop.org/types", "constraintTest"), elem.getQName());
 
         List<XmlSchemaIdentityConstraint> c = elem.getConstraints();
-        assertEquals(4, c.size());
+        assertEquals(6, c.size());
 
-        Set<String> s = new HashSet<String>();
-        s.add(XmlSchemaKey.class.getName());
-        s.add(XmlSchemaKeyref.class.getName());
-        s.add(XmlSchemaUnique.class.getName());
-        for (int i = 0; i < c.size(); i++) {
-            Object o = c.get(i);
-            if (o instanceof XmlSchemaKey) {
-                XmlSchemaKey key = (XmlSchemaKey)o;
-                assertEquals("keyTest", key.getName());
+        {
+            assertTrue(c.get(0) instanceof XmlSchemaKey);
+            XmlSchemaKey key = (XmlSchemaKey) c.get(0);
+            assertEquals("keyTest", key.getName());
+            XmlSchemaXPath selectorXpath = key.getSelector();
+            assertEquals("tns:products/tns:productName", selectorXpath.getXPath());
 
-                XmlSchemaXPath selectorXpath = key.getSelector();
-                assertEquals("tns:products/tns:productName", selectorXpath.getXPath());
-
-                List<XmlSchemaXPath> fields = key.getFields();
-                assertEquals(1, fields.size());
-                XmlSchemaXPath fieldXpath = null;
-                for (int j = 0; j < fields.size(); j++) {
-                    fieldXpath = fields.get(j);
-                }
-                assertNotNull(fieldXpath);
-                assertEquals("@productId", fieldXpath.getXPath());
-            } else if (o instanceof XmlSchemaKeyref) {
-                XmlSchemaKeyref keyref = (XmlSchemaKeyref)o;
-                assertNotNull(keyref);
-                assertEquals("keyRefTest", keyref.getName());
-                assertEquals(new QName("http://soapinterop.org/types", "keyTest"), keyref.getRefer());
-
-                XmlSchemaXPath selectorXpath = keyref.getSelector();
-                assertEquals("tns:manufacturers/tns:location/tns:productName", selectorXpath.getXPath());
-
-                List<XmlSchemaXPath> fields = keyref.getFields();
-                assertEquals(1, fields.size());
-                XmlSchemaXPath fieldXpath = null;
-                for (int j = 0; j < fields.size(); j++) {
-                    fieldXpath = fields.get(j);
-                }
-                assertNotNull(fieldXpath);
-                assertEquals("@productId", fieldXpath.getXPath());
-            } else if (o instanceof XmlSchemaUnique) {
-                XmlSchemaUnique unique = (XmlSchemaUnique)o;
-                assertNotNull(unique);
-                if ("uniqueTest".equals(unique.getName())) {
-                    XmlSchemaXPath selectorXpath = unique.getSelector();
-                    assertEquals("tns:manufacturers/tns:location", selectorXpath.getXPath());
-    
-                    List<XmlSchemaXPath> fields = unique.getFields();
-                    assertEquals(1, fields.size());
-                    XmlSchemaXPath fieldXpath = null;
-                    for (int j = 0; j < fields.size(); j++) {
-                        fieldXpath = fields.get(j);
-                    }
-                    assertNotNull(fieldXpath);
-                    assertEquals("@district", fieldXpath.getXPath());
-                }
-            } else {
-                fail("An unexpected constraint of \"" + o.getClass().getName() + "\" was found.");
+            List<XmlSchemaXPath> fields = key.getFields();
+            assertEquals(1, fields.size());
+            XmlSchemaXPath fieldXpath = null;
+            for (int j = 0; j < fields.size(); j++) {
+                fieldXpath = fields.get(j);
             }
-            s.remove(o.getClass().getName());
+            assertNotNull(fieldXpath);
+            assertEquals("@productId", fieldXpath.getXPath());
+        }
+        {
+            assertTrue(c.get(1) instanceof XmlSchemaKey);
+            XmlSchemaKey key = (XmlSchemaKey) c.get(1);
+            assertEquals("keyTest2", key.getName());
+            XmlSchemaXPath selectorXpath = key.getSelector();
+            assertEquals("tns:products/tns:productName", selectorXpath.getXPath());
+
+            List<XmlSchemaXPath> fields = key.getFields();
+            assertEquals(1, fields.size());
+            XmlSchemaXPath fieldXpath = null;
+            for (int j = 0; j < fields.size(); j++) {
+                fieldXpath = fields.get(j);
+            }
+            assertNotNull(fieldXpath);
+            assertEquals("@productId", fieldXpath.getXPath());
+        }
+        {
+            assertTrue(c.get(2) instanceof XmlSchemaKeyref);
+            XmlSchemaKeyref keyref = (XmlSchemaKeyref) c.get(2);
+            assertEquals("keyRefTest", keyref.getName());
+            assertEquals(new QName("http://soapinterop.org/types", "keyTest"), keyref.getRefer());
+
+            XmlSchemaXPath selectorXpath = keyref.getSelector();
+            assertEquals("tns:manufacturers/tns:location/tns:productName", selectorXpath.getXPath());
+
+            List<XmlSchemaXPath> fields = keyref.getFields();
+            assertEquals(1, fields.size());
+            XmlSchemaXPath fieldXpath = null;
+            for (int j = 0; j < fields.size(); j++) {
+                fieldXpath = fields.get(j);
+            }
+            assertNotNull(fieldXpath);
+            assertEquals("@productId", fieldXpath.getXPath());
+        }
+        {
+            assertTrue(c.get(3) instanceof XmlSchemaKeyref);
+            XmlSchemaKeyref keyref = (XmlSchemaKeyref) c.get(3);
+            assertEquals("keyRefTest2", keyref.getName());
+            assertEquals(new QName("http://soapinterop.org/types", "keyTest2"), keyref.getRefer());
+
+            XmlSchemaXPath selectorXpath = keyref.getSelector();
+            assertEquals("tns:manufacturers/tns:location/tns:productName", selectorXpath.getXPath());
+
+            List<XmlSchemaXPath> fields = keyref.getFields();
+            assertEquals(1, fields.size());
+            XmlSchemaXPath fieldXpath = null;
+            for (int j = 0; j < fields.size(); j++) {
+                fieldXpath = fields.get(j);
+            }
+            assertNotNull(fieldXpath);
+            assertEquals("@productId", fieldXpath.getXPath());
+
+        }
+        {
+            assertTrue(c.get(4) instanceof XmlSchemaUnique);
+            XmlSchemaUnique unique = (XmlSchemaUnique) c.get(4);
+            assertNotNull(unique);
+            assertEquals("uniqueTest", unique.getName());
+            XmlSchemaXPath selectorXpath = unique.getSelector();
+            assertEquals("tns:manufacturers/tns:location", selectorXpath.getXPath());
+
+            List<XmlSchemaXPath> fields = unique.getFields();
+            assertEquals(1, fields.size());
+            XmlSchemaXPath fieldXpath = null;
+            for (int j = 0; j < fields.size(); j++) {
+                fieldXpath = fields.get(j);
+            }
+            assertNotNull(fieldXpath);
+            assertEquals("@district", fieldXpath.getXPath());
+        }
+        {
+            assertTrue(c.get(5) instanceof XmlSchemaUnique);
+            XmlSchemaUnique unique = (XmlSchemaUnique) c.get(5);
+            assertNotNull(unique);
+            assertEquals("uniqueTest2", unique.getName());
+            XmlSchemaXPath selectorXpath = unique.getSelector();
+            assertEquals("tns:products/tns:productName", selectorXpath.getXPath());
+
+            List<XmlSchemaXPath> fields = unique.getFields();
+            assertEquals(1, fields.size());
+            XmlSchemaXPath fieldXpath = null;
+            for (int j = 0; j < fields.size(); j++) {
+                fieldXpath = fields.get(j);
+            }
+            assertNotNull(fieldXpath);
+            assertEquals("@productId", fieldXpath.getXPath());
         }
 
-        assertTrue("The set should have been empty, but instead contained: " + s + ".", s.isEmpty());
-        
         StringWriter writer = new StringWriter();
         schema.write(writer);
         String str = writer.toString();
-        assertTrue(str.contains("uniqueTest"));
-        assertTrue(str.contains("uniqueTest2"));
+        assertTrue(str.contains("name=\"uniqueTest\""));
+        assertTrue(str.contains("name=\"uniqueTest2\""));
+        assertTrue(str.contains("name=\"keyTest\""));
+        assertTrue(str.contains("name=\"keyTest2\""));
+        assertTrue(str.contains("name=\"keyRefTest\""));
+        assertTrue(str.contains("name=\"keyRefTest2\""));
     }
 
 }

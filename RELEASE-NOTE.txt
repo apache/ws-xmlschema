@@ -19,6 +19,7 @@ This release fixes the following defects:
     * [XMLSCHEMA-20] - Serializing an XmlSchema that imports another schema that doesn't have targetNamespace results in the import having a namespace attribute with empty value
     * [XMLSCHEMA-22] - enum parsing is locale specific
     * [XMLSCHEMA-23] - Namespace declarations for extensor attributes are lost
+    * [XMLSCHEMA-7] - Only the first xsd:key and xsd:keyref elements are added to the schema structure when persing a schema
 
 ** Improvement
     * [XMLSCHEMA-24] - When serializing DOM, use setAttributeNS instead of setAttribute
