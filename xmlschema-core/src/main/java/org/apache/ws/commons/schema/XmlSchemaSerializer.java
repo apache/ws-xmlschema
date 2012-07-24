@@ -2430,11 +2430,11 @@ public class XmlSchemaSerializer {
         if (xsdPrefix == null) {
             //find a prefix to use
             xsdPrefix = "";
-            if (ctx != null && ctx.getNamespaceURI(xsdPrefix) != null) {
+            if (ctx != null && ctx.getNamespaceURI(xsdPrefix).length() > 0) {
                 xsdPrefix = "xsd";
             }
             int count = 0;
-            while (ctx != null && ctx.getNamespaceURI(xsdPrefix) != null) {
+            while (ctx != null && ctx.getNamespaceURI(xsdPrefix).length() > 0) {
                 xsdPrefix = "xsd" + ++count;
             }
         }
@@ -2448,14 +2448,16 @@ public class XmlSchemaSerializer {
             String[] prefixes = ctx.getDeclaredPrefixes();
             for (int i = 0;  i < prefixes.length;  i++) {
                 String prefix = prefixes[i];
-                String uri = ctx.getNamespaceURI(prefix);
-                if (uri != null && prefix != null) {
-                    if ("".equals(prefix) || !schemaNamespace.containsKey(uri)) {
-                        schemaNamespace.put(uri, prefix);
+                if (prefix != null) {
+                    String uri = ctx.getNamespaceURI(prefix);
+                    if (uri.length() > 0) {
+                        if ("".equals(prefix) || !schemaNamespace.containsKey(uri)) {
+                            schemaNamespace.put(uri, prefix);
+                        }
+                        prefix = (prefix.length() > 0) ? "xmlns:" + prefix : "xmlns";
+                        schemaEl.setAttributeNS(XMLNS_NAMESPACE_URI,
+                                                prefix, uri);
                     }
-                    prefix = (prefix.length() > 0) ? "xmlns:" + prefix : "xmlns";
-                    schemaEl.setAttributeNS(XMLNS_NAMESPACE_URI,
-                                            prefix, uri);
                 }
             }
         }
