@@ -581,7 +581,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
      * @param writer - the writer to write this
      */
     public void write(Writer writer) {
-        serializeInternal(this, writer, null);
+        serializeInternal(writer, null);
     }
 
     /**
@@ -590,7 +590,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
      * @param writer - the writer to write this
      */
     public void write(Writer writer, Map<String, String> options) {
-        serializeInternal(this, writer, options);
+        serializeInternal(writer, options);
     }
 
     protected XmlSchemaAttribute getAttributeByName(QName name, boolean deep, Stack<XmlSchema> schemaStack) {
@@ -868,16 +868,15 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
     /**
      * serialize the schema - this is the method tht does to work
      *
-     * @param schema
      * @param out
      * @param options
      */
-    private void serializeInternal(XmlSchema schema, Writer out, Map<String, String> options) {
+    private void serializeInternal(Writer out, Map<String, String> options) {
 
         try {
             XmlSchemaSerializer xser = new XmlSchemaSerializer();
             xser.setExtReg(this.parent.getExtReg());
-            Document[] serializedSchemas = xser.serializeSchema(schema, false);
+            Document[] serializedSchemas = xser.serializeSchema(this, false);
             TransformerFactory trFac = TransformerFactory.newInstance();
 
             try {
@@ -892,8 +891,8 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
             javax.xml.transform.Transformer tr = trFac.newTransformer();
 
             // use the input encoding if there is one
-            if (schema.inputEncoding != null && !"".equals(schema.inputEncoding)) {
-                tr.setOutputProperty(OutputKeys.ENCODING, schema.inputEncoding);
+            if (this.inputEncoding != null && !"".equals(this.inputEncoding)) {
+                tr.setOutputProperty(OutputKeys.ENCODING, this.inputEncoding);
             }
 
             // let these be configured from outside if any is present
