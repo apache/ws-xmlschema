@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.ws.commons.schema.constants.Constants;
+
 /**
  * This class maps from a prefix to an object that is either a String or a URI.
  * In fact, it will work with anything with a toString result that is useful
@@ -49,11 +51,20 @@ public class NamespaceMap extends HashMap<String, Object> implements NamespacePr
         Set<String> keys = keySet();
         return (String[])keys.toArray(new String[keys.size()]);
     }
-
+    
     public String getNamespaceURI(String prefix) {
-	Object namespaceURI = get(prefix); 
-	return namespaceURI == null ? null : namespaceURI .toString();
-    }
+        if (prefix == null) {
+            throw new IllegalArgumentException("The prefix must not be null.");
+        }
+        if (Constants.XML_NS_PREFIX.equals(prefix)) {
+            return Constants.XML_NS_URI;
+        }
+        if (Constants.XMLNS_ATTRIBUTE.equals(prefix)) {
+            return Constants.XMLNS_ATTRIBUTE_NS_URI;
+        }
+        Object namespaceURI = get(prefix); 
+        return namespaceURI == null ? Constants.NULL_NS_URI : namespaceURI .toString();
+    }    
 
     public String getPrefix(String namespaceURI) {
         for (Map.Entry<String, Object> entry : entrySet()) {
