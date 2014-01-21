@@ -28,6 +28,10 @@
     <artifactId>w3c-testcases</artifactId>
     <packaging>jar</packaging>
     <name>XmlSchema W3C tests</name>
+    <properties>
+        <!-- don't deploy this as this is just test data and a large amount of it -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
     <build>
         <defaultGoal>install</defaultGoal>
 	<plugins>
