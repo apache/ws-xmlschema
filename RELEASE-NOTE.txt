@@ -1,8 +1,8 @@
  ====================================
- Apache XMLSchema 2.0.3 Release Notes
+ Apache XMLSchema 2.1.0 Release Notes
  ====================================
 
-This is the release of Apache XMLSchema 2.0.3.
+This is the release of Apache XMLSchema 2.1.0.
 
 XMLSchema is a lightweight schema object model that can be used to manipulate 
 and generate XML schema representations. It has few external dependencies
@@ -15,8 +15,8 @@ to the documentation, and reporting bugs are always welcome.
 This release fixes the following defect:
 
 ** Bug
-    * [XMLSCHEMA-25] - Potential never ending loop when writing schemas
-
+    * [XMLSCHEMA-26] - NPE: NamespaceMap.getNamespaceURI() returns null
+    * [XMLSCHEMA-30] - Each type from W3C base schema (http://www.w3.org/2001/XMLSchema) is equals to each other
 
 Thanks for your interest in XMLSchema!
 
