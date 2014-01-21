@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://example.com/test" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ec="http://example.com/test">
+
+    <xs:simpleType name="customSimpleType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="TEST1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="customComplexTypeType">
+        <xs:sequence>
+            <xs:element name="testElem" type="ec:customSimpleType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="customTopSimpleElement" type="ec:customSimpleType"/>
+    <xs:element name="customTopComplexElement" type="ec:customComplexTypeType"/>
+
+    <xs:group name="customGroup1">
+        <xs:sequence/>
+    </xs:group>
+
+    <xs:group name="customGroup2">
+        <xs:sequence/>
+    </xs:group>
+
+</xs:schema>

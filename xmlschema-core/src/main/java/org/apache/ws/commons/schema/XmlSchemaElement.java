@@ -20,16 +20,13 @@
 package org.apache.ws.commons.schema;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import javax.xml.namespace.QName;
 
-import org.apache.ws.commons.schema.utils.CollectionFactory;
-import org.apache.ws.commons.schema.utils.XmlSchemaNamedWithForm;
-import org.apache.ws.commons.schema.utils.XmlSchemaNamedWithFormImpl;
-import org.apache.ws.commons.schema.utils.XmlSchemaRef;
-import org.apache.ws.commons.schema.utils.XmlSchemaRefBase;
+import org.apache.ws.commons.schema.utils.*;
 
 /**
  * Class for elements, representing xs:element.
@@ -102,6 +99,49 @@ public class XmlSchemaElement extends XmlSchemaParticle implements TypeReceiver,
                 }
             });
         }
+    }
+
+    @Override
+    public boolean equals(Object what) {
+        final boolean parentCheck =  super.equals(what);
+        if(!parentCheck){
+            return false;
+        }
+
+        if (!(what instanceof XmlSchemaElement)) {
+            return false;
+        }
+
+        XmlSchemaElement xse = (XmlSchemaElement)what;
+
+        final boolean isAbstactElementEq = (this.abstractElement == xse.abstractElement);
+        final boolean isNillableEq = (this.nillable == xse.nillable);
+        final boolean isBlockEq = UtilObjects.equals(this.block, xse.block);
+        final boolean isConstraintsEq = UtilObjects.equals(this.constraints, xse.constraints);
+        final boolean isDefaultValueEq = UtilObjects.equals(this.defaultValue, xse.defaultValue);
+        final boolean isFixedValueEq = UtilObjects.equals(this.fixedValue, xse.fixedValue);
+        final boolean isFinalDerivationEq = UtilObjects.equals(this.finalDerivation, xse.finalDerivation);
+        final boolean isRefEq = UtilObjects.equals(this.ref, xse.ref);
+        final boolean isSchemaTypeEq = UtilObjects.equals(this.schemaType, xse.schemaType);
+        final boolean isSchemaTypeNameEq = UtilObjects.equals(this.schemaTypeName, xse.schemaTypeName);
+        final boolean isSubstitutionGroupEq = UtilObjects.equals(this.substitutionGroup, xse.substitutionGroup);
+        final boolean isNamedDelegateEq = UtilObjects.equals(this.namedDelegate, xse.namedDelegate);
+
+        return (isAbstactElementEq && isNillableEq && isBlockEq && isConstraintsEq && isDefaultValueEq && isFixedValueEq &&
+                isFinalDerivationEq && isRefEq && isSchemaTypeEq && isSchemaTypeNameEq && isSubstitutionGroupEq && isNamedDelegateEq);
+
+    }
+
+    @Override
+    public int hashCode() {
+        Object[] hashObjects =
+                new Object[]{block, constraints, defaultValue, fixedValue, finalDerivation, ref, schemaType,
+                                                                        schemaTypeName, substitutionGroup, namedDelegate};
+        int hash = Arrays.hashCode(hashObjects);
+        hash = hash + (abstractElement ? 1 : 11);
+        hash = hash + (nillable ? 3 : 13);
+        hash = hash ^ super.hashCode();
+        return hash;
     }
 
     /**

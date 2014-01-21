@@ -25,6 +25,8 @@ import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaException;
 import org.apache.ws.commons.schema.XmlSchemaForm;
 
+import java.util.Arrays;
+
 /**
  *
  */
@@ -42,6 +44,34 @@ public class XmlSchemaNamedWithFormImpl extends XmlSchemaNamedImpl implements Xm
     public XmlSchemaNamedWithFormImpl(XmlSchema parent, boolean topLevel, boolean element) {
         super(parent, topLevel);
         this.element = element;
+    }
+
+    @Override
+    public boolean equals(Object what) {
+        final boolean parentCheck =  super.equals(what);
+        if(!parentCheck){
+            return false;
+        }
+
+        if (!(what instanceof XmlSchemaNamedWithFormImpl)) {
+            return false;
+        }
+
+        XmlSchemaNamedWithFormImpl xsn = (XmlSchemaNamedWithFormImpl)what;
+
+        final boolean isElementEq = (this.element == xsn.element);
+        boolean isFormEq = UtilObjects.equals(this.form, xsn.form);
+        boolean isWireNameEq = UtilObjects.equals(this.wireName, xsn.wireName);
+
+        return (isElementEq && isFormEq && isWireNameEq);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = Arrays.hashCode( new Object[]{form, wireName} );
+        hash = hash + (element ? 47 : 13);
+        hash = hash ^ super.hashCode();
+        return hash;
     }
 
     /**

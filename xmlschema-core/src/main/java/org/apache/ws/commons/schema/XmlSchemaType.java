@@ -22,8 +22,11 @@ package org.apache.ws.commons.schema;
 import javax.xml.namespace.QName;
 
 import org.apache.ws.commons.schema.utils.CollectionFactory;
+import org.apache.ws.commons.schema.utils.UtilObjects;
 import org.apache.ws.commons.schema.utils.XmlSchemaNamed;
 import org.apache.ws.commons.schema.utils.XmlSchemaNamedImpl;
+
+import java.util.Arrays;
 
 
 /**
@@ -54,6 +57,36 @@ public abstract class XmlSchemaType extends XmlSchemaAnnotated implements XmlSch
                 }
             });
         }
+    }
+
+    @Override
+    public boolean equals(Object what) {
+        final boolean parentCheck =  super.equals(what);
+        if(!parentCheck){
+            return false;
+        }
+
+        if (!(what instanceof XmlSchemaType)) {
+            return false;
+        }
+
+        XmlSchemaType xst = (XmlSchemaType)what;
+
+        final boolean isIsMixedEq = (this.isMixed == xst.isMixed);
+        final boolean isDeriveByEq = UtilObjects.equals(this.deriveBy, xst.deriveBy);
+        final boolean isFinalDerivationEq = UtilObjects.equals(this.finalDerivation, xst.finalDerivation);
+        final boolean isFinalResolvedEq = UtilObjects.equals(this.finalResolved, xst.finalResolved);
+        final boolean isNamedDelegateEq = UtilObjects.equals(this.namedDelegate, xst.namedDelegate);
+
+        return (isIsMixedEq && isDeriveByEq && isFinalDerivationEq && isFinalResolvedEq && isNamedDelegateEq);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = Arrays.hashCode( new Object[]{deriveBy, finalDerivation, finalResolved, namedDelegate} );
+        hash = hash + (isMixed ? 29 : 83);
+        hash = hash ^ super.hashCode();
+        return hash;
     }
 
     public XmlSchemaDerivationMethod getDeriveBy() {

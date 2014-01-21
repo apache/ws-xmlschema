@@ -23,8 +23,11 @@ package org.apache.ws.commons.schema;
 import javax.xml.namespace.QName;
 
 import org.apache.ws.commons.schema.utils.CollectionFactory;
+import org.apache.ws.commons.schema.utils.UtilObjects;
 import org.apache.ws.commons.schema.utils.XmlSchemaNamed;
 import org.apache.ws.commons.schema.utils.XmlSchemaNamedImpl;
+
+import java.util.Arrays;
 
 /**
  * Class that defines groups at the schema level that are referenced from the complex types. Groups a set of
@@ -48,6 +51,31 @@ public class XmlSchemaGroup extends XmlSchemaAnnotated implements XmlSchemaNamed
         });
     }
 
+    @Override
+    public boolean equals(Object what) {
+        final boolean parentCheck =  super.equals(what);
+        if(!parentCheck){
+            return false;
+        }
+
+        if (!(what instanceof XmlSchemaGroup)) {
+            return false;
+        }
+
+        XmlSchemaGroup xsg = (XmlSchemaGroup)what;
+
+        boolean isParticleEq = UtilObjects.equals(this.particle, xsg.particle);
+        boolean isNamedDelegateEq = UtilObjects.equals(this.namedDelegate, xsg.namedDelegate);
+
+        return (isParticleEq && isNamedDelegateEq);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = Arrays.hashCode( new Object[]{particle, namedDelegate});
+        hash = hash ^ super.hashCode();
+        return hash;
+    }
 
     public XmlSchemaGroupParticle getParticle() {
         return particle;

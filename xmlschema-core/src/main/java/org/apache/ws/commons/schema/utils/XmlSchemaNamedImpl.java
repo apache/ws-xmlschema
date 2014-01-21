@@ -24,6 +24,8 @@ import javax.xml.namespace.QName;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaException;
 
+import java.util.Arrays;
+
 /**
  * Common class of all of the named objects in the XML Schema model.
  * Because 'being named' is not part of the XML Schema logical
@@ -57,7 +59,36 @@ public class XmlSchemaNamedImpl implements XmlSchemaNamed {
         this.parentSchema = parent;
         this.topLevel = topLevel;
     }
-    
+
+    @Override
+    public boolean equals(Object what) {
+        if (what == this) {
+            return true;
+        }
+
+        if (!(what instanceof XmlSchemaNamedImpl)) {
+            return false;
+        }
+
+        XmlSchemaNamedImpl xsn = (XmlSchemaNamedImpl)what;
+
+        final boolean isTopLevelEq = (this.topLevel==xsn.topLevel);
+        boolean isParentSchemaEq = UtilObjects.equals(this.parentSchema, xsn.parentSchema);
+        boolean isRefTwinEq = UtilObjects.equals(this.refTwin, xsn.refTwin);
+        boolean isQNameEq = UtilObjects.equals(this.qname, xsn.qname);
+
+        return (isTopLevelEq && isParentSchemaEq && isRefTwinEq && isQNameEq);
+    }
+
+    @Override
+    public int hashCode() {
+        Object[] hashObjects = new Object[]{parentSchema, refTwin, qname};
+        int hash = Arrays.hashCode(hashObjects);
+        hash = hash + (topLevel ? 39 : 107);
+        hash = hash ^ super.hashCode();
+        return hash;
+    }
+
     /**
      * If the named object also implements ref=, it should pass the reference object
      * here for some error checking.
