@@ -26,7 +26,12 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
-import org.apache.ws.commons.schema.utils.*;
+import org.apache.ws.commons.schema.utils.CollectionFactory;
+import org.apache.ws.commons.schema.utils.UtilObjects;
+import org.apache.ws.commons.schema.utils.XmlSchemaNamedWithForm;
+import org.apache.ws.commons.schema.utils.XmlSchemaNamedWithFormImpl;
+import org.apache.ws.commons.schema.utils.XmlSchemaRef;
+import org.apache.ws.commons.schema.utils.XmlSchemaRefBase;
 
 /**
  * Class for elements, representing xs:element.

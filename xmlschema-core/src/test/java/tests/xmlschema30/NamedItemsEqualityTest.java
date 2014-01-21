@@ -20,15 +20,22 @@
 package tests.xmlschema30;
 
 import com.google.common.testing.EqualsTester;
-import org.apache.ws.commons.schema.*;
+
+import org.apache.ws.commons.schema.XmlSchema;
+import org.apache.ws.commons.schema.XmlSchemaCollection;
+import org.apache.ws.commons.schema.XmlSchemaElement;
+import org.apache.ws.commons.schema.XmlSchemaGroup;
+import org.apache.ws.commons.schema.XmlSchemaType;
 import org.apache.ws.commons.schema.constants.Constants;
-import org.apache.ws.commons.schema.utils.XmlSchemaNamedImpl;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import tests.Resources;
 
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
