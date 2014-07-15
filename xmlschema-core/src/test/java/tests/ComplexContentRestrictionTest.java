@@ -67,6 +67,9 @@ public class ComplexContentRestrictionTest extends Assert {
 
         XmlSchemaComplexType cType = (XmlSchemaComplexType)schemaCol.getTypeByQName(typeQName);
         assertNotNull(cType);
+        
+        QName baseName = cType.getBaseSchemaTypeName();
+        assertEquals(new QName("http://soapinterop.org/types", "AssemblyRequiredProduct"), baseName);
 
         XmlSchemaContentModel xscm = cType.getContentModel();
         assertNotNull(xscm);

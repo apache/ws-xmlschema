@@ -138,12 +138,13 @@ public class XmlSchemaComplexType extends XmlSchemaType {
             return null;
         }
 
-        if (!(content instanceof XmlSchemaComplexContentExtension)) {
-            return null;
+        if (content instanceof XmlSchemaComplexContentExtension) {
+            return ((XmlSchemaComplexContentExtension)content).getBaseTypeName();
         }
-
-        XmlSchemaComplexContentExtension ext = (XmlSchemaComplexContentExtension)content;
-        return ext.getBaseTypeName();
+        if (content instanceof XmlSchemaComplexContentRestriction) {
+            return ((XmlSchemaComplexContentRestriction)content).getBaseTypeName();
+        }
+        return null;
     }
 
     void setAttributeWildcard(XmlSchemaAnyAttribute attributeWildcard) {
