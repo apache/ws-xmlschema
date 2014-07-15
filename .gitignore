@@ -29,3 +29,4 @@ xmlschema-eclipse/.settings/
 xmlschema-eclipse/target/
 .project
 .settings/
+.svn*

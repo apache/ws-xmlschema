@@ -21,6 +21,7 @@ package org.apache.ws.commons.schema;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
@@ -385,47 +386,46 @@ public final class XmlSchemaCollection {
     private void setupBuiltinDatatypeHierarchy(XmlSchema xsd) {
 
         setDerivationByRestriction(xsd, Constants.XSD_ANYSIMPLETYPE, Constants.XSD_ANYTYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_DURATION, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_DATETIME, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_TIME, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_DATE, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_YEARMONTH, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_YEAR, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_MONTHDAY, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_DAY, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_MONTH, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_BOOLEAN, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_BASE64, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_HEXBIN, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_FLOAT, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_DOUBLE, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_ANYURI, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_QNAME, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_NOTATION, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_NOTATION, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_DECIMAL, Constants.XSD_ANYSIMPLETYPE);
+        setDerivationByRestriction(xsd, Constants.XSD_DURATION, Constants.XSD_ANYSIMPLETYPE,  new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_DATETIME, Constants.XSD_ANYSIMPLETYPE,  new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_TIME, Constants.XSD_ANYSIMPLETYPE,      new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_DATE, Constants.XSD_ANYSIMPLETYPE,      new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_YEARMONTH, Constants.XSD_ANYSIMPLETYPE, new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_YEAR, Constants.XSD_ANYSIMPLETYPE,      new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_MONTHDAY, Constants.XSD_ANYSIMPLETYPE,  new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_DAY, Constants.XSD_ANYSIMPLETYPE,       new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_MONTH, Constants.XSD_ANYSIMPLETYPE,     new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_BOOLEAN, Constants.XSD_ANYSIMPLETYPE,   new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_BASE64, Constants.XSD_ANYSIMPLETYPE,    new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_HEXBIN, Constants.XSD_ANYSIMPLETYPE,    new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_FLOAT, Constants.XSD_ANYSIMPLETYPE,     new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_DOUBLE, Constants.XSD_ANYSIMPLETYPE,    new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_ANYURI, Constants.XSD_ANYSIMPLETYPE,    new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_QNAME, Constants.XSD_ANYSIMPLETYPE,     new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_NOTATION, Constants.XSD_ANYSIMPLETYPE,  new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
+        setDerivationByRestriction(xsd, Constants.XSD_DECIMAL, Constants.XSD_ANYSIMPLETYPE,   new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", true) });
 
-        setDerivationByRestriction(xsd, Constants.XSD_INTEGER, Constants.XSD_DECIMAL);
-        setDerivationByRestriction(xsd, Constants.XSD_NONPOSITIVEINTEGER, Constants.XSD_INTEGER);
-        setDerivationByRestriction(xsd, Constants.XSD_NEGATIVEINTEGER, Constants.XSD_NONPOSITIVEINTEGER);
-        setDerivationByRestriction(xsd, Constants.XSD_LONG, Constants.XSD_INTEGER);
-        setDerivationByRestriction(xsd, Constants.XSD_INT, Constants.XSD_LONG);
-        setDerivationByRestriction(xsd, Constants.XSD_SHORT, Constants.XSD_INT);
-        setDerivationByRestriction(xsd, Constants.XSD_BYTE, Constants.XSD_SHORT);
-        setDerivationByRestriction(xsd, Constants.XSD_NONNEGATIVEINTEGER, Constants.XSD_INTEGER);
-        setDerivationByRestriction(xsd, Constants.XSD_POSITIVEINTEGER, Constants.XSD_NONNEGATIVEINTEGER);
-        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDLONG, Constants.XSD_NONNEGATIVEINTEGER);
-        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDINT, Constants.XSD_UNSIGNEDLONG);
-        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDSHORT, Constants.XSD_UNSIGNEDINT);
-        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDBYTE, Constants.XSD_UNSIGNEDSHORT);
+        setDerivationByRestriction(xsd, Constants.XSD_INTEGER, Constants.XSD_DECIMAL,                    new XmlSchemaFacet[] { new XmlSchemaFractionDigitsFacet(new Integer(0), true),                 new XmlSchemaPatternFacet("[\\-+]?[0-9]+", false)                     });
+        setDerivationByRestriction(xsd, Constants.XSD_NONPOSITIVEINTEGER, Constants.XSD_INTEGER,         new XmlSchemaFacet[] { new XmlSchemaMaxInclusiveFacet(new Integer(0), false)         });
+        setDerivationByRestriction(xsd, Constants.XSD_NEGATIVEINTEGER, Constants.XSD_NONPOSITIVEINTEGER, new XmlSchemaFacet[] { new XmlSchemaMaxInclusiveFacet(new Integer(-1), false)        });
+        setDerivationByRestriction(xsd, Constants.XSD_LONG, Constants.XSD_INTEGER,                       new XmlSchemaFacet[] { new XmlSchemaMinInclusiveFacet(new Long(-9223372036854775808L), false), new XmlSchemaMaxInclusiveFacet(new Long(9223372036854775807L), false) });
+        setDerivationByRestriction(xsd, Constants.XSD_INT, Constants.XSD_LONG,                           new XmlSchemaFacet[] { new XmlSchemaMinInclusiveFacet(new Integer(-2147483648), false),        new XmlSchemaMaxInclusiveFacet(2147483647, false)                     });
+        setDerivationByRestriction(xsd, Constants.XSD_SHORT, Constants.XSD_INT,                          new XmlSchemaFacet[] { new XmlSchemaMinInclusiveFacet(new Short((short) -32768), false),       new XmlSchemaMaxInclusiveFacet(new Short((short) 32767), false)       });
+        setDerivationByRestriction(xsd, Constants.XSD_BYTE, Constants.XSD_SHORT,                         new XmlSchemaFacet[] { new XmlSchemaMinInclusiveFacet(new Byte((byte) -128), false),           new XmlSchemaMaxInclusiveFacet(new Byte((byte) 127), false)           });
+        setDerivationByRestriction(xsd, Constants.XSD_NONNEGATIVEINTEGER, Constants.XSD_INTEGER,         new XmlSchemaFacet[] { new XmlSchemaMinInclusiveFacet(new Integer(0), false)         });
+        setDerivationByRestriction(xsd, Constants.XSD_POSITIVEINTEGER, Constants.XSD_NONNEGATIVEINTEGER, new XmlSchemaFacet[] { new XmlSchemaMinInclusiveFacet(new Integer(1), false)         });
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDLONG, Constants.XSD_NONNEGATIVEINTEGER,    new XmlSchemaFacet[] { new XmlSchemaMaxInclusiveFacet(new BigInteger("18446744073709551615"), false) });
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDINT, Constants.XSD_UNSIGNEDLONG,           new XmlSchemaFacet[] { new XmlSchemaMaxInclusiveFacet(new Long(4294967295L), false)  });
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDSHORT, Constants.XSD_UNSIGNEDINT,          new XmlSchemaFacet[] { new XmlSchemaMaxInclusiveFacet(new Integer(65535), false)     });
+        setDerivationByRestriction(xsd, Constants.XSD_UNSIGNEDBYTE, Constants.XSD_UNSIGNEDSHORT,         new XmlSchemaFacet[] { new XmlSchemaMaxInclusiveFacet(new Short((short) 255), false) });
 
-        setDerivationByRestriction(xsd, Constants.XSD_STRING, Constants.XSD_ANYSIMPLETYPE);
-        setDerivationByRestriction(xsd, Constants.XSD_NORMALIZEDSTRING, Constants.XSD_STRING);
-        setDerivationByRestriction(xsd, Constants.XSD_TOKEN, Constants.XSD_NORMALIZEDSTRING);
-        setDerivationByRestriction(xsd, Constants.XSD_LANGUAGE, Constants.XSD_TOKEN);
-        setDerivationByRestriction(xsd, Constants.XSD_NMTOKEN, Constants.XSD_TOKEN);
-        setDerivationByRestriction(xsd, Constants.XSD_NAME, Constants.XSD_NMTOKEN);
-        setDerivationByRestriction(xsd, Constants.XSD_NCNAME, Constants.XSD_TOKEN);
+        setDerivationByRestriction(xsd, Constants.XSD_STRING, Constants.XSD_ANYSIMPLETYPE,    new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("preserve", false) });
+        setDerivationByRestriction(xsd, Constants.XSD_NORMALIZEDSTRING, Constants.XSD_STRING, new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("replace", false) });
+        setDerivationByRestriction(xsd, Constants.XSD_TOKEN, Constants.XSD_NORMALIZEDSTRING,  new XmlSchemaFacet[] { new XmlSchemaWhiteSpaceFacet("collapse", false) });
+        setDerivationByRestriction(xsd, Constants.XSD_LANGUAGE, Constants.XSD_TOKEN,          new XmlSchemaFacet[] { new XmlSchemaPatternFacet("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*", false) });
+        setDerivationByRestriction(xsd, Constants.XSD_NMTOKEN, Constants.XSD_TOKEN,           new XmlSchemaFacet[] { new XmlSchemaPatternFacet("\\c+", false) });
+        setDerivationByRestriction(xsd, Constants.XSD_NAME, Constants.XSD_NMTOKEN,            new XmlSchemaFacet[] { new XmlSchemaPatternFacet("\\i\\c*", false) });
+        setDerivationByRestriction(xsd, Constants.XSD_NCNAME, Constants.XSD_TOKEN,            new XmlSchemaFacet[] { new XmlSchemaPatternFacet("[\\i-[:]][\\c-[:]]*", false) });
         setDerivationByRestriction(xsd, Constants.XSD_ID, Constants.XSD_NCNAME);
         setDerivationByRestriction(xsd, Constants.XSD_IDREF, Constants.XSD_NCNAME);
         setDerivationByRestriction(xsd, Constants.XSD_ENTITY, Constants.XSD_NCNAME);
@@ -436,17 +436,28 @@ public final class XmlSchemaCollection {
     }
 
     private void setDerivationByRestriction(XmlSchema xsd, QName child, QName parent) {
+    	setDerivationByRestriction(xsd, child, parent, null);
+    }
 
-        XmlSchemaSimpleType simple = (XmlSchemaSimpleType)xsd.getTypeByName(child);
+    private void setDerivationByRestriction(XmlSchema xsd, QName child, QName parent, XmlSchemaFacet[] facets) {
+
+    	XmlSchemaSimpleType simple = (XmlSchemaSimpleType)xsd.getTypeByName(child);
         XmlSchemaSimpleTypeRestriction restriction = new XmlSchemaSimpleTypeRestriction();
         restriction.setBaseTypeName(parent);
         restriction.setBaseType((XmlSchemaSimpleType)xsd.getTypeByName(parent));
+
+        if (facets != null) {
+        	for (XmlSchemaFacet facet : facets) {
+        		restriction.getFacets().add(facet);
+        	}
+        }
+
         simple.setContent(restriction);
     }
 
     private void setDerivationByList(XmlSchema xsd, QName child, QName parent) {
 
-        XmlSchemaSimpleType simple = (XmlSchemaSimpleType)xsd.getTypeByName(child);
+    	XmlSchemaSimpleType simple = (XmlSchemaSimpleType)xsd.getTypeByName(child);
         XmlSchemaSimpleTypeList restriction = new XmlSchemaSimpleTypeList();
         restriction.setItemTypeName(parent);
         restriction.setItemType((XmlSchemaSimpleType)xsd.getTypeByName(parent));
