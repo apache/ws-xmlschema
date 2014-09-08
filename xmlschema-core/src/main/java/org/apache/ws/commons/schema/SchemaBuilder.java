@@ -858,6 +858,8 @@ public class SchemaBuilder {
 
         XmlSchemaAny any = new XmlSchemaAny();
 
+        any.setTargetNamespace(schema.getLogicalTargetNamespace());
+
         if (anyEl.hasAttribute("namespace")) {
             any.setNamespace(anyEl.getAttribute("namespace"));
         }

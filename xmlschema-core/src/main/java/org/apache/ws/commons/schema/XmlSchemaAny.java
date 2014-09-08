@@ -32,8 +32,8 @@ public class XmlSchemaAny extends XmlSchemaParticle
      */
     private String namespace;
     private XmlSchemaContentProcessing processContent;
+    private String targetNamespace;
 
-    
     /**
      * Creates new XmlSchemaAny
      */
@@ -58,4 +58,30 @@ public class XmlSchemaAny extends XmlSchemaParticle
         this.processContent = processContent;
     }
 
+    /**
+     * {@link #getNamespace()} returns the namespace or set of namespaces
+     * that this wildcard element is valid for.  The target namespaces may
+     * include <code>##other</code>, <code>##targetNamespace</code>.  The
+     * <code>##other</code> directive means any namespace other than the
+     * schema's target namespace, while the <code>##targetNamespace</code>
+     * directive means the element <i>must be</i> in the schema's target
+     * namespace.  Resolving either of these requires knowledge of what
+     * the schema's target namespace is, which is returned by this method.
+     *
+     * @return The wildcard element's target namespace.
+     */
+    public String getTargetNamespace() {
+    	return targetNamespace;
+    }
+
+    /**
+     * Sets the schema's target namespace.
+     *
+     * @param namespace The schema's target namespace.
+     *
+     * @see #getTargetNamespace()
+     */
+    public void setTargetNamespace(String namespace) {
+    	targetNamespace = namespace;
+    }
 }

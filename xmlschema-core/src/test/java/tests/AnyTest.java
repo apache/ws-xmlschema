@@ -182,6 +182,7 @@ public class AnyTest extends Assert {
                 assertEquals("none", xscp.toString());
                 assertEquals(minCount, ((XmlSchemaAny)o).getMinOccurs());
                 assertEquals(maxCount, ((XmlSchemaAny)o).getMaxOccurs());
+                assertEquals(elementQName.getNamespaceURI(), ((XmlSchemaAny) o).getTargetNamespace());
             }
         }
 
