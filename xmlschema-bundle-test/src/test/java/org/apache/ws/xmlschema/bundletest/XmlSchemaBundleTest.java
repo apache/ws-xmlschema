@@ -39,12 +39,10 @@ import org.ops4j.pax.exam.junit.PaxExam;
 public class XmlSchemaBundleTest {
 
     @Configuration
-    public static Option[] configuration()
-    {
-       return CoreOptions.options(
-            CoreOptions.junitBundles(),
-            CoreOptions.provision(CoreOptions.mavenBundle().groupId("org.apache.ws.xmlschema").artifactId("xmlschema-core")
-       ));
+    public static Option[] configuration() {
+        return CoreOptions.options(CoreOptions.junitBundles(),
+                                   CoreOptions.provision(CoreOptions.mavenBundle()
+                                       .groupId("org.apache.ws.xmlschema").artifactId("xmlschema-core")));
     }
 
     @Test(expected = java.lang.NoClassDefFoundError.class)
