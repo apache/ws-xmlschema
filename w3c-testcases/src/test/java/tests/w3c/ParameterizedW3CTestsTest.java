@@ -21,11 +21,8 @@ package tests.w3c;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -119,7 +116,7 @@ public class ParameterizedW3CTestsTest extends XMLAssert {
         System.err.println("-----");
         schema.write(System.err);
         if (detaileddiffs != null) {
-            ListIterator li = detaileddiffs.getAllDifferences().listIterator();
+            ListIterator<?> li = detaileddiffs.getAllDifferences().listIterator();
 
             while (li.hasNext()) {
                 System.err.println(li.next());

@@ -24,7 +24,6 @@
       <artifactId>xmlschema</artifactId>
       <version>2.2.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.apache.ws.xmlschema</groupId>
     <artifactId>w3c-testcases</artifactId>
     <packaging>jar</packaging>
     <name>XmlSchema W3C tests</name>
