@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License. 
+ -->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:avro:complex_schema" xmlns:avro="urn:avro:complex_schema" elementFormDefault="qualified">
+	<element name="root" abstract="true" />
+	<element name="realRoot" substitutionGroup="avro:root">
+		<complexType>
+			<sequence>
+				<element ref="avro:backtrack"     />
+				<element ref="avro:allTheThings"  />
+				<element ref="avro:prohibit"      />
+				<element ref="avro:anyAndFriends" />
+				<element name="simpleExtension"   type="avro:grandchildType"           minOccurs="0" maxOccurs="1" />
+				<element name="simpleRestriction" type="avro:simpleContentRestriction" minOccurs="0" maxOccurs="1" />
+				<element name="complexExtension"  type="avro:complexExtension"         minOccurs="0" maxOccurs="1" />
+				<element ref="avro:mixedType" minOccurs="0" maxOccurs="1" />
+			</sequence>
+			<attribute name="year"  type="gYear"  fixed="2014"    />
+			<attribute name="month" type="gMonth" default="--08"  />
+			<attribute name="day"   type="gDay"   default="---12" />
+		</complexType>
+	</element>
+	<element name="backtrack">
+		<annotation>
+			<documentation>
+				This forces backtracking through the different schema options.
+				Consider the following elements:
+				&lt;backtrack&gt;
+				   &lt;qName&gt;avro:qName&lt;/qName&gt;
+				   &lt;avroEnum&gt;avro&lt;/avroEnum&gt;
+				   &lt;xmlEnum&gt;rest.li&lt;/xmlEnum&gt;
+				   &lt;xmlEnum&gt;xml&lt;/xmlEnum&gt;
+				   &lt;unsignedLongList&gt;18446744073709551615 1844674407370955 12579&lt;/unsignedLongList&gt;
+				   &lt;listOfUnion&gt;true 18446744073709551616 false -2147483648 -1234.567 avro&lt;/listOfUnion&gt;
+				&lt;/backtrack&gt;
+				The first four elements in the list can match either the first choice
+				group or the second sequence group, and by default the first branch will
+				be taken.  It is not until the last child element, &lt;listOfUnion&gt;,
+				is reached, that it becomes clear the choice group should not be followed.
+			</documentation>
+		</annotation>
+		<complexType>
+			<sequence>
+				<choice minOccurs="0" maxOccurs="2">
+					<choice minOccurs="1" maxOccurs="4">
+						<element ref="avro:qName"    />
+						<element ref="avro:avroEnum" />
+						<element ref="avro:xmlEnum"  />
+					</choice>
+					<sequence>
+						<element ref="avro:xmlEnum"          />
+						<element ref="avro:unsignedLongList" />
+					</sequence>
+				</choice>
+				<sequence>
+					<element ref="avro:qName"                 />
+					<element ref="avro:avroEnum"              />
+					<element ref="avro:xmlEnum" maxOccurs="2" />
+					<element ref="avro:unsignedLongList"      />
+					<element ref="avro:listOfUnion"           />
+				</sequence>
+			</sequence>
+		</complexType>
+	</element>
+	<element name="qName">
+		<simpleType>
+			<restriction base="QName">
+				<minLength value="1" />
+				<maxLength value="256" />
+			</restriction>
+		</simpleType>
+	</element>
+	<element name="avroEnum">
+		<simpleType>
+			<restriction base="string">
+				<enumeration value="xml"      />
+				<enumeration value="json"     />
+				<enumeration value="avro"     />
+				<enumeration value="thrift"   />
+				<enumeration value="protobuf" />
+				<enumeration value="rest_li"  />
+			</restriction>
+		</simpleType>
+	</element>
+	<element name="xmlEnum">
+		<simpleType>
+			<restriction base="string">
+				<enumeration value="xml"      />
+				<enumeration value="json"     />
+				<enumeration value="avro"     />
+				<enumeration value="thrift"   />
+				<enumeration value="protobuf" />
+				<enumeration value="rest.li"  />
+			</restriction>
+		</simpleType>
+	</element>
+	<element name="unsignedLongList">
+		<simpleType>
+			<list itemType="unsignedLong" />
+		</simpleType>
+	</element>
+	<element name="listOfUnion">
+		<simpleType>
+			<list>
+				<simpleType>
+					<union memberTypes="boolean string int positiveInteger" />
+				</simpleType>
+			</list>
+		</simpleType>
+	</element>
+	<element name="allTheThings">
+		<annotation>
+			<documentation>
+				This is a map containing a map of a union of firstMap and secondMap.
+				The maps are generated as all three have a single required attribute
+				of type ID.
+
+				The inner two maps become a union because a union of two map types is
+				not allowed.  Likewise, the map itself must become a union of two other
+				types.
+			</documentation>
+		</annotation>
+		<complexType>
+			<all>
+				<element name="firstMap">
+					<complexType>
+						<sequence>
+							<element name="value" default="1234567" nillable="true" minOccurs="1" maxOccurs="2">
+								<simpleType>
+									<restriction base="decimal">
+										<fractionDigits value="0"></fractionDigits>
+									</restriction>
+								</simpleType>
+							</element>
+						</sequence>
+						<attribute name="id" type="ID" use="required" />
+					</complexType>
+				</element>
+				<element name="secondMap">
+					<complexType>
+						<attribute name="id" type="ID" use="required" />
+						<attribute name="value" type="string" use="required" />
+					</complexType>
+				</element>
+			</all>
+			<attribute name="id" type="ID" use="required" />
+			<attribute name="listOfNumbers" default="127 -32768 18446744073709551615 -18446744073709551616">
+				<simpleType>
+					<list>
+						<simpleType>
+							<union memberTypes="byte unsignedLong int negativeInteger" />
+						</simpleType>
+					</list>
+				</simpleType>
+			</attribute>
+			<attribute name="truth" type="boolean" fixed="true" />
+		</complexType>
+	</element>
+	<complexType name="baseType">
+		<sequence>
+			<element name="fixed" type="integer" fixed="100" />
+		</sequence>
+		<attribute name="optional" type="string" use="optional" />
+		<anyAttribute namespace="##targetNamespace" />
+	</complexType>
+	<element name="prohibit">
+		<complexType>
+			<complexContent>
+				<restriction base="avro:baseType">
+					<sequence>
+						<element name="fixed" type="integer" fixed="100" />
+					</sequence>
+					<attribute name="optional" type="string" use="prohibited" />
+				</restriction>
+			</complexContent>
+		</complexType>
+	</element>
+	<element name="anyAndFriends">
+		<complexType mixed="true">
+			<sequence>
+				<any />
+        <any namespace="##any"   />
+        <any namespace="##other" />
+        <any namespace="http://avro.apache.org/AvroTest" />
+        <any namespace="http://avro.apache.org/AvroTest urn:avro:complex_schema" />
+        <any namespace="##targetNamespace http://avro.apache.org/AvroTest" />
+			</sequence>
+		</complexType>
+	</element>
+  <simpleType name="baseUnion">
+    <union memberTypes="boolean negativeInteger" />
+  </simpleType>
+  <simpleType name="restriction">
+  	<restriction base="avro:baseUnion">
+  		<enumeration value="true"  />
+  		<enumeration value="false" />
+  		<enumeration value="-123"  />
+  	</restriction>
+  </simpleType>
+  <complexType name="simpleTypeWithAttributes">
+  	<simpleContent>
+  		<extension base="avro:restriction">
+  			<attributeGroup ref="avro:derivedAttrGroup" />
+	  	</extension>
+  	</simpleContent>
+  </complexType>
+  <attributeGroup name="baseAttrGroup">
+  	<attribute name="default" type="string"        default="hello" />
+  	<attribute name="fixed"   type="unsignedShort" fixed="65534"   />
+  </attributeGroup>
+  <attributeGroup name="derivedAttrGroup">
+  	<attributeGroup ref="avro:baseAttrGroup" />
+  </attributeGroup>
+  <complexType name="derivedTypeWithAttributes">
+  	<complexContent>
+  		<extension base="avro:simpleTypeWithAttributes">
+			<anyAttribute namespace="http://avro.apache.org/AvroTest" />
+  		</extension>
+  	</complexContent>
+  </complexType>
+  <complexType name="grandchildType">
+  	<complexContent>
+  		<extension base="avro:derivedTypeWithAttributes">
+			<anyAttribute namespace="##targetNamespace" />
+  		</extension>
+  	</complexContent>
+  </complexType>
+  <complexType name="simpleContentRestriction">
+  	<simpleContent>
+  		<restriction base="avro:simpleTypeWithAttributes">
+	  		<enumeration value="true"  />
+  			<enumeration value="false" />
+  		</restriction>
+  	</simpleContent>
+  </complexType>
+  <complexType name="complexExtension">
+  	<complexContent>
+  		<extension base="avro:baseType">
+  			<choice>
+  				<element ref="avro:listOfUnion" />
+  				<element ref="avro:unsignedLongList" />
+  			</choice>
+  			<attribute name="defaulted" type="normalizedString" default="hello" />
+  		</extension>
+  	</complexContent>
+  </complexType>
+  <element name="mixedType">
+  	<complexType mixed="true">
+  		<sequence>
+  			<element ref="avro:listOfUnion" />
+  			<element ref="avro:unsignedLongList" />
+  		</sequence>
+  	</complexType>
+  </element>
+</schema>

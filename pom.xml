@@ -84,6 +84,7 @@
         <module>xmlschema-core</module>
         <module>xmlschema-bundle-test</module>
         <module>w3c-testcases</module>
+        <module>xmlschema-walker</module>
     </modules>
     <build>
         <defaultGoal>install</defaultGoal>

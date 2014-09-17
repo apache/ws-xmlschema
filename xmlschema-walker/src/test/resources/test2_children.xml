@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License. 
+ -->
+<avro:root
+  anyURI="http://tempuri.org"
+  base64Binary="MA=="
+  boolean="true"
+  byte="57"
+  date="2014-07-27"
+  dateTime="2014-07-27T12:47:30"
+  decimal="65536"
+  double="32768.32768"
+  duration="P1D"
+  float="0.0"
+  gDay="---27"
+  gMonth="--07"
+  gMonthDay="--07-27"
+  gYear="2014"
+  gYearMonth="2014-07"
+  hexBinary="0F00"
+  id="idvalue0"
+  idref="idvalue0"
+  idrefs="idvalue0"
+  int="2147483647"
+  integer="9223372036854775808"
+  language="EN"
+  long="9223372036854775807"
+  name="Name"
+  ncName="NCName"
+  negativeInteger="-9223372036854775808"
+  nmtoken="NMTOKEN"
+  nmtokens="NMTOKENS"
+  nonNegativeInteger="9223372036854775808"
+  nonPositiveInteger="-9223372036854775808"
+  normalizedString="xmlIsFun"
+  positiveInteger="9223372036854775808"
+  qname="QName"
+  short="-32768"
+  string=""
+  time="12:47:30"
+  token="xmlSchema"
+  unsignedByte="255"
+  unsignedInt="4294967295"
+  unsignedLong="18446744073709551615"
+  unsignedShort="65535"
+  xmlns:avro="http://avro.apache.org/AvroTest"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://avro.apache.org/AvroTest test_schema.xsd ">
+
+	<avro:primitive>null</avro:primitive>
+	<avro:primitive>boolean</avro:primitive>
+	<avro:primitive>int</avro:primitive>
+	<avro:primitive>long</avro:primitive>
+	<avro:primitive>float</avro:primitive>
+	<avro:primitive>double</avro:primitive>
+	<avro:primitive>decimal</avro:primitive>
+	<avro:primitive>bytes</avro:primitive>
+	<avro:primitive>string</avro:primitive>
+	<avro:nonNullPrimitive>boolean</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>int</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>long</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>float</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>double</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>decimal</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>bytes</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>string</avro:nonNullPrimitive>
+</avro:root>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License. 
+ -->
+<avro:root
+  xmlns:avro="http://avro.apache.org/AvroTest"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://avro.apache.org/AvroTest test_schema.xsd ">
+
+	<avro:primitive>decimal</avro:primitive>
+	<avro:nonNullPrimitive>int</avro:nonNullPrimitive>
+	<avro:map avro:id="id1">
+		<avro:primitive>double</avro:primitive>
+		<avro:nonNullPrimitive>float</avro:nonNullPrimitive>
+	</avro:map>
+	<avro:map avro:id="id2">
+		<avro:primitive>null</avro:primitive>
+	</avro:map>
+	<avro:record>
+		<avro:nonNullPrimitive>decimal</avro:nonNullPrimitive>
+	</avro:record>
+	<avro:map avro:id="id3">
+		<avro:primitive>string</avro:primitive>
+		<avro:map avro:id="id4">
+			<avro:nonNullPrimitive>string</avro:nonNullPrimitive>
+		</avro:map>
+		<avro:map avro:id="id5">
+			<avro:primitive>long</avro:primitive>
+		</avro:map>
+	</avro:map>
+	<avro:nonNullPrimitive>long</avro:nonNullPrimitive>
+	<avro:nonNullPrimitive>boolean</avro:nonNullPrimitive>
+</avro:root>
