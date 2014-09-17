@@ -36,7 +36,7 @@ import java.util.Arrays;
  */
 
 public class XmlSchemaGroup extends XmlSchemaAnnotated implements XmlSchemaNamed,
-    XmlSchemaChoiceMember, XmlSchemaSequenceMember {
+    XmlSchemaChoiceMember, XmlSchemaSequenceMember, XmlSchemaAllMember {
 
     private XmlSchemaGroupParticle particle;
     private XmlSchemaNamedImpl namedDelegate;

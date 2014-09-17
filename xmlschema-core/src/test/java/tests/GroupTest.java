@@ -32,12 +32,12 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaChoice;
+import org.apache.ws.commons.schema.XmlSchemaChoiceMember;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaGroup;
 import org.apache.ws.commons.schema.XmlSchemaGroupRef;
-import org.apache.ws.commons.schema.XmlSchemaObject;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -113,8 +113,8 @@ public class GroupTest extends Assert {
         s.add("salePrice");
         s.add("clearancePrice");
         s.add("freePrice");
-        List<XmlSchemaObject> items = xsc.getItems();
-        Iterator<XmlSchemaObject> iterator = items.iterator();
+        List<XmlSchemaChoiceMember> items = xsc.getItems();
+        Iterator<XmlSchemaChoiceMember> iterator = items.iterator();
         while (iterator.hasNext()) {
             XmlSchemaElement e = (XmlSchemaElement)iterator.next();
             String eName = e.getName();

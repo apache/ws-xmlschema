@@ -41,7 +41,7 @@ import org.apache.ws.commons.schema.utils.XmlSchemaRefBase;
  */
 
 public class XmlSchemaElement extends XmlSchemaParticle implements TypeReceiver, XmlSchemaNamedWithForm,
-    XmlSchemaChoiceMember, XmlSchemaSequenceMember,
+    XmlSchemaChoiceMember, XmlSchemaSequenceMember, XmlSchemaAllMember,
     XmlSchemaItemWithRef<XmlSchemaElement> {
 
     /**

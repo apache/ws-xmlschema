@@ -160,16 +160,22 @@ public class XmlSchemaSerializer {
             allEl.appendChild(annotation);
         }
 
-        List<XmlSchemaElement> itemColl = allObj.getItems();
+        List<XmlSchemaAllMember> itemColl = allObj.getItems();
 
         if (itemColl != null) {
             int itemLength = itemColl.size();
 
             for (int i = 0; i < itemLength; i++) {
-                XmlSchemaObject obj = itemColl.get(i);
+                XmlSchemaAllMember obj = itemColl.get(i);
                 if (obj instanceof XmlSchemaElement) {
                     Element el = serializeElement(doc, (XmlSchemaElement)obj, schema);
                     allEl.appendChild(el);
+                } else if (obj instanceof XmlSchemaGroupRef) {
+                    Element group = serializeGroupRef(doc, (XmlSchemaGroupRef)obj, schema);
+                    allEl.appendChild(group);
+                } else if (obj instanceof XmlSchemaAny) {
+                    Element any = serializeAny(doc, (XmlSchemaAny)obj, schema);
+                    allEl.appendChild(any);
                 } else {
                     throw new XmlSchemaSerializerException("Only element "
                                                            + "allowed as child of all model type");
@@ -612,13 +618,13 @@ public class XmlSchemaSerializer {
             choice.appendChild(annotation);
         }
 
-        List<XmlSchemaObject> itemColl = choiceObj.getItems();
+        List<XmlSchemaChoiceMember> itemColl = choiceObj.getItems();
 
         if (itemColl != null) {
             int itemLength = itemColl.size();
 
             for (int i = 0; i < itemLength; i++) {
-                XmlSchemaObject obj = itemColl.get(i);
+                XmlSchemaChoiceMember obj = itemColl.get(i);
 
                 if (obj instanceof XmlSchemaElement) {
                     Element el = serializeElement(doc, (XmlSchemaElement)obj, schema);

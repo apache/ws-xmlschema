@@ -19,9 +19,11 @@
 
 package org.apache.ws.commons.schema;
 
+import org.apache.ws.commons.schema.utils.XmlSchemaObjectBase;
+
 /**
  * This interface exists to allow all of the items that can occur in a choice element
  * to have a type in common. It has no protocol.
  */
-public interface XmlSchemaChoiceMember {
+public interface XmlSchemaChoiceMember extends XmlSchemaObjectBase {
 }

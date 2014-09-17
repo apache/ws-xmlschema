@@ -30,10 +30,10 @@ import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
 
 import org.apache.ws.commons.schema.XmlSchemaChoice;
+import org.apache.ws.commons.schema.XmlSchemaChoiceMember;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaElement;
-import org.apache.ws.commons.schema.XmlSchemaObject;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -78,8 +78,8 @@ public class ChoiceTest extends Assert {
         Set<String> s = new HashSet<String>();
         s.add("desktop");
         s.add("laptop");
-        List<XmlSchemaObject> items = choice.getItems();
-        Iterator<XmlSchemaObject> iterator = items.iterator();
+        List<XmlSchemaChoiceMember> items = choice.getItems();
+        Iterator<XmlSchemaChoiceMember> iterator = items.iterator();
         while (iterator.hasNext()) {
             XmlSchemaElement e = (XmlSchemaElement)iterator.next();
             String eName = e.getName();

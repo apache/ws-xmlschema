@@ -30,14 +30,15 @@ import javax.xml.namespace.QName;
 
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaAll;
+import org.apache.ws.commons.schema.XmlSchemaAllMember;
 import org.apache.ws.commons.schema.XmlSchemaAny;
 import org.apache.ws.commons.schema.XmlSchemaChoice;
+import org.apache.ws.commons.schema.XmlSchemaChoiceMember;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaGroup;
 import org.apache.ws.commons.schema.XmlSchemaGroupParticle;
 import org.apache.ws.commons.schema.XmlSchemaGroupRef;
-import org.apache.ws.commons.schema.XmlSchemaObject;
 import org.apache.ws.commons.schema.XmlSchemaParticle;
 import org.apache.ws.commons.schema.XmlSchemaSequence;
 import org.apache.ws.commons.schema.XmlSchemaSequenceMember;
@@ -437,11 +438,20 @@ public final class XmlSchemaWalker {
         // 4. Walk the children.
         if (all != null) {
             children = new ArrayList<XmlSchemaParticle>(all.getItems().size());
-            children.addAll(all.getItems());
-
+            for (XmlSchemaAllMember item : all.getItems()) {
+                if (item instanceof XmlSchemaGroup) {
+                    children.add(((XmlSchemaGroup)item).getParticle());
+                } else if (item instanceof XmlSchemaParticle) {
+                    children.add((XmlSchemaParticle)item);
+                } else {
+                    throw new IllegalArgumentException(
+                                                       "All child is not an XmlSchemaGroup or XmlSchemaParticle; "
+                                                           + "it is a " + item.getClass().getName());
+                }
+            }
         } else if (choice != null) {
             children = new ArrayList<XmlSchemaParticle>(choice.getItems().size());
-            for (XmlSchemaObject item : choice.getItems()) {
+            for (XmlSchemaChoiceMember item : choice.getItems()) {
                 if (item instanceof XmlSchemaGroup) {
                     children.add(((XmlSchemaGroup)item).getParticle());
                 } else if (item instanceof XmlSchemaParticle) {

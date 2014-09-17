@@ -30,16 +30,16 @@ import java.util.List;
  */
 public class XmlSchemaChoice extends XmlSchemaGroupParticle implements XmlSchemaChoiceMember,
     XmlSchemaSequenceMember {
-    private List<XmlSchemaObject> items;
+    private List<XmlSchemaChoiceMember> items;
 
     /**
      * Creates new XmlSchemaChoice
      */
     public XmlSchemaChoice() {
-        items = new ArrayList<XmlSchemaObject>();
+        items = new ArrayList<XmlSchemaChoiceMember>();
     }
 
-    public List<XmlSchemaObject> getItems() {
+    public List<XmlSchemaChoiceMember> getItems() {
         return items;
     }
 

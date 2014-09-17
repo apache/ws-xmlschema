@@ -25,7 +25,7 @@ package org.apache.ws.commons.schema;
  */
 
 public class XmlSchemaAny extends XmlSchemaParticle 
-    implements XmlSchemaChoiceMember, XmlSchemaSequenceMember {
+    implements XmlSchemaChoiceMember, XmlSchemaSequenceMember, XmlSchemaAllMember {
 
     /**
      * Namespaces containing the elements that can be used.

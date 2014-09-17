@@ -28,16 +28,16 @@ import java.util.List;
  */
 public class XmlSchemaAll extends XmlSchemaGroupParticle {
     
-    private List<XmlSchemaElement> items;
+    private List<XmlSchemaAllMember> items;
 
     /**
      * Creates new XmlSchemaAll
      */
     public XmlSchemaAll() {
-        items = new ArrayList<XmlSchemaElement>();
+        items = new ArrayList<XmlSchemaAllMember>();
     }
 
-    public List<XmlSchemaElement> getItems() {
+    public List<XmlSchemaAllMember> getItems() {
         return items;
     }
 
