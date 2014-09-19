@@ -74,7 +74,7 @@ public class TestXmlSchemaPathFinder {
 
         final File xmlFile = UtilsForTests.buildFile("src", "test", "resources", "test1_root.xml");
 
-        XmlSchemaPathNode traversal = runTest(schemaFile, xmlFile, root);
+        XmlSchemaPathNode<Void, Void> traversal = runTest(schemaFile, xmlFile, root);
 
         Map<QName, ExpectedElement> expectedElements = new HashMap<QName, ExpectedElement>();
 
@@ -105,7 +105,7 @@ public class TestXmlSchemaPathFinder {
 
         final File xmlFile = UtilsForTests.buildFile("src", "test", "resources", "test2_children.xml");
 
-        XmlSchemaPathNode traversal = runTest(schemaFile, xmlFile, root);
+        XmlSchemaPathNode<Void, Void> traversal = runTest(schemaFile, xmlFile, root);
 
         Map<QName, ExpectedElement> expectedElements = new HashMap<QName, ExpectedElement>();
 
@@ -227,7 +227,7 @@ public class TestXmlSchemaPathFinder {
 
         final File xmlFile = UtilsForTests.buildFile("src", "test", "resources", "test3_grandchildren.xml");
 
-        XmlSchemaPathNode traversal = runTest(schemaFile, xmlFile, root);
+        XmlSchemaPathNode<Void, Void> traversal = runTest(schemaFile, xmlFile, root);
 
         Map<QName, ExpectedElement> expectedElements = new HashMap<QName, ExpectedElement>();
 
@@ -728,7 +728,7 @@ public class TestXmlSchemaPathFinder {
             }
         }
 
-        XmlSchemaPathNode traversal = runTest(xmlSchemaCollection, xmlFile, root);
+        XmlSchemaPathNode<Void, Void> traversal = runTest(xmlSchemaCollection, xmlFile, root);
 
         Map<QName, ExpectedElement> expectedElements = new HashMap<QName, ExpectedElement>();
 
@@ -1252,7 +1252,7 @@ public class TestXmlSchemaPathFinder {
         validate(expPath, traversal);
     }
 
-    private XmlSchemaPathNode runTest(File schemaFile, File xmlFile, QName root) throws Exception {
+    private <U, V> XmlSchemaPathNode<U, V> runTest(File schemaFile, File xmlFile, QName root) throws Exception {
 
         XmlSchemaCollection xmlSchemaCollection = new XmlSchemaCollection();
 
@@ -1269,7 +1269,7 @@ public class TestXmlSchemaPathFinder {
         return runTest(xmlSchemaCollection, xmlFile, root);
     }
 
-    private XmlSchemaPathNode runTest(XmlSchemaCollection xmlSchemaCollection, File xmlFile, QName root)
+    private <U, V> XmlSchemaPathNode<U, V> runTest(XmlSchemaCollection xmlSchemaCollection, File xmlFile, QName root)
         throws Exception {
 
         XmlSchemaStateMachineGenerator stateMachineGen = new XmlSchemaStateMachineGenerator();
@@ -1282,7 +1282,7 @@ public class TestXmlSchemaPathFinder {
 
         XmlSchemaStateMachineNode stateMachine = stateMachineGen.getStartNode();
 
-        XmlSchemaPathFinder pathFinder = new XmlSchemaPathFinder(stateMachine);
+        XmlSchemaPathFinder<U, V> pathFinder = new XmlSchemaPathFinder<U, V>(stateMachine);
 
         Document xmlDoc = docBuilder.parse(xmlFile);
 
@@ -1293,9 +1293,9 @@ public class TestXmlSchemaPathFinder {
         return pathFinder.getXmlSchemaTraversal();
     }
 
-    void validate(ArrayList<ExpectedPathNode> expPath, XmlSchemaPathNode start) {
-        XmlSchemaPathNode prev = null;
-        XmlSchemaPathNode curr = start;
+    <U, V> void validate(ArrayList<ExpectedPathNode> expPath, XmlSchemaPathNode<U, V> start) {
+        XmlSchemaPathNode<U, V> prev = null;
+        XmlSchemaPathNode<U, V> curr = start;
         int position = 0;
 
         do {

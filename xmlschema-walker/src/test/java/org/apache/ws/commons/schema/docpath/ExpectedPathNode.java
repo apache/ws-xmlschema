@@ -37,7 +37,7 @@ class ExpectedPathNode {
         expIteration = expectedIteration;
     }
 
-    void validate(int pathIndex, XmlSchemaPathNode actualPathNode) {
+    void validate(int pathIndex, XmlSchemaPathNode<?, ?> actualPathNode) {
         assertEquals("Path Index: " + pathIndex, expDirection, actualPathNode.getDirection());
 
         ExpectedNode.validate("Path Index: " + pathIndex, expDocNode, actualPathNode.getDocumentNode(), null);

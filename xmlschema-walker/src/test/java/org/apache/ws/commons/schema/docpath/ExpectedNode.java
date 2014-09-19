@@ -51,7 +51,7 @@ public class ExpectedNode {
         this.elemQName = elemQName;
     }
 
-    static void validate(String msg, ExpectedNode exp, XmlSchemaDocumentNode docNode,
+    static <U> void validate(String msg, ExpectedNode exp, XmlSchemaDocumentNode<U> docNode,
                          Map<QName, ExpectedElement> expElements) {
 
         assertEquals(msg, exp.nodeType, docNode.getStateMachineNode().getNodeType());
@@ -75,13 +75,13 @@ public class ExpectedNode {
         for (int iteration = 1; iteration <= docNode.getIteration(); ++iteration) {
             SortedMap<Integer, ExpectedNode> expected = exp.children.get(iteration - 1);
 
-            SortedMap<Integer, XmlSchemaDocumentNode> actual = docNode.getChildren(iteration);
+            SortedMap<Integer, XmlSchemaDocumentNode<U>> actual = docNode.getChildren(iteration);
 
             assertEquals(msg + ", iteration=" + iteration + "; " + exp.nodeType, expected.size(),
                          (actual == null) ? 0 : actual.size());
 
             if (actual != null) {
-                for (Map.Entry<Integer, XmlSchemaDocumentNode> actEntry : actual.entrySet()) {
+                for (Map.Entry<Integer, XmlSchemaDocumentNode<U>> actEntry : actual.entrySet()) {
                     ExpectedNode expNode = expected.get(actEntry.getKey());
                     assertNotNull(msg + ", iteration=" + iteration + ", child = " + actEntry.getKey()
                                   + ": entry " + actEntry.getKey() + " is not expected.", expNode);

@@ -46,7 +46,7 @@ public final class XmlSchemaDocumentNode<U> {
     private XmlSchemaStateMachineNode stateMachineNode;
     private XmlSchemaDocumentNode<U> parent;
     private List<SortedMap<Integer, XmlSchemaDocumentNode<U>>> children;
-    private List<XmlSchemaPathNode> visitors;
+    private List<XmlSchemaPathNode<U, ?>> visitors;
     private boolean receivedContent;
     private U userDefinedContent;
 
@@ -120,7 +120,7 @@ public final class XmlSchemaDocumentNode<U> {
      * many occurrences are active via the current path winding through the
      * schema.
      */
-    void addVisitor(XmlSchemaPathNode path) {
+    void addVisitor(XmlSchemaPathNode<U, ?> path) {
         if (path.getDocumentNode() != this) {
             throw new IllegalArgumentException("Path node must have this XmlSchemaDocumentNode "
                                                + "as its document node.");
@@ -137,7 +137,7 @@ public final class XmlSchemaDocumentNode<U> {
         }
 
         if (visitors == null) {
-            visitors = new ArrayList<XmlSchemaPathNode>(4);
+            visitors = new ArrayList<XmlSchemaPathNode<U, ?>>(4);
         }
 
         if (children != null) {
@@ -155,7 +155,7 @@ public final class XmlSchemaDocumentNode<U> {
         visitors.add(path);
     }
 
-    boolean removeVisitor(XmlSchemaPathNode path) {
+    boolean removeVisitor(XmlSchemaPathNode<U, ?> path) {
         if ((visitors == null) || visitors.isEmpty()) {
             return false;
         }
@@ -230,7 +230,7 @@ public final class XmlSchemaDocumentNode<U> {
         }
     }
 
-    void set(XmlSchemaDocumentNode parent, XmlSchemaStateMachineNode stateMachineNode) {
+    void set(XmlSchemaDocumentNode<U> parent, XmlSchemaStateMachineNode stateMachineNode) {
 
         this.parent = parent;
         this.stateMachineNode = stateMachineNode;

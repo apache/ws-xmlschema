@@ -34,7 +34,6 @@ import java.util.Set;
 import javax.xml.transform.stream.StreamSource;
 
 import org.junit.Assert;
-
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaAll;
 import org.apache.ws.commons.schema.XmlSchemaAny;
@@ -497,6 +496,7 @@ public class TestSchemaWalker {
     /**
      * Test for src/main/resources/test_schema.xsd
      */
+    @SuppressWarnings("unchecked")
     @Test
     public void test() throws Exception {
         // Build the expectations.

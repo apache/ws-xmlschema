@@ -249,7 +249,7 @@ public class TestXmlSchemaNamespaceContext {
         assertEquals(expected.length, found);
     }
 
-    static void assertArrayEquality(String[] expected, Iterator actual) {
+    static void assertArrayEquality(String[] expected, Iterator<?> actual) {
         HashSet<String> expSet = new HashSet<String>();
         for (String exp : expected) {
             expSet.add(exp);

@@ -49,7 +49,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * XML.
  * </p>
  */
-public final class XmlSchemaPathFinder extends DefaultHandler {
+public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
 
     /*
      * If a group loops back on itself, we don't want to loop until the stack
@@ -60,17 +60,17 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
     private final XmlSchemaNamespaceContext nsContext;
 
-    private XmlSchemaPathNode rootPathNode;
+    private XmlSchemaPathNode<U, V> rootPathNode;
 
-    private XmlSchemaPathNode currentPath;
+    private XmlSchemaPathNode<U, V> currentPath;
 
     private ArrayList<TraversedElement> traversedElements;
-    private ArrayList<DecisionPoint> decisionPoints;
+    private ArrayList<DecisionPoint<U, V>> decisionPoints;
 
     private ArrayList<QName> elementStack;
     private ArrayList<QName> anyStack;
 
-    private XmlSchemaPathManager pathMgr;
+    private XmlSchemaPathManager<U, V> pathMgr;
 
     /*
      * We want to keep track of all of the valid path segments to a particular
@@ -83,20 +83,22 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
      * directly after it, while leaving the new start node unlinked. Path
      * segments may also be recycled when a decision point is refuted.
      */
-    private final class PathSegment implements Comparable<PathSegment> {
+    private static final class PathSegment<U, V> implements Comparable<PathSegment<U, V>> {
 
-        private XmlSchemaPathNode start;
-        private XmlSchemaPathNode end;
-        private XmlSchemaPathNode afterStart;
+        private XmlSchemaPathManager<U, V> pathMgr;
+        private XmlSchemaPathNode<U, V> start;
+        private XmlSchemaPathNode<U, V> end;
+        private XmlSchemaPathNode<U, V> afterStart;
         private int length;
         private int afterStartPathIndex;
 
-        PathSegment(XmlSchemaPathNode node) {
+        PathSegment(XmlSchemaPathManager<U, V> pathMgr, XmlSchemaPathNode<U, V> node) {
+            this.pathMgr = pathMgr;
             set(node);
         }
 
         @Override
-        public int compareTo(PathSegment o) {
+        public int compareTo(PathSegment<U, V> o) {
             if (this == o) {
                 return 0;
             }
@@ -116,8 +118,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                     return -1;
 
                 } else {
-                    throw new IllegalStateException(
-                                                    "The end nodes do not have the same machine node type, so one "
+                    throw new IllegalStateException("The end nodes do not have the same machine node type, so one "
                                                         + "should be an ELEMENT and the other should be an ANY.  "
                                                         + "However, this end node is a "
                                                         + end.getStateMachineNode().getNodeType()
@@ -138,8 +139,8 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
              */
             if ((thisLength > 0) && (thatLength > 0)) {
                 // Both paths have more than just one element.
-                XmlSchemaPathNode thisIter = afterStart;
-                XmlSchemaPathNode thatIter = o.getAfterStart();
+                XmlSchemaPathNode<U, V> thisIter = afterStart;
+                XmlSchemaPathNode<U, V> thatIter = o.getAfterStart();
 
                 while ((thisIter != null) && (thatIter != null)) {
                     if (thisIter.getDirection().getRank() < thatIter.getDirection().getRank()) {
@@ -200,7 +201,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
         int getLength() {
             if ((length == 0) && (start != end)) {
-                for (XmlSchemaPathNode iter = afterStart; iter != end; iter = iter.getNext()) {
+                for (XmlSchemaPathNode<U, V> iter = afterStart; iter != end; iter = iter.getNext()) {
                     ++length;
                 }
                 ++length; // (afterStart -> end) + start
@@ -214,9 +215,9 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
          * to know the newStart's path index to reach the clonedStartNode, so we
          * know how to properly link them later.
          */
-        void prepend(XmlSchemaPathNode newStart, int pathIndexToNextNode) {
+        void prepend(XmlSchemaPathNode<U, V> newStart, int pathIndexToNextNode) {
             // We need to clone start and make it the afterStart.
-            final XmlSchemaPathNode clonedStartNode = pathMgr.clone(start);
+            final XmlSchemaPathNode<U, V> clonedStartNode = pathMgr.clone(start);
 
             if (afterStart != null) {
                 afterStart.setPreviousNode(clonedStartNode);
@@ -234,15 +235,15 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             length = 0; // Force a recalculation.
         }
 
-        XmlSchemaPathNode getStart() {
+        XmlSchemaPathNode<U, V> getStart() {
             return start;
         }
 
-        XmlSchemaPathNode getEnd() {
+        XmlSchemaPathNode<U, V> getEnd() {
             return end;
         }
 
-        XmlSchemaPathNode getAfterStart() {
+        XmlSchemaPathNode<U, V> getAfterStart() {
             return afterStart;
         }
 
@@ -250,7 +251,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             return afterStartPathIndex;
         }
 
-        void set(XmlSchemaPathNode node) {
+        void set(XmlSchemaPathNode<U, V> node) {
             if (node == null) {
                 throw new IllegalArgumentException("DocumentPathNode cannot be null.");
             }
@@ -270,7 +271,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             str.append(start.getStateMachineNode()).append(" ]");
 
             if (afterStart != null) {
-                XmlSchemaPathNode path = afterStart;
+                XmlSchemaPathNode<U, V> path = afterStart;
 
                 do {
                     str.append(" [").append(path.getDirection()).append(" | ");
@@ -297,16 +298,16 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
      * shortest through the longest, until we find a path that successfully
      * navigates both the document and the schema.
      */
-    private static class DecisionPoint {
+    private static class DecisionPoint<U, V> {
 
-        private final XmlSchemaPathNode decisionPoint;
-        private final List<PathSegment> choices;
+        private final XmlSchemaPathNode<U, V> decisionPoint;
+        private final List<PathSegment<U, V>> choices;
         private final int traversedElementIndex;
         private final ArrayList<QName> elementStack;
         private final ArrayList<QName> anyStack;
 
-        DecisionPoint(XmlSchemaPathNode decisionPoint, List<PathSegment> choices, int traversedElementIndex,
-                      ArrayList<QName> elementStack, ArrayList<QName> anyStack) {
+        DecisionPoint(XmlSchemaPathNode<U, V> decisionPoint, List<PathSegment<U, V>> choices,
+                      int traversedElementIndex, ArrayList<QName> elementStack, ArrayList<QName> anyStack) {
 
             if (decisionPoint == null) {
                 throw new IllegalArgumentException("The decision point path node cannot be null.");
@@ -337,7 +338,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
          * <code>null</code> if all <code>PathSegment</code>s have been
          * followed.
          */
-        PathSegment tryNextPath() {
+        PathSegment<U, V> tryNextPath() {
             if (choices.isEmpty()) {
                 return null;
             } else {
@@ -345,7 +346,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             }
         }
 
-        XmlSchemaPathNode getDecisionPoint() {
+        XmlSchemaPathNode<U, V> getDecisionPoint() {
             return decisionPoint;
         }
 
@@ -354,7 +355,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
         }
 
         ArrayList<QName> getAnyStack() {
-            return (anyStack == null) ? null : ((ArrayList<QName>)anyStack.clone());
+            return (anyStack == null) ? null : new ArrayList<QName>(anyStack);
         }
 
         @Override
@@ -367,7 +368,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             str.append(decisionPoint.getStateMachineNode());
             str.append(" ]").append(nl);
 
-            for (PathSegment choice : choices) {
+            for (PathSegment<U, V> choice : choices) {
                 str.append('\t').append(choice).append(nl);
             }
 
@@ -418,7 +419,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
      * documents.
      */
     public XmlSchemaPathFinder(XmlSchemaStateMachineNode root) {
-        pathMgr = new XmlSchemaPathManager();
+        pathMgr = new XmlSchemaPathManager<U, V>();
         nsContext = new XmlSchemaNamespaceContext();
 
         rootPathNode = pathMgr.createStartPathNode(XmlSchemaPathNode.Direction.CHILD, root);
@@ -503,9 +504,9 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             }
 
             // 1. Find possible paths.
-            List<PathSegment> possiblePaths = find(currentPath, elemQName);
+            List<PathSegment<U, V>> possiblePaths = find(currentPath, elemQName);
 
-            PathSegment nextPath = null;
+            PathSegment<U, V> nextPath = null;
 
             if ((possiblePaths != null) && !possiblePaths.isEmpty()) {
                 /*
@@ -515,12 +516,12 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                  * paths.
                  */
                 if (possiblePaths.size() > 1) {
-                    final DecisionPoint decisionPoint = new DecisionPoint(currentPath, possiblePaths,
-                                                                          traversedElements.size(),
-                                                                          elementStack, anyStack);
+                    final DecisionPoint<U, V> decisionPoint =
+                        new DecisionPoint<U, V>(currentPath, possiblePaths, traversedElements.size(),
+                                                elementStack, anyStack);
 
                     if (decisionPoints == null) {
-                        decisionPoints = new ArrayList<DecisionPoint>(4);
+                        decisionPoints = new ArrayList<DecisionPoint<U, V>>(4);
                     }
                     decisionPoints.add(decisionPoint);
 
@@ -545,7 +546,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                      * the top path (the one we just tried), and select the next
                      * one.
                      */
-                    final DecisionPoint priorPoint = decisionPoints.get(decisionPoints.size() - 1);
+                    final DecisionPoint<U, V> priorPoint = decisionPoints.get(decisionPoints.size() - 1);
 
                     nextPath = priorPoint.tryNextPath();
 
@@ -597,9 +598,9 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                                 break;
 
                             } else if (possiblePaths.size() > 1) {
-                                final DecisionPoint decisionPoint = new DecisionPoint(currentPath,
-                                                                                      possiblePaths, index,
-                                                                                      elementStack, anyStack);
+                                final DecisionPoint<U, V> decisionPoint =
+                                    new DecisionPoint<U, V>(currentPath, possiblePaths, index, elementStack, anyStack);
+
                                 decisionPoints.add(decisionPoint);
                                 nextPath = decisionPoint.tryNextPath();
 
@@ -651,9 +652,10 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
                         } else if (te.traversal.equals(TraversedElement.Traversal.CONTENT)) {
 
-                            final XmlSchemaPathNode contentPath = pathMgr
-                                .addParentSiblingOrContentNodeToPath(currentPath,
-                                                                     XmlSchemaPathNode.Direction.CONTENT);
+                            final XmlSchemaPathNode<U, V> contentPath =
+                                pathMgr
+                                  .addParentSiblingOrContentNodeToPath(currentPath,
+                                                                       XmlSchemaPathNode.Direction.CONTENT);
 
                             currentPath.setNextNode(-1, contentPath);
                             currentPath = contentPath;
@@ -685,9 +687,10 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                         continue;
 
                     } else if (possiblePaths.size() > 1) {
-                        final DecisionPoint decisionPoint = new DecisionPoint(currentPath, possiblePaths,
-                                                                              traversedElements.size(),
-                                                                              elementStack, anyStack);
+                        final DecisionPoint<U, V> decisionPoint =
+                            new DecisionPoint<U, V>(currentPath, possiblePaths, traversedElements.size(),
+                                                    elementStack, anyStack);
+
                         decisionPoints.add(decisionPoint);
                         nextPath = decisionPoint.tryNextPath();
                     } else {
@@ -804,7 +807,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
             currentPath.getDocumentNode().setReceivedContent(true);
 
-            final XmlSchemaPathNode contentPath = pathMgr
+            final XmlSchemaPathNode<U, V> contentPath = pathMgr
                 .addParentSiblingOrContentNodeToPath(currentPath, XmlSchemaPathNode.Direction.CONTENT);
 
             currentPath.setNextNode(-1, contentPath);
@@ -921,12 +924,12 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
      * traversed.
      * </p>
      */
-    public XmlSchemaPathNode getXmlSchemaTraversal() {
+    public XmlSchemaPathNode<U, V> getXmlSchemaTraversal() {
         return rootPathNode;
     }
 
-    private static Fulfillment isPositionFulfilled(XmlSchemaPathNode currentPath, List<Integer> possiblePaths) {
-
+    private static <U, V> Fulfillment isPositionFulfilled(XmlSchemaPathNode<U, V> currentPath,
+                                                          List<Integer> possiblePaths) {
         boolean completelyFulfilled = true;
         boolean partiallyFulfilled = true;
 
@@ -957,7 +960,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
         final List<XmlSchemaStateMachineNode> nextStates = state.getPossibleNextStates();
 
-        Map<Integer, XmlSchemaDocumentNode> children = null;
+        Map<Integer, XmlSchemaDocumentNode<U>> children = null;
         if (currentPath.getDocumentNode() != null) {
             children = currentPath.getDocumentNode().getChildren();
         }
@@ -981,7 +984,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                 XmlSchemaStateMachineNode nextState = nextStates.get(stateIndex);
 
                 if ((children != null) && children.containsKey(stateIndex)) {
-                    final XmlSchemaDocumentNode child = children.get(stateIndex);
+                    final XmlSchemaDocumentNode<U> child = children.get(stateIndex);
                     final int iteration = child.getIteration();
                     if (iteration >= nextState.getMinOccurs()) {
                         groupPartiallyFulfilled = true;
@@ -1019,7 +1022,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                 final XmlSchemaStateMachineNode nextState = nextStates.get(stateIndex);
 
                 if ((children != null) && children.containsKey(stateIndex)) {
-                    final XmlSchemaDocumentNode child = children.get(stateIndex);
+                    final XmlSchemaDocumentNode<U> child = children.get(stateIndex);
                     final int iteration = child.getIteration();
                     if (iteration < nextState.getMinOccurs()) {
                         partiallyFulfilled = false;
@@ -1055,7 +1058,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                 final XmlSchemaStateMachineNode nextState = nextStates.get(stateIndex);
 
                 if ((children != null) && children.containsKey(stateIndex)) {
-                    final XmlSchemaDocumentNode child = children.get(stateIndex);
+                    final XmlSchemaDocumentNode<U> child = children.get(stateIndex);
                     if (child.getIteration() < nextState.getMinOccurs()) {
                         partiallyFulfilled = false;
                     }
@@ -1093,9 +1096,9 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
         return fulfillment;
     }
 
-    private List<PathSegment> find(XmlSchemaPathNode startNode, QName elemQName) {
+    private List<PathSegment<U, V>> find(XmlSchemaPathNode<U, V> startNode, QName elemQName) {
 
-        final XmlSchemaPathNode startOfPath = startNode;
+        final XmlSchemaPathNode<U, V> startOfPath = startNode;
 
         if (startNode.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
             && !elementStack.isEmpty()
@@ -1143,20 +1146,20 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                                                         .getQName());
             }
 
-            final XmlSchemaPathNode childPath = pathMgr.addChildNodeToPath(startNode, 0);
+            final XmlSchemaPathNode<U, V> childPath = pathMgr.addChildNodeToPath(startNode, 0);
 
             startNode.setNextNode(0, childPath);
             startNode = childPath;
         }
 
-        final List<PathSegment> choices = find(startNode, elemQName, null);
+        final List<PathSegment<U, V>> choices = find(startNode, elemQName, null);
 
         if ((choices != null) && (startOfPath != startNode)) {
             /*
              * If we moved down to the children, we need to prepend the path
              * with the original start node.
              */
-            for (PathSegment choice : choices) {
+            for (PathSegment<U, V> choice : choices) {
                 choice.prepend(startOfPath, 0);
             }
         }
@@ -1164,15 +1167,15 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
         return choices;
     }
 
-    private List<PathSegment> find(XmlSchemaPathNode startNode, QName elemQName,
+    private List<PathSegment<U, V>> find(XmlSchemaPathNode<U, V> startNode, QName elemQName,
                                    XmlSchemaStateMachineNode doNotFollow) {
 
         final ArrayList<Integer> childrenNodes = new ArrayList<Integer>();
         final boolean isFulfilled = !isPositionFulfilled(startNode, childrenNodes).equals(Fulfillment.NOT);
 
         // First, try searching down the tree.
-        List<PathSegment> choices = null;
-        List<PathSegment> currChoices = null;
+        List<PathSegment<U, V>> choices = null;
+        List<PathSegment<U, V>> currChoices = null;
 
         if (startNode.getIteration() > startNode.getDocIteration()) {
             choices = find(startNode, elemQName, 0);
@@ -1185,11 +1188,11 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                      */
                     continue;
                 }
-                final XmlSchemaPathNode currPath = pathMgr.addChildNodeToPath(startNode, childPath);
+                final XmlSchemaPathNode<U, V> currPath = pathMgr.addChildNodeToPath(startNode, childPath);
 
                 currChoices = find(currPath, elemQName, 0);
                 if (currChoices != null) {
-                    for (PathSegment choice : currChoices) {
+                    for (PathSegment<U, V> choice : currChoices) {
                         choice.prepend(startNode, childPath);
                     }
 
@@ -1207,13 +1210,13 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
             // Try siblings.
             if (startNode.getIteration() < startNode.getMaxOccurs()) {
-                final XmlSchemaPathNode siblingPath = pathMgr
+                final XmlSchemaPathNode<U, V> siblingPath = pathMgr
                     .addParentSiblingOrContentNodeToPath(startNode, XmlSchemaPathNode.Direction.SIBLING);
                 siblingPath.setIteration(startNode.getIteration() + 1);
 
                 currChoices = find(siblingPath, elemQName, 0);
                 if (currChoices != null) {
-                    for (PathSegment choice : currChoices) {
+                    for (PathSegment<U, V> choice : currChoices) {
                         choice.prepend(startNode, -1);
                     }
 
@@ -1231,7 +1234,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                 return choices;
             }
 
-            final XmlSchemaPathNode path = pathMgr
+            final XmlSchemaPathNode<U, V> path = pathMgr
                 .addParentSiblingOrContentNodeToPath(startNode, XmlSchemaPathNode.Direction.PARENT);
 
             if (path.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
@@ -1240,10 +1243,10 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                 return choices;
             }
 
-            final List<PathSegment> pathsOfParent = find(path, elemQName, startNode.getStateMachineNode());
+            final List<PathSegment<U, V>> pathsOfParent = find(path, elemQName, startNode.getStateMachineNode());
 
             if (pathsOfParent != null) {
-                for (PathSegment choice : pathsOfParent) {
+                for (PathSegment<U, V> choice : pathsOfParent) {
                     choice.prepend(startNode, -1);
                 }
 
@@ -1261,7 +1264,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
         return choices;
     }
 
-    private List<PathSegment> find(XmlSchemaPathNode startNode, QName elemQName, int currDepth) {
+    private List<PathSegment<U, V>> find(XmlSchemaPathNode<U, V> startNode, QName elemQName, int currDepth) {
 
         final XmlSchemaStateMachineNode state = startNode.getStateMachineNode();
 
@@ -1301,15 +1304,15 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                                             + " has no children.  Found when processing " + elemQName);
         }
 
-        List<PathSegment> choices = null;
+        List<PathSegment<U, V>> choices = null;
 
         switch (state.getNodeType()) {
         case ELEMENT: {
             if (state.getElement().getQName().equals(elemQName)
                 && startNode.getIteration() <= state.getMaxOccurs()) {
 
-                choices = new ArrayList<PathSegment>(1);
-                choices.add(new PathSegment(startNode));
+                choices = new ArrayList<PathSegment<U, V>>(1);
+                choices.add(new PathSegment<U, V>(pathMgr, startNode));
             }
         }
             break;
@@ -1333,7 +1336,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                 .getPossibleNextStates().size(); ++stateIndex) {
 
                 // Process child.
-                final XmlSchemaPathNode nextPath = pathMgr.addChildNodeToPath(startNode, stateIndex);
+                final XmlSchemaPathNode<U, V> nextPath = pathMgr.addChildNodeToPath(startNode, stateIndex);
 
                 /*
                  * Both the tree node's and the document path node's state
@@ -1352,10 +1355,10 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
                 final boolean reachedMinOccurs = (nextPath.getDocIteration() >= nextPath.getMinOccurs());
 
-                final List<PathSegment> seqPaths = find(nextPath, elemQName, currDepth + 1);
+                final List<PathSegment<U, V>> seqPaths = find(nextPath, elemQName, currDepth + 1);
 
                 if (seqPaths != null) {
-                    for (PathSegment seqPath : seqPaths) {
+                    for (PathSegment<U, V> seqPath : seqPaths) {
                         seqPath.prepend(startNode, stateIndex);
                     }
 
@@ -1410,12 +1413,12 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                                                         + nextState.getNodeType() + '.');
                 }
 
-                final XmlSchemaPathNode nextPath = pathMgr.addChildNodeToPath(startNode, stateIndex);
+                final XmlSchemaPathNode<U, V> nextPath = pathMgr.addChildNodeToPath(startNode, stateIndex);
 
-                final List<PathSegment> choicePaths = find(nextPath, elemQName, currDepth + 1);
+                final List<PathSegment<U, V>> choicePaths = find(nextPath, elemQName, currDepth + 1);
 
                 if (choicePaths != null) {
-                    for (PathSegment choicePath : choicePaths) {
+                    for (PathSegment<U, V> choicePath : choicePaths) {
                         choicePath.prepend(startNode, stateIndex);
                     }
 
@@ -1447,8 +1450,8 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             final XmlSchemaAny any = state.getAny();
 
             if (any.getNamespace() == null) {
-                choices = new ArrayList<PathSegment>(1);
-                choices.add(new PathSegment(startNode));
+                choices = new ArrayList<PathSegment<U, V>>(1);
+                choices.add(new PathSegment<U, V>(pathMgr, startNode));
                 break;
             }
 
@@ -1497,8 +1500,8 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
             }
 
             if (matches) {
-                choices = new ArrayList<PathSegment>(1);
-                choices.add(new PathSegment(startNode));
+                choices = new ArrayList<PathSegment<U, V>>(1);
+                choices.add(new PathSegment<U, V>(pathMgr, startNode));
             }
         }
             break;
@@ -1537,8 +1540,8 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                                             + state.getNodeType());
         }
 
-        XmlSchemaDocumentNode iter = currentPath.getDocumentNode();
-        XmlSchemaPathNode path = currentPath;
+        XmlSchemaDocumentNode<U> iter = currentPath.getDocumentNode();
+        XmlSchemaPathNode<U, V> path = currentPath;
 
         do {
             if (iter.getIteration() < iter.getStateMachineNode().getMaxOccurs()) {
@@ -1556,7 +1559,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
                 break;
             }
 
-            final XmlSchemaPathNode nextPath = pathMgr
+            final XmlSchemaPathNode<U, V> nextPath = pathMgr
                 .addParentSiblingOrContentNodeToPath(path, XmlSchemaPathNode.Direction.PARENT);
 
             path.setNextNode(-1, nextPath);
@@ -1568,7 +1571,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
     }
 
     private void walkUpToElement(QName element) {
-        XmlSchemaDocumentNode iter = currentPath.getDocumentNode();
+        XmlSchemaDocumentNode<U> iter = currentPath.getDocumentNode();
 
         if (iter.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
             && iter.getStateMachineNode().getElement().getQName().equals(element)) {
@@ -1580,7 +1583,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
             iter = iter.getParent();
             if (iter != null) {
-                final XmlSchemaPathNode nextPath = pathMgr
+                final XmlSchemaPathNode<U, V> nextPath = pathMgr
                     .addParentSiblingOrContentNodeToPath(currentPath, XmlSchemaPathNode.Direction.PARENT);
 
                 currentPath.setNextNode(-1, nextPath);
@@ -1597,7 +1600,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
         }
     }
 
-    private void followPath(PathSegment path) {
+    private void followPath(PathSegment<U, V> path) {
         switch (path.getEnd().getStateMachineNode().getNodeType()) {
         case ELEMENT:
         case ANY:
@@ -1607,7 +1610,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
         }
 
         // Join the start element with the new path.
-        XmlSchemaPathNode startNode = path.getStart();
+        XmlSchemaPathNode<U, V> startNode = path.getStart();
 
         if (path.getAfterStart() != null) {
             startNode.setNextNode(path.getAfterStartPathIndex(), path.getAfterStart());
@@ -1665,7 +1668,7 @@ public final class XmlSchemaPathFinder extends DefaultHandler {
 
     private XmlSchemaStateMachineNode getStateMachineOfOwningElement() {
         QName element = elementStack.get(elementStack.size() - 1);
-        XmlSchemaDocumentNode iter = currentPath.getDocumentNode();
+        XmlSchemaDocumentNode<U> iter = currentPath.getDocumentNode();
 
         if (iter.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
             && iter.getStateMachineNode().getElement().getQName().equals(element)) {

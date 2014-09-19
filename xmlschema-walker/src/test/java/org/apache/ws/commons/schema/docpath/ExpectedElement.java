@@ -35,7 +35,7 @@ class ExpectedElement {
         this.typeInfo = typeInfo;
     }
 
-    void validate(XmlSchemaDocumentNode docNode) {
+    void validate(XmlSchemaDocumentNode<?> docNode) {
         String qName = docNode.getStateMachineNode().getElement().getQName().toString();
 
         XmlSchemaTypeInfo actType = docNode.getStateMachineNode().getElementType();
