@@ -20,13 +20,11 @@
 package org.apache.ws.xmlschema.bundletest;
 
 import junit.framework.Assert;
-
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.internal.DummyInternalClass;
-
+import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
@@ -42,7 +40,9 @@ public class XmlSchemaBundleTest {
     public static Option[] configuration() {
         return CoreOptions.options(CoreOptions.junitBundles(),
                                    CoreOptions.provision(CoreOptions.mavenBundle()
-                                       .groupId("org.apache.ws.xmlschema").artifactId("xmlschema-core")));
+                                       .groupId("org.apache.ws.xmlschema").artifactId("xmlschema-core")),
+                                   CoreOptions.provision(CoreOptions.mavenBundle()
+                                       .groupId("org.apache.ws.xmlschema").artifactId("xmlschema-walker")));
     }
 
     @Test(expected = java.lang.NoClassDefFoundError.class)
@@ -54,5 +54,8 @@ public class XmlSchemaBundleTest {
     public void testSchemaAvailable() {
         XmlSchemaCollection collection = new XmlSchemaCollection();
         Assert.assertNotNull(collection);
+        XmlSchemaWalker walker = new XmlSchemaWalker(collection);
+        Assert.assertNotNull(walker);
     }
+    
 }
