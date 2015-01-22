@@ -1005,7 +1005,8 @@ public class SchemaBuilder {
                     }
                     String namespace = ctx.getNamespaceURI(prefix);
                     if (!Constants.NULL_NS_URI.equals(namespace)) {
-                        Attr nsAttr = attrEl.getOwnerDocument().createAttribute("xmlns:" + prefix);
+                        Attr nsAttr = attrEl.getOwnerDocument().createAttributeNS(Constants.XMLNS_ATTRIBUTE_NS_URI,
+                                                                                  "xmlns:" + prefix);
                         nsAttr.setValue(namespace);
                         attrs.add(nsAttr);
                     }
