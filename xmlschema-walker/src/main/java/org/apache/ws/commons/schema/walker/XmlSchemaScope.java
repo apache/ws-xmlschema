@@ -305,6 +305,12 @@ final class XmlSchemaScope {
 
             walk(isMixed, complexContent);
 
+            final QName userRecognizedType =
+                getUserRecognizedType(complexType.getQName(), null);
+            if (userRecognizedType != null) {
+              typeInfo.setUserRecognizedType(userRecognizedType);
+            }
+
         } else {
             child = complexType.getParticle();
             attributes = createAttributeMap(complexType.getAttributes());
