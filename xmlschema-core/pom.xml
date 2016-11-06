@@ -167,5 +167,12 @@
             <artifactId>guava-testlib</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <!-- Always test with a well defined DOM implementation -->
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
