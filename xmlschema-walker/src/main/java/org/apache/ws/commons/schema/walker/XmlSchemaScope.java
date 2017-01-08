@@ -572,8 +572,10 @@ final class XmlSchemaScope {
         XmlSchemaSimpleType schemaType = globalAttr.getSchemaType();
         if (schemaType == null) {
             final QName typeQName = globalAttr.getSchemaTypeName();
-            XmlSchema typeSchema = schemasByNamespace.get(typeQName.getNamespaceURI());
-            schemaType = (XmlSchemaSimpleType)typeSchema.getTypeByName(typeQName);
+            if (typeQName != null) {
+                XmlSchema typeSchema = schemasByNamespace.get(typeQName.getNamespaceURI());
+                schemaType = (XmlSchemaSimpleType) typeSchema.getTypeByName(typeQName);
+            }
         }
 
         /*

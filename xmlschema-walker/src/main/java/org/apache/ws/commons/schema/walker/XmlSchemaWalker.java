@@ -252,21 +252,23 @@ public final class XmlSchemaWalker {
                 if (attrs != null) {
                     for (XmlSchemaAttrInfo attr : attrs) {
                         XmlSchemaType attrType = attr.getAttribute().getSchemaType();
-                        XmlSchemaScope attrScope = null;
-                        if ((attrType.getQName() != null) && scopeCache.containsKey(attrType.getQName())) {
-                            attrScope = scopeCache.get(attrType.getQName());
-                        } else {
-                            attrScope = new XmlSchemaScope(attr.getAttribute().getSchemaType(),
-                                                           schemasByNamespace, scopeCache,
-                                                           userRecognizedTypes);
+                        if (attrType != null) {
+                            XmlSchemaScope attrScope;
+                            if ((attrType.getQName() != null) && scopeCache.containsKey(attrType.getQName())) {
+                                attrScope = scopeCache.get(attrType.getQName());
+                            } else {
+                                attrScope = new XmlSchemaScope(attrType,
+                                                               schemasByNamespace, scopeCache,
+                                                               userRecognizedTypes);
 
-                            if (attrType.getName() != null) {
-                                scopeCache.put(attrType.getQName(), attrScope);
+                                if (attrType.getName() != null) {
+                                    scopeCache.put(attrType.getQName(), attrScope);
+                                }
                             }
-                        }
 
-                        final XmlSchemaTypeInfo attrTypeInfo = attrScope.getTypeInfo();
-                        attr.setType(attrTypeInfo);
+                            final XmlSchemaTypeInfo attrTypeInfo = attrScope.getTypeInfo();
+                            attr.setType(attrTypeInfo);
+                        }
 
                         for (XmlSchemaVisitor visitor : visitors) {
                             visitor.onVisitAttribute(element, attr);

@@ -295,7 +295,9 @@ public class TestSchemaWalker {
             for (; index < attrs.size(); ++index) {
                 Attribute attr = attrs.get(index);
                 if (attr.name.equals(attribute.getName())) {
-                    if ((attr.typeName == null) && !attribute.getSchemaType().isAnonymous()) {
+                    if ((attr.typeName == null)
+                            && attribute.getSchemaType() != null
+                            && !attribute.getSchemaType().isAnonymous()) {
 
                         throw new IllegalStateException("Element \"" + element.getName()
                                                         + "\" has an attribute named \"" + attr.name
@@ -303,7 +305,9 @@ public class TestSchemaWalker {
                                                         + "but actually is named \""
                                                         + attribute.getSchemaType().getName() + "\"");
 
-                    } else if ((attr.typeName != null) && attribute.getSchemaType().isAnonymous()) {
+                    } else if ((attr.typeName != null)
+                            && attribute.getSchemaType() != null
+                            && attribute.getSchemaType().isAnonymous()) {
 
                         throw new IllegalStateException("Element \"" + element.getName()
                                                         + "\" has an attribute named \"" + attr.name
@@ -311,7 +315,8 @@ public class TestSchemaWalker {
                                                         + attr.typeName + "\"; but is anonymous instead.");
 
                     } else if ((attr.typeName != null)
-                               && !attr.typeName.equals(attribute.getSchemaType().getName())) {
+                            && attribute.getSchemaType() != null
+                            && !attr.typeName.equals(attribute.getSchemaType().getName())) {
 
                         throw new IllegalStateException("Element \"" + element.getName()
                                                         + "\" has an attribute named \"" + attr.name
@@ -336,13 +341,13 @@ public class TestSchemaWalker {
                                                         + "\" whose usage was expected to be required,"
                                                         + " but is actually optional.");
 
-                    } else if (!attr.type.equals(attributeType.getType())) {
+                    } else if (attr.type != null && !attr.type.equals(attributeType.getType())) {
                         throw new IllegalStateException("Element \"" + element.getName()
                                                         + "\" has an attribute named \"" + attr.name
                                                         + "\" whose type was expected to be " + attr.type
                                                         + " but actually was " + attributeType.getType());
 
-                    } else if (attr.type.equals(XmlSchemaTypeInfo.Type.ATOMIC)
+                    } else if (attr.type != null && attr.type.equals(XmlSchemaTypeInfo.Type.ATOMIC)
                                && !attr.baseType.equals(attributeType.getBaseType())) {
 
                         throw new IllegalStateException("Element \"" + element.getName()
@@ -351,7 +356,7 @@ public class TestSchemaWalker {
                                                         + attr.baseType.name() + " but actually was "
                                                         + attributeType.getBaseType());
 
-                    } else if (attr.type.equals(XmlSchemaTypeInfo.Type.LIST)
+                    } else if (attr.type != null && attr.type.equals(XmlSchemaTypeInfo.Type.LIST)
                                && !attr.baseType.equals(attributeType.getChildTypes().get(0).getBaseType())) {
 
                         throw new IllegalStateException("Element \"" + element.getName()
@@ -683,6 +688,8 @@ public class TestSchemaWalker {
         attrGroupAttrs.add(new Attribute("unsignedByte", "unsignedByte", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, unsignedByteFacets));
 
+        attrGroupAttrs.add(new Attribute("unknown", null, null, null, true));
+
         HashSet<XmlSchemaRestriction> stringFacets = new HashSet<XmlSchemaRestriction>();
         stringFacets.add(new XmlSchemaRestriction(new XmlSchemaWhiteSpaceFacet("preserve", false)));
         attrGroupAttrs.add(new Attribute("string", "string", XmlSchemaTypeInfo.Type.ATOMIC,
@@ -878,6 +885,10 @@ public class TestSchemaWalker {
 
     private static void checkFacets(String nextName, XmlSchemaTypeInfo typeInfo,
                                     Set<XmlSchemaRestriction> nextFacets) {
+        if (typeInfo == null) {
+            return;
+        }
+
         final HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> facets = typeInfo.getFacets();
 
         if ((facets == null) && (nextFacets != null)) {

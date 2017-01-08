@@ -72,6 +72,7 @@
 		<xsd:attribute name="unsignedInt"          type="xsd:unsignedInt"        use="optional" />
 		<xsd:attribute name="unsignedShort"        type="xsd:unsignedShort"      use="optional" />
 		<xsd:attribute name="unsignedByte"         type="xsd:unsignedByte"       use="optional" />
+		<xsd:attribute name="unknown"              use="optional"/>
 	</xsd:attributeGroup>
 	<xsd:attribute name="size">
 		<xsd:simpleType>
