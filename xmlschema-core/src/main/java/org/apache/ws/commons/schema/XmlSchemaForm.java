@@ -34,7 +34,13 @@ public enum XmlSchemaForm {
 
     @Override
     public String toString() {
-        return super.toString().toLowerCase();
+        switch (this) {
+        case QUALIFIED:
+            return "qualified";
+        case UNQUALIFIED:
+            return "unqualified";
+        }
+        return "none";
     }
 
 }
