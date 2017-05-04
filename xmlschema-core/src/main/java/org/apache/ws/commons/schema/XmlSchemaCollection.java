@@ -768,6 +768,9 @@ public final class XmlSchemaCollection {
      * @return the attribute or null.
      */
     public XmlSchemaAttribute getAttributeByQName(QName schemaAttributeName) {
+    	if (schemaAttributeName == null) {
+    		return null;
+    	}
         String uri = schemaAttributeName.getNamespaceURI();
         for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
             if (entry.getKey().getNamespace().equals(uri)) {
@@ -788,6 +791,9 @@ public final class XmlSchemaCollection {
      * @return the element object, or null.
      */
     public XmlSchemaElement getElementByQName(QName qname) {
+    	if (qname == null) {
+    		return null;
+    	}
         String uri = qname.getNamespaceURI();
         for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
             if (entry.getKey().getNamespace().equals(uri)) {
@@ -802,6 +808,9 @@ public final class XmlSchemaCollection {
 
     
     public XmlSchemaAttributeGroup getAttributeGroupByQName(QName name) {
+    	if (name == null) {
+    		return null;
+    	}
         String uri = name.getNamespaceURI();
         for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
             if (entry.getKey().getNamespace().equals(uri)) {
@@ -816,6 +825,9 @@ public final class XmlSchemaCollection {
     }
     
     public XmlSchemaGroup getGroupByQName(QName name) {
+    	if (name == null) {
+    		return null;
+    	}
         String uri = name.getNamespaceURI();
         for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
             if (entry.getKey().getNamespace().equals(uri)) {
@@ -830,6 +842,9 @@ public final class XmlSchemaCollection {
     }
     
     public XmlSchemaNotation getNotationByQName(QName name) {
+    	if (name == null) {
+    		return null;
+    	}
         String uri = name.getNamespaceURI();
         for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
             if (entry.getKey().getNamespace().equals(uri)) {
