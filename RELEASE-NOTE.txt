@@ -1,8 +1,8 @@
  ====================================
- Apache XMLSchema 2.1.0 Release Notes
+ Apache XMLSchema 2.2.2 Release Notes
  ====================================
 
-This is the release of Apache XMLSchema 2.1.0.
+This is the release of Apache XMLSchema 2.2.2.
 
 XMLSchema is a lightweight schema object model that can be used to manipulate 
 and generate XML schema representations. It has few external dependencies
@@ -15,12 +15,12 @@ to the documentation, and reporting bugs are always welcome.
 This release fixes the following defects:
 
 ** Bug
-    * [XMLSCHEMA-26] - NPE: NamespaceMap.getNamespaceURI() returns null
-    * [XMLSCHEMA-30] - Each type from W3C base schema (http://www.w3.org/2001/XMLSchema) is equals to each other
+  * [XMLSCHEMA-40] - XmlSchemaForm Turkish Character Problem
+  * [XMLSCHEMA-42] - xmlschema-walker fails when an xs:attribute has no type attribute
+  * [XMLSCHEMA-43] - Build fails with Java 9 Early Access build
+  * [XMLSCHEMA-44] - Make XmlSchemaCollection get* APIs null-safe.
+  * [XMLSCHEMA-46] - xmlschema-walker should support user-recognized types for more than just the base simple types.
 
-Note:  XMLSCHEMA-26 changes the behavior of NamespaceMap.getNamespaceURI() 
-slightly to return “” instead of null.  Code that relies on the null return
-will need to be updated.
 
 
 Thanks for your interest in XMLSchema!
