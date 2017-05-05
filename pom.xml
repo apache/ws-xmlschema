@@ -28,7 +28,7 @@
     <artifactId>xmlschema</artifactId>
     <packaging>pom</packaging>
     <name>XmlSchema</name>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.2.2</version>
     <description>Apache XMLSchema is a light weight schema object model that can be used to manipulate or generate XML schema.</description>
     <url>http://ws.apache.org/commons/xmlschema20/</url>
     <issueManagement>
@@ -60,9 +60,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/webservices/xmlschema/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/webservices/xmlschema/trunk</developerConnection>
-        <url>http://svn.apache.org/viewvc/webservices/xmlschema/trunk</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/webservices/xmlschema/tags/xmlschema-2.2.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/webservices/xmlschema/tags/xmlschema-2.2.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/webservices/xmlschema/tags/xmlschema-2.2.2</url>
     </scm>
     <prerequisites>
         <maven>3.0</maven>
