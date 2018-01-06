@@ -45,9 +45,9 @@ public final class XmlSchemaNamespaceContext implements NamespacePrefixList {
      * following initial mappings:
      * <ul>
      * <li>
-   *     <code>xml</code> -> <code>http://www.w3.org/1999/namespace</code></li>
+   *     <code>xml</code> -&gt; <code>http://www.w3.org/1999/namespace</code></li>
      * <li>
-   *     <code>xmlns</code> -> <code>http://www.w3.org/2000/xmlns/</code></li>
+   *     <code>xmlns</code> -&gt; <code>http://www.w3.org/2000/xmlns/</code></li>
      * </ul>
      */
     public XmlSchemaNamespaceContext() {

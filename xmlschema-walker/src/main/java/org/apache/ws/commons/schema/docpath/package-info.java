@@ -57,11 +57,9 @@
  *     {@link org.apache.ws.commons.schema.docpath.XmlSchemaPathNode#setUserDefinedContent(Object)}.
  *   </li>
  * </ol>
- * </p>
  *
  * <h2>XmlSchemaStateMachineNode</h2>
  * 
- * <p>
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaStateMachineNode}
  * represents a single node in the
  * {@link org.apache.ws.commons.schema.XmlSchema} - either an element or a
@@ -71,11 +69,9 @@
  * for each {@link org.apache.ws.commons.schema.XmlSchemaElement}, meaning
  * the {@link org.apache.ws.commons.schema.docpath.XmlSchemaStateMachineNode}s
  * may loop back on themselves if an XML element is a child of itself.
- * </p>
  *
  * <h2>XmlSchemaDocumentNode</h2>
  * 
- * <p>
  * As {@link org.apache.ws.commons.schema.docpath.XmlSchemaStateMachineNode}s
  * represent the XML Schema,
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaDocumentNode}s
@@ -84,7 +80,6 @@
  * set of children can be requested, one for each occurrence.  Document nodes
  * never loop back on themselves; if an element is a child of itself, a new
  * document node instance will be created at each level in the tree.
- * </p>
  *
  * <p>
  * As a result, the
@@ -94,16 +89,13 @@
  * using the
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaPathNode#setUserDefinedContent(Object)}.
  * method.
- * </p>
  *
  * <h2>XmlSchemaPathNode</h2>
  *
- * <p>
  * Where {@link org.apache.ws.commons.schema.docpath.XmlSchemaDocumentNode}s
  * represent the XML Schema structure used to describe the XML Document,
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaPathNode}s define the
  * actual walk through the XML Schema taken to represent that document.
- * </p>
  * <p>
  * Paths may go in four
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaPathNode.Direction}s:
@@ -134,11 +126,9 @@
  *     element's child groups.
  *   </li>
  * </ul>
- * </p>
  *
  * <h2>XmlSchemaPathFinder</h2>
  * 
- * <p>
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaPathFinder} builds
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaDocumentNode}s
  * and {@link org.apache.ws.commons.schema.docpath.XmlSchemaPathNode}s
@@ -146,27 +136,22 @@
  * during a SAX walk of an XML document.  In addition to confirming the XML
  * Document conforms to its schema's structure, it will also confirm attribute
  * and element content conform to its expected type.
- * </p>
  *
  * <p>
  * <b>Note:</b> This is done entirely over a SAX walk, meaning the source need
  * not be an XML Document at all.  Any data structure that can be traversed
  * via a SAX walk can be confirmed to conform against an expected XML Schema.
- * </p>
  *
  * <h2>SaxWalkerOverDom</h2>
  *
- * <p>
  * This allows SAX-based walks over {@link org.w3c.dom.Document} objects.
  * One can use this in conjunction with
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaPathFinder} to
  * confirm a document parsed using a {@link javax.xml.parsers.DocumentBuilder}
  * conforms to its XML Schema.
- * </p>
  *
  * <h2>DomBuilderFromSax</h2>
  *
- * <p>
  * In the reverse direction, one can use
  * {@link org.apache.ws.commons.schema.docpath.DomBuilderFromSax} to build an
  * {@link org.w3c.dom.Document} based on an XML Schema and a SAX walk over
@@ -177,6 +162,5 @@
  * {@link org.apache.ws.commons.schema.docpath.XmlSchemaStateMachineNode}s.
  * This is used by the <code>DomBuilderFromSax</code> to resolve ambiguities
  * in how to generate the XML Document based on the schema.
- * </p>
  */
 package org.apache.ws.commons.schema.docpath;

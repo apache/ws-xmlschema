@@ -32,7 +32,7 @@ import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
  * This represents a node in the state machine used when parsing an XML
  * {@link org.w3c.dom.Document} based on its
  * {@link org.apache.ws.commons.schema.XmlSchema} and Avro
- * {@link org.apache.avro.Schema}.
+ * {@code org.apache.avro.Schema}.
  * <p>
  * A <code>SchemaStateMachineNode</code> represents one of:
  * <ul>
@@ -48,7 +48,6 @@ import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
  * first pass will determine the correct path through the document's schema in
  * order to properly parse the elements, and the second traversal will read the
  * elements while following that path.
- * </p>
  */
 public final class XmlSchemaStateMachineNode {
 
@@ -192,7 +191,7 @@ public final class XmlSchemaStateMachineNode {
 
     /**
      * Returns the {@link XmlSchemaAny} associated with this node, or
-     * <code>null</code if none.
+     * {@code null} if none.
      */
     public XmlSchemaAny getAny() {
         return any;

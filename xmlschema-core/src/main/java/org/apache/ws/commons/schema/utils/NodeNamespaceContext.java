@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.namespace.NamespaceContext;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 

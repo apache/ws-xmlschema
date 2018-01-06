@@ -148,14 +148,14 @@ public interface XmlSchemaVisitor {
     /**
      * Called when a choice group is entered.
      *
-     * @param all The {@link XmlSchemaChoice} representing the choice group.
+     * @param choice The {@link XmlSchemaChoice} representing the choice group.
      */
     void onEnterChoiceGroup(XmlSchemaChoice choice);
 
     /**
      * Called when a choice group is exited.
      *
-     * @param all The {@link XmlSchemaChoice} representing the choice group.
+     * @param choice The {@link XmlSchemaChoice} representing the choice group.
      */
     void onExitChoiceGroup(XmlSchemaChoice choice);
 

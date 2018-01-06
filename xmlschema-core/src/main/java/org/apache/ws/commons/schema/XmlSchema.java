@@ -202,7 +202,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
      * Return a map containing all the defined attribute groups of this schema. The keys are QNames, where the
      * namespace will always be the target namespace of this schema. This makes it easier to look up items for
      * cross-schema references.
-     * <br/>
+     * <br>
      * If org.apache.ws.commons.schema.protectReadOnlyCollections
      * is 'true', this will return a map that checks at runtime.
      *
@@ -216,7 +216,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
      * Return a map containing all the defined attributes of this schema. The keys are QNames, where the
      * namespace will always be the target namespace of this schema. This makes it easier to look up items for
      * cross-schema references.
-     * <br/>
+     * <br>
      * If org.apache.ws.commons.schema.protectReadOnlyCollections
      * is 'true', this will return a map that checks at runtime.
      *
@@ -267,7 +267,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
      * Return a map containing all the defined elements of this schema. The keys are QNames, where the
      * namespace will always be the target namespace of this schema. This makes it easier to look up items for
      * cross-schema references.
-     * <br/>
+     * <br>
      * If org.apache.ws.commons.schema.protectReadOnlyCollections
      * is 'true', this will return a map that checks at runtime
      *
@@ -279,7 +279,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
 
     /**
      * Return all of the includes, imports, and redefines for this schema.
-     * <br/>
+     * <br>
      * If org.apache.ws.commons.schema.protectReadOnlyCollections
      * is 'true', this will return a list that checks at runtime
      *
@@ -309,7 +309,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
     /**
      * Return a map containing all the defined groups of this schema. The keys are QNames, where the namespace
      * will always be the target namespace of this schema. This makes it easier to look up items for
-     * cross-schema references.<br/>
+     * cross-schema references.<br>
      * If org.apache.ws.commons.schema.protectReadOnlyCollections
      * is 'true', this will return a map that checks at runtime
      *
@@ -330,7 +330,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
     }
 
     /**
-     * Return all of the global items in this schema.<br/>
+     * Return all of the global items in this schema.<br>
      * If org.apache.ws.commons.schema.protectReadOnlyCollections
      * is 'true', this will return a map that checks at runtime.
      * @return <strong>all</strong> of the global items from this schema.
@@ -372,7 +372,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
      * Return a map containing all the defined notations of this schema. The keys are QNames, where the
      * namespace will always be the target namespace of this schema. This makes it easier to look up items for
      * cross-schema references.
-     * <br/>
+     * <br>
      * If org.apache.ws.commons.schema.protectReadOnlyCollections
      * is 'true', this will return a map that checks at runtime.
      *

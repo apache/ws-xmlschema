@@ -328,7 +328,7 @@ public final class DomBuilderFromSax extends DefaultHandler {
     }
 
     /**
-     * Retrieves the XML Schema namespace -> location mapping set by the last
+     * Retrieves the XML Schema namespace -&gt; location mapping set by the last
      * call to {@link #setNamespaceToLocationMapping(Map)}.
      */
     public Map<String, String> getNamespaceToLocationMapping() {
@@ -336,17 +336,17 @@ public final class DomBuilderFromSax extends DefaultHandler {
     }
 
     /**
-     * Sets the XML Schema namespace -> location mapping to use when defining
+     * Sets the XML Schema namespace -&gt; location mapping to use when defining
      * the schemaLocation attribute in the generated XML document.
      *
-     * @param nsToLocMapping The namespace -> location mapping.
+     * @param nsToLocMapping The namespace -&gt; location mapping.
      */
     public void setNamespaceToLocationMapping(Map<String, String> nsToLocMapping) {
         namespaceToLocationMapping = nsToLocMapping;
     }
 
     /**
-     * Retrieves the {@link QName} -> {@link XmlSchemaStateMachineNode} mapping
+     * Retrieves the {@link QName} -&gt; {@link XmlSchemaStateMachineNode} mapping
      * defined by the call to {@link #setStateMachinesByQName(Map)}.
      */
     public Map<QName, XmlSchemaStateMachineNode> getStateMachinesByQName() {

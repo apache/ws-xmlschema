@@ -61,7 +61,7 @@ public final class XmlSchemaWalker {
 
     /**
      * Initializes the {@link XmlSchemaWalker} with the
-     * {@link XmlScheamCollection} to reference when following an
+     * {@link XmlSchemaCollection} to reference when following an
      * {@link XmlSchemaElement}.
      */
     public XmlSchemaWalker(XmlSchemaCollection xmlSchemas) {

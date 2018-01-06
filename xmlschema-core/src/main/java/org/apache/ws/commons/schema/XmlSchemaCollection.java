@@ -516,7 +516,6 @@ public final class XmlSchemaCollection {
      * document.
      * 
      * @param doc the XSD document.
-     * @param veh handler that is called back for validation.
      * @return the XML schema object.
      */
     public XmlSchema read(Document doc) {
@@ -574,7 +573,6 @@ public final class XmlSchemaCollection {
      * the concatenation of system ID and targetNamespace. In this API, the systemID is taken from the Source.
      * 
      * @param source the XSD document.
-     * @param veh handler that is called back for validation.
      * @return the XML schema object.
      */
     public XmlSchema read(Source source) {

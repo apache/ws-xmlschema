@@ -52,7 +52,6 @@ import org.xml.sax.SAXException;
  * <li>{@link ContentHandler#endPrefixMapping(String)}</li>
  * <li>{@link ContentHandler#endDocument()}</li>
  * </ul>
- * </p>
  */
 public final class SaxWalkerOverDom {
 
@@ -299,7 +298,6 @@ public final class SaxWalkerOverDom {
      * handlers, this method is a no-op.
      *
      * @param document The {@link Document} to traverse.
-     * @param systemId The system ID of this {@link Document}.
      * @throws SAXException if an exception occurs when notifying the handlers.
      */
     public void walk(Document document) throws SAXException {
