@@ -1649,10 +1649,11 @@ public class SchemaBuilder {
                 restriction.setAnnotation(handleAnnotation(el));
             } else {
                 XmlSchemaFacet facet = XmlSchemaFacet.construct(el);
-                if (XDOMUtil.anyElementsWithNameNS(el, XmlSchema.SCHEMA_NS, "annotation")) {
-                    XmlSchemaAnnotation facetAnnotation = handleAnnotation(el);
-                    facet.setAnnotation(facetAnnotation);
+                Element annotation = XDOMUtil.getFirstChildElementNS(el, XmlSchema.SCHEMA_NS, "annotation");
 
+                if (annotation != null) {
+                    XmlSchemaAnnotation facetAnnotation = handleAnnotation(annotation);
+                    facet.setAnnotation(facetAnnotation);
                 }
                 restriction.getFacets().add(facet);
                 // process extra attributes and elements
