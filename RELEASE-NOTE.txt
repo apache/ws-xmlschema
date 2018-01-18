@@ -1,8 +1,8 @@
  ====================================
- Apache XMLSchema 2.2.2 Release Notes
+ Apache XMLSchema 2.2.3 Release Notes
  ====================================
 
-This is the release of Apache XMLSchema 2.2.2.
+This is the release of Apache XMLSchema 2.2.3.
 
 XMLSchema is a lightweight schema object model that can be used to manipulate 
 and generate XML schema representations. It has few external dependencies
@@ -15,12 +15,7 @@ to the documentation, and reporting bugs are always welcome.
 This release fixes the following defects:
 
 ** Bug
-  * [XMLSCHEMA-40] - XmlSchemaForm Turkish Character Problem
-  * [XMLSCHEMA-42] - xmlschema-walker fails when an xs:attribute has no type attribute
-  * [XMLSCHEMA-43] - Build fails with Java 9 Early Access build
-  * [XMLSCHEMA-44] - Make XmlSchemaCollection get* APIs null-safe.
-  * [XMLSCHEMA-46] - xmlschema-walker should support user-recognized types for more than just the base simple types.
-
+* [XMLSCHEMA-50] Unable to get the contents of a XmlSchemaAnnotation in some cases
 
 
 Thanks for your interest in XMLSchema!
