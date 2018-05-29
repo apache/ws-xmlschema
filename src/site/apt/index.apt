@@ -22,6 +22,6 @@ Issues
 Downloads
 
    Most users incorporate XML Schema via maven. You can also download release packages
-   from {{{http://www.apache.org/dyn/closer.cgi/ws/xmlschema/}downloads}}.
+   from {{{./download.html}downloads}}.
 
   -The XMLSchema Development Team (dev at ws.apache.org)

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<document>
+<body>
+<section name="Obtain the Apache XMLSchema&#8482; distribution">
+<p> 
+XMLSchema is a lightweight Java object model that can be used to manipulate
+and generate XML schema representations. You can use it to read XML Schema
+(xsd) files into memory and analyze or modify them, or to create entirely new
+schemas from scratch.
+</p>
+<subsection name="How to Download">
+<p>
+Use the links below to download a distribution of Apache XMLSchema from one of
+our mirrors. It is good practice to verify the integrity of the distribution
+files. Apache XMLSchema releases are available under the 
+<a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the 
+LICENSE.txt and NOTICE.txt files contained in each release artifact.
+</p>
+</subsection>
+<subsection name="Current official release (closest mirror site selected automatically)">
+<p>
+The current stable release is Apache XMLSchema 2.2.3:
+</p>
+<ul>
+<li>
+<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip">xmlschema-2.2.3-source-release.zip</a>
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip.md5">MD5</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip.sha1">SHA1</a>)
+</li>
+<li>
+<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip">xmlschema-core-2.2.3-bin.zip</a>
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip.md5">MD5</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip.sha1">SHA1</a>
+</li>
+</ul>
+</subsection>
+<subsection name="Verifying Releases">
+<p>
+When downloading from a mirror please check the SHA1/MD5 checksums as well
+as verifying the OpenPGP compatible signature available from the main Apache
+site. The <a href="https://www.apache.org/dist/ws/xmlschema/KEYS">KEYS</a> file
+contains the public keys used for signing the release. It is recommended that a
+web of trust is used to confirm the identity of these keys.
+</p>
+<p>
+You can check the OpenPGP compatible signature with GnuPG via:
+<ul>
+<li>gpg --import KEYS</li>
+<li>gpg --verify xmlschema-*-source-release.zip.asc</li>
+</ul>
+</p>
+<p>
+You can check the SHA1/MD5 digests with:
+<ul>
+<li>md5sum xmlschema-*-source-release.zip (and compare output to xmlschema-*-source.release.zip.md5)</li>
+<li>sha1sum xmlschema-*-source-release.zip (and compare output to xmlschema-*-source.release.zip.sha1)</li>
+</ul>
+</p>
+</subsection>
+<subsection name="Archive of old releases">
+<p>
+Older releases are available in the <a href="http://archive.apache.org/dist/ws/xmlschema/">archive</a>.
+</p>
+</subsection>
+</section>
+            
+</body>
+</document>
