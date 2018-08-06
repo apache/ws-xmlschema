@@ -46,7 +46,6 @@ import org.xml.sax.InputSource;
 import org.apache.ws.commons.schema.XmlSchemaCollection.SchemaKey;
 import org.apache.ws.commons.schema.constants.Constants;
 import org.apache.ws.commons.schema.extensions.ExtensionRegistry;
-import org.apache.ws.commons.schema.utils.DOMUtil;
 import org.apache.ws.commons.schema.utils.NodeNamespaceContext;
 import org.apache.ws.commons.schema.utils.TargetNamespaceValidator;
 import org.apache.ws.commons.schema.utils.XDOMUtil;
@@ -155,7 +154,7 @@ public class SchemaBuilder {
     XmlSchema build(Document doc, String uri) {
         Element schemaEl = doc.getDocumentElement();
         XmlSchema xmlSchema = handleXmlSchemaElement(schemaEl, uri);
-        xmlSchema.setInputEncoding(DOMUtil.getInputEncoding(doc));
+        xmlSchema.setInputEncoding(doc.getInputEncoding());
         return xmlSchema;
     }
 
