@@ -599,7 +599,7 @@ public class FacetsTest extends Assert {
     			fail("Simple Type " + Constants.XSD_INTEGER + " should not have a facet of type " + facet.getClass().getName());
     		}
     	}
-    	assertEquals(new Integer(0), integerFractionDigitsFacet.getValue());
+    	assertEquals(Integer.valueOf(0), integerFractionDigitsFacet.getValue());
     	assertTrue(integerFractionDigitsFacet.isFixed());
     	assertEquals("[\\-+]?[0-9]+", integerPatternFacet.getValue());
     	assertFalse(integerPatternFacet.isFixed());
@@ -608,53 +608,53 @@ public class FacetsTest extends Assert {
     	testMaxInclusiveFacet(
     			Constants.XSD_NONPOSITIVEINTEGER,
     			getFacetsForQName(collection, Constants.XSD_NONPOSITIVEINTEGER),
-    			new Integer(0));
+    			Integer.valueOf(0));
 
     	// negativeInteger
     	testMaxInclusiveFacet(
     			Constants.XSD_NEGATIVEINTEGER,
     			getFacetsForQName(collection, Constants.XSD_NEGATIVEINTEGER),
-    			new Integer(-1));
+    			Integer.valueOf(-1));
 
     	// long
     	testNumericRange(
     			Constants.XSD_LONG,
     			getFacetsForQName(collection, Constants.XSD_LONG),
-    			new Long(-9223372036854775808L),
-    			new Long(9223372036854775807L));
+    			Long.valueOf(-9223372036854775808L),
+    			Long.valueOf(9223372036854775807L));
 
     	// int
     	testNumericRange(
     			Constants.XSD_INT,
     			getFacetsForQName(collection, Constants.XSD_INT),
-    			new Integer(-2147483648),
-    			new Integer(2147483647));
+    			Integer.valueOf(-2147483648),
+    			Integer.valueOf(2147483647));
 
     	// short
     	testNumericRange(
     			Constants.XSD_SHORT,
     			getFacetsForQName(collection, Constants.XSD_SHORT),
-    			new Short((short) -32768),
-    			new Short((short)  32767));
+    			Short.valueOf((short) -32768),
+    			Short.valueOf((short)  32767));
 
     	// byte
     	testNumericRange(
     			Constants.XSD_BYTE,
     			getFacetsForQName(collection, Constants.XSD_BYTE),
-    			new Byte((byte) -128),
-    			new Byte((byte)  127));
+    			Byte.valueOf((byte) -128),
+    			Byte.valueOf((byte)  127));
 
     	// nonNegativeInteger
     	testMinInclusiveFacet(
     			Constants.XSD_NONNEGATIVEINTEGER,
     			getFacetsForQName(collection, Constants.XSD_NONNEGATIVEINTEGER),
-    			new Integer(0));
+    			Integer.valueOf(0));
 
     	// positiveInteger
     	testMinInclusiveFacet(
     			Constants.XSD_POSITIVEINTEGER,
     			getFacetsForQName(collection, Constants.XSD_POSITIVEINTEGER),
-    			new Integer(1));
+    			Integer.valueOf(1));
 
     	// unsignedLong
     	testMaxInclusiveFacet(
@@ -666,19 +666,19 @@ public class FacetsTest extends Assert {
     	testMaxInclusiveFacet(
     			Constants.XSD_UNSIGNEDINT,
     			getFacetsForQName(collection, Constants.XSD_UNSIGNEDINT),
-    			new Long(4294967295L));
+    			Long.valueOf(4294967295L));
 
     	// unsignedShort
     	testMaxInclusiveFacet(
     			Constants.XSD_UNSIGNEDSHORT,
     			getFacetsForQName(collection, Constants.XSD_UNSIGNEDSHORT),
-    			new Integer(65535));
+    			Integer.valueOf(65535));
 
     	// unsignedByte
     	testMaxInclusiveFacet(
     			Constants.XSD_UNSIGNEDBYTE,
     			getFacetsForQName(collection, Constants.XSD_UNSIGNEDBYTE),
-    			new Short((short) 255));
+    			Short.valueOf((short) 255));
 
     	// String Type Facets
 

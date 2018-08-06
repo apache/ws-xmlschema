@@ -108,84 +108,84 @@ public class TestXmlSchemaRestriction {
 
     @Test
     public void testExclusiveMaxFixed() {
-        XmlSchemaMaxExclusiveFacet facet = new XmlSchemaMaxExclusiveFacet(new Integer(1234), true);
+        XmlSchemaMaxExclusiveFacet facet = new XmlSchemaMaxExclusiveFacet(Integer.valueOf(1234), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.EXCLUSIVE_MAX, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testExclusiveMaxNotFixed() {
-        XmlSchemaMaxExclusiveFacet facet = new XmlSchemaMaxExclusiveFacet(new Integer(1234), false);
+        XmlSchemaMaxExclusiveFacet facet = new XmlSchemaMaxExclusiveFacet(Integer.valueOf(1234), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.EXCLUSIVE_MAX, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testExclusiveMinFixed() {
-        XmlSchemaMinExclusiveFacet facet = new XmlSchemaMinExclusiveFacet(new Integer(1234), true);
+        XmlSchemaMinExclusiveFacet facet = new XmlSchemaMinExclusiveFacet(Integer.valueOf(1234), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.EXCLUSIVE_MIN, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testExclusiveMinNotFixed() {
-        XmlSchemaMinExclusiveFacet facet = new XmlSchemaMinExclusiveFacet(new Integer(1234), false);
+        XmlSchemaMinExclusiveFacet facet = new XmlSchemaMinExclusiveFacet(Integer.valueOf(1234), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.EXCLUSIVE_MIN, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testInclusiveMinFixed() {
-        XmlSchemaMinInclusiveFacet facet = new XmlSchemaMinInclusiveFacet(new Integer(1234), true);
+        XmlSchemaMinInclusiveFacet facet = new XmlSchemaMinInclusiveFacet(Integer.valueOf(1234), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.INCLUSIVE_MIN, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testInclusiveMinNotFixed() {
-        XmlSchemaMinInclusiveFacet facet = new XmlSchemaMinInclusiveFacet(new Integer(1234), false);
+        XmlSchemaMinInclusiveFacet facet = new XmlSchemaMinInclusiveFacet(Integer.valueOf(1234), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.INCLUSIVE_MIN, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testInclusiveMaxFixed() {
-        XmlSchemaMaxInclusiveFacet facet = new XmlSchemaMaxInclusiveFacet(new Integer(1234), true);
+        XmlSchemaMaxInclusiveFacet facet = new XmlSchemaMaxInclusiveFacet(Integer.valueOf(1234), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.INCLUSIVE_MAX, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testInclusiveMaxNotFixed() {
-        XmlSchemaMaxInclusiveFacet facet = new XmlSchemaMaxInclusiveFacet(new Integer(1234), false);
+        XmlSchemaMaxInclusiveFacet facet = new XmlSchemaMaxInclusiveFacet(Integer.valueOf(1234), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.INCLUSIVE_MAX, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testDigitsFractionFixed() {
-        XmlSchemaFractionDigitsFacet facet = new XmlSchemaFractionDigitsFacet(new Integer(0), true);
+        XmlSchemaFractionDigitsFacet facet = new XmlSchemaFractionDigitsFacet(Integer.valueOf(0), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.DIGITS_FRACTION, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testDigitsFractionNotFixed() {
-        XmlSchemaFractionDigitsFacet facet = new XmlSchemaFractionDigitsFacet(new Integer(0), false);
+        XmlSchemaFractionDigitsFacet facet = new XmlSchemaFractionDigitsFacet(Integer.valueOf(0), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.DIGITS_FRACTION, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testDigitsTotalFixed() {
-        XmlSchemaTotalDigitsFacet facet = new XmlSchemaTotalDigitsFacet(new Integer(0), true);
+        XmlSchemaTotalDigitsFacet facet = new XmlSchemaTotalDigitsFacet(Integer.valueOf(0), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.DIGITS_TOTAL, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testDigitsTotalNotFixed() {
-        XmlSchemaTotalDigitsFacet facet = new XmlSchemaTotalDigitsFacet(new Integer(0), false);
+        XmlSchemaTotalDigitsFacet facet = new XmlSchemaTotalDigitsFacet(Integer.valueOf(0), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.DIGITS_TOTAL, new XmlSchemaRestriction(facet));
     }
@@ -206,42 +206,42 @@ public class TestXmlSchemaRestriction {
 
     @Test
     public void testLengthFacetFixed() {
-        XmlSchemaLengthFacet facet = new XmlSchemaLengthFacet(new Integer(1), true);
+        XmlSchemaLengthFacet facet = new XmlSchemaLengthFacet(Integer.valueOf(1), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.LENGTH, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testLengthFacetNotFixed() {
-        XmlSchemaLengthFacet facet = new XmlSchemaLengthFacet(new Integer(1000), false);
+        XmlSchemaLengthFacet facet = new XmlSchemaLengthFacet(Integer.valueOf(1000), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.LENGTH, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testLengthMinFacetFixed() {
-        XmlSchemaMinLengthFacet facet = new XmlSchemaMinLengthFacet(new Integer(1), true);
+        XmlSchemaMinLengthFacet facet = new XmlSchemaMinLengthFacet(Integer.valueOf(1), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.LENGTH_MIN, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testLengthMinFacetNotFixed() {
-        XmlSchemaMinLengthFacet facet = new XmlSchemaMinLengthFacet(new Integer(10), false);
+        XmlSchemaMinLengthFacet facet = new XmlSchemaMinLengthFacet(Integer.valueOf(10), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.LENGTH_MIN, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testLengthMaxFacetFixed() {
-        XmlSchemaMaxLengthFacet facet = new XmlSchemaMaxLengthFacet(new Integer(256), true);
+        XmlSchemaMaxLengthFacet facet = new XmlSchemaMaxLengthFacet(Integer.valueOf(256), true);
 
         assertEquality(facet, XmlSchemaRestriction.Type.LENGTH_MAX, new XmlSchemaRestriction(facet));
     }
 
     @Test
     public void testLengthMaxFacetNotFixed() {
-        XmlSchemaMaxLengthFacet facet = new XmlSchemaMaxLengthFacet(new Integer(128), false);
+        XmlSchemaMaxLengthFacet facet = new XmlSchemaMaxLengthFacet(Integer.valueOf(128), false);
 
         assertEquality(facet, XmlSchemaRestriction.Type.LENGTH_MAX, new XmlSchemaRestriction(facet));
     }
@@ -365,7 +365,7 @@ public class TestXmlSchemaRestriction {
             assertTrue(rstr1.equals(rstr2));
             assertTrue(rstr1.hashCode() == rstr2.hashCode());
 
-            rstr1.setValue(new Integer(0));
+            rstr1.setValue(Integer.valueOf(0));
 
             assertTrue(rstr1.equals(rstr2));
             assertTrue(rstr1.hashCode() == rstr2.hashCode());

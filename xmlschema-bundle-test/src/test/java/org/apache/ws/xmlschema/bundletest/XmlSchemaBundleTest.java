@@ -19,14 +19,13 @@
 
 package org.apache.ws.xmlschema.bundletest;
 
-import junit.framework.Assert;
-
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.url;
 
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.internal.DummyInternalClass;
 import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;

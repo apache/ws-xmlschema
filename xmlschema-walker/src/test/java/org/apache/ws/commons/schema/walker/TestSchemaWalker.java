@@ -582,7 +582,7 @@ public class TestSchemaWalker {
 
         HashSet<XmlSchemaRestriction> decimalFacets = (HashSet<XmlSchemaRestriction>)whiteSpaceCollapseFixedRestrictions
             .clone();
-        decimalFacets.add(new XmlSchemaRestriction(XmlSchemaRestriction.Type.DIGITS_FRACTION, new Integer(0),
+        decimalFacets.add(new XmlSchemaRestriction(XmlSchemaRestriction.Type.DIGITS_FRACTION, Integer.valueOf(0),
                                                    false));
 
         attrGroupAttrs.add(new Attribute("decimal", null, XmlSchemaTypeInfo.Type.ATOMIC,
@@ -590,14 +590,14 @@ public class TestSchemaWalker {
 
         HashSet<XmlSchemaRestriction> integerFacets = (HashSet<XmlSchemaRestriction>)whiteSpaceCollapseFixedRestrictions
             .clone();
-        integerFacets.add(new XmlSchemaRestriction(new XmlSchemaFractionDigitsFacet(new Integer(0), true)));
+        integerFacets.add(new XmlSchemaRestriction(new XmlSchemaFractionDigitsFacet(Integer.valueOf(0), true)));
         integerFacets.add(new XmlSchemaRestriction(new XmlSchemaPatternFacet("[\\-+]?[0-9]+", false)));
         attrGroupAttrs.add(new Attribute("integer", "integer", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, integerFacets));
 
         HashSet<XmlSchemaRestriction> nonPositiveIntegerFacets = (HashSet<XmlSchemaRestriction>)integerFacets
             .clone();
-        nonPositiveIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Integer(0),
+        nonPositiveIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Integer.valueOf(0),
                                                                                              false)));
         attrGroupAttrs.add(new Attribute("nonPositiveInteger", "nonPositiveInteger",
                                          XmlSchemaTypeInfo.Type.ATOMIC, XmlSchemaBaseSimpleType.DECIMAL,
@@ -605,45 +605,45 @@ public class TestSchemaWalker {
 
         HashSet<XmlSchemaRestriction> negativeIntegerFacets = (HashSet<XmlSchemaRestriction>)integerFacets
             .clone();
-        negativeIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Integer(-1),
+        negativeIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Integer.valueOf(-1),
                                                                                           false)));
         attrGroupAttrs.add(new Attribute("negativeInteger", "negativeInteger", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, negativeIntegerFacets));
 
         HashSet<XmlSchemaRestriction> longFacets = (HashSet<XmlSchemaRestriction>)integerFacets.clone();
         longFacets
-            .add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(new Long(-9223372036854775808L),
+            .add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(Long.valueOf(-9223372036854775808L),
                                                                          false)));
         longFacets
-            .add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Long(9223372036854775807L),
+            .add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Long.valueOf(9223372036854775807L),
                                                                          false)));
         attrGroupAttrs.add(new Attribute("long", "long", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, longFacets));
 
         HashSet<XmlSchemaRestriction> intFacets = (HashSet<XmlSchemaRestriction>)integerFacets.clone();
         intFacets
-            .add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(new Integer(-2147483648), false)));
+            .add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(Integer.valueOf(-2147483648), false)));
         intFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(2147483647, false)));
         attrGroupAttrs.add(new Attribute("int", "int", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, intFacets));
 
         HashSet<XmlSchemaRestriction> shortFacets = (HashSet<XmlSchemaRestriction>)integerFacets.clone();
-        shortFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(new Short((short)-32768),
+        shortFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(Short.valueOf((short)-32768),
                                                                                 false)));
-        shortFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Short((short)32767),
+        shortFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Short.valueOf((short)32767),
                                                                                 false)));
         attrGroupAttrs.add(new Attribute("short", "short", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, shortFacets));
 
         HashSet<XmlSchemaRestriction> byteFacets = (HashSet<XmlSchemaRestriction>)integerFacets.clone();
-        byteFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(new Byte((byte)-128), false)));
-        byteFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Byte((byte)127), false)));
+        byteFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(Byte.valueOf((byte)-128), false)));
+        byteFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Byte.valueOf((byte)127), false)));
         attrGroupAttrs.add(new Attribute("byte", "byte", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, byteFacets));
 
         HashSet<XmlSchemaRestriction> nonNegativeIntegerFacets = (HashSet<XmlSchemaRestriction>)integerFacets
             .clone();
-        nonNegativeIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(new Integer(0),
+        nonNegativeIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(Integer.valueOf(0),
                                                                                              false)));
         attrGroupAttrs.add(new Attribute("nonNegativeInteger", "nonNegativeInteger",
                                          XmlSchemaTypeInfo.Type.ATOMIC, XmlSchemaBaseSimpleType.DECIMAL,
@@ -651,7 +651,7 @@ public class TestSchemaWalker {
 
         HashSet<XmlSchemaRestriction> positiveIntegerFacets = (HashSet<XmlSchemaRestriction>)integerFacets
             .clone();
-        positiveIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(new Integer(1),
+        positiveIntegerFacets.add(new XmlSchemaRestriction(new XmlSchemaMinInclusiveFacet(Integer.valueOf(1),
                                                                                           false)));
         attrGroupAttrs.add(new Attribute("positiveInteger", "positiveInteger", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, positiveIntegerFacets));
@@ -669,21 +669,21 @@ public class TestSchemaWalker {
 
         HashSet<XmlSchemaRestriction> unsignedIntFacets = (HashSet<XmlSchemaRestriction>)nonNegativeIntegerFacets
             .clone();
-        unsignedIntFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Long(4294967295L),
+        unsignedIntFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Long.valueOf(4294967295L),
                                                                                       false)));
         attrGroupAttrs.add(new Attribute("unsignedInt", "unsignedInt", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, unsignedIntFacets));
 
         HashSet<XmlSchemaRestriction> unsignedShortFacets = (HashSet<XmlSchemaRestriction>)nonNegativeIntegerFacets
             .clone();
-        unsignedShortFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Integer(65535),
+        unsignedShortFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Integer.valueOf(65535),
                                                                                         false)));
         attrGroupAttrs.add(new Attribute("unsignedShort", "unsignedShort", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, unsignedShortFacets));
 
         HashSet<XmlSchemaRestriction> unsignedByteFacets = (HashSet<XmlSchemaRestriction>)nonNegativeIntegerFacets
             .clone();
-        unsignedByteFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(new Short((short)255),
+        unsignedByteFacets.add(new XmlSchemaRestriction(new XmlSchemaMaxInclusiveFacet(Short.valueOf((short)255),
                                                                                        false)));
         attrGroupAttrs.add(new Attribute("unsignedByte", "unsignedByte", XmlSchemaTypeInfo.Type.ATOMIC,
                                          XmlSchemaBaseSimpleType.DECIMAL, true, unsignedByteFacets));
