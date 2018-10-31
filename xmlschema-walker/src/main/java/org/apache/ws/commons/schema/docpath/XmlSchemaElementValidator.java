@@ -438,7 +438,7 @@ final class XmlSchemaElementValidator {
 
         case FLOAT:
             try {
-                rangeChecks(name, new BigDecimal(DatatypeConverter.parseFloat(value)), facets);
+                rangeChecks(name, BigDecimal.valueOf(DatatypeConverter.parseFloat(value)), facets);
             } catch (NumberFormatException iae) {
                 throw new ValidationException(name + " value of \"" + value + "\" is not a valid float.", iae);
             }
@@ -457,7 +457,7 @@ final class XmlSchemaElementValidator {
 
         case DOUBLE:
             try {
-                rangeChecks(name, new BigDecimal(DatatypeConverter.parseDouble(value)), facets);
+                rangeChecks(name, BigDecimal.valueOf(DatatypeConverter.parseDouble(value)), facets);
             } catch (NumberFormatException iae) {
                 throw new ValidationException(name + " value of \"" + value + "\" is not a valid double.",
                                               iae);
@@ -561,10 +561,10 @@ final class XmlSchemaElementValidator {
             newValue = (BigDecimal)numericValue;
 
         } else if (numericValue instanceof Double) {
-            newValue = new BigDecimal(((Double)numericValue).doubleValue());
+            newValue = BigDecimal.valueOf(((Double)numericValue).doubleValue());
 
         } else if (numericValue instanceof Float) {
-            newValue = new BigDecimal(((Float)numericValue).floatValue());
+            newValue = BigDecimal.valueOf(((Float)numericValue).floatValue());
 
         } else if (numericValue instanceof BigInteger) {
             newValue = new BigDecimal((BigInteger)numericValue);

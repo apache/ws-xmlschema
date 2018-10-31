@@ -97,7 +97,7 @@ public class XmlSchemaDerivationMethod {
     }
     
     public boolean notAll() {
-        return empty | extension | list | restriction | substitution | union;
+        return empty || extension || list || restriction || substitution || union;
     }
     
 

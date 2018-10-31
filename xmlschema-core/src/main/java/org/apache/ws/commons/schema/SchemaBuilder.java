@@ -986,7 +986,7 @@ public class SchemaBuilder {
         }
 
         NamedNodeMap attrNodes = attrEl.getAttributes();
-        Vector<Attr> attrs = new Vector<Attr>();
+        List<Attr> attrs = new ArrayList<Attr>();
         NodeNamespaceContext ctx = null;
         for (int i = 0; i < attrNodes.getLength(); i++) {
             Attr att = (Attr)attrNodes.item(i);
