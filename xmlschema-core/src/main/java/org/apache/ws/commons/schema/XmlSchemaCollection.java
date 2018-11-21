@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -707,6 +708,8 @@ public final class XmlSchemaCollection {
     XmlSchema read(InputSource inputSource, TargetNamespaceValidator namespaceValidator) {
         try {
             DocumentBuilderFactory docFac = DocumentBuilderFactory.newInstance();
+            docFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
+            docFac.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             docFac.setNamespaceAware(true);
             final DocumentBuilder builder = docFac.newDocumentBuilder();
             Document doc = null;

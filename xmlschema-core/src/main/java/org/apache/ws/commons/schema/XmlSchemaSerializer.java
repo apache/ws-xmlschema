@@ -1548,6 +1548,9 @@ public class XmlSchemaSerializer {
         Document serializedSchemaDocs;
         try {
             DocumentBuilderFactory docFac = DocumentBuilderFactory.newInstance();
+            docFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
+            docFac.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+
             docFac.setNamespaceAware(true);
             DocumentBuilder builder = docFac.newDocumentBuilder();
             serializedSchemaDocs = builder.newDocument();
