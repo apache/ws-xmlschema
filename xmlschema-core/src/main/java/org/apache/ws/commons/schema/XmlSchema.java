@@ -878,6 +878,7 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
             xser.setExtReg(this.parent.getExtReg());
             Document[] serializedSchemas = xser.serializeSchema(this, false);
             TransformerFactory trFac = TransformerFactory.newInstance();
+            trFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
 
             try {
                 trFac.setAttribute("indent-number", "4");
