@@ -79,7 +79,6 @@ public final class DomBuilderFromSax extends DefaultHandler {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         factory.setNamespaceAware(true);
 
         docBuilder = factory.newDocumentBuilder();
