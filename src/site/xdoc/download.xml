@@ -35,20 +35,20 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 </subsection>
 <subsection name="Current official release (closest mirror site selected automatically)">
 <p>
-The current stable release is Apache XMLSchema 2.2.3:
+The current stable release is Apache XMLSchema 2.2.4:
 </p>
 <ul>
 <li>
-<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip">xmlschema-2.2.3-source-release.zip</a>
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip.asc">PGP</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip.md5">MD5</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-2.2.3-source-release.zip.sha1">SHA1</a>)
+<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip">xmlschema-2.2.4-source-release.zip</a>
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.md5">MD5</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.sha1">SHA1</a>)
 </li>
 <li>
-<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip">xmlschema-core-2.2.3-bin.zip</a>
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip.asc">PGP</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip.md5">MD5</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.3/xmlschema-core-2.2.3-bin.zip.sha1">SHA1</a>
+<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip">xmlschema-core-2.2.4-bin.zip</a>
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.md5">MD5</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.sha1">SHA1</a>
 </li>
 </ul>
 </subsection>
