@@ -709,7 +709,6 @@ public final class XmlSchemaCollection {
         try {
             DocumentBuilderFactory docFac = DocumentBuilderFactory.newInstance();
             docFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
-            docFac.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             docFac.setNamespaceAware(true);
             final DocumentBuilder builder = docFac.newDocumentBuilder();
             Document doc = null;
