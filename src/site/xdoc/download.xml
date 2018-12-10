@@ -41,20 +41,18 @@ The current stable release is Apache XMLSchema 2.2.4:
 <li>
 <a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip">xmlschema-2.2.4-source-release.zip</a>
 (<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.asc">PGP</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.md5">MD5</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.sha1">SHA1</a>)
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.sha512">SHA-512</a>)
 </li>
 <li>
 <a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip">xmlschema-core-2.2.4-bin.zip</a>
 (<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.asc">PGP</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.md5">MD5</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.sha1">SHA1</a>
+(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.sha512">SHA-512</a>
 </li>
 </ul>
 </subsection>
 <subsection name="Verifying Releases">
 <p>
-When downloading from a mirror please check the SHA1/MD5 checksums as well
+When downloading from a mirror please check the (SHA-512) checksums as well
 as verifying the OpenPGP compatible signature available from the main Apache
 site. The <a href="https://www.apache.org/dist/ws/xmlschema/KEYS">KEYS</a> file
 contains the public keys used for signing the release. It is recommended that a
@@ -68,10 +66,9 @@ You can check the OpenPGP compatible signature with GnuPG via:
 </ul>
 </p>
 <p>
-You can check the SHA1/MD5 digests with:
+You can check the SHA-512 digests with:
 <ul>
-<li>md5sum xmlschema-*-source-release.zip (and compare output to xmlschema-*-source.release.zip.md5)</li>
-<li>sha1sum xmlschema-*-source-release.zip (and compare output to xmlschema-*-source.release.zip.sha1)</li>
+<li>sha512sum xmlschema-*-source-release.zip (and compare output to xmlschema-*-source.release.zip.sha512)</li>
 </ul>
 </p>
 </subsection>
