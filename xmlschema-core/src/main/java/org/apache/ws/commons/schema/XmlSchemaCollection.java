@@ -27,11 +27,12 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
@@ -136,7 +137,7 @@ public final class XmlSchemaCollection {
     /**
      * stack to track imports (to prevent recursion)
      */
-    Stack<SchemaKey> stack;
+    Deque<SchemaKey> stack;
     Map<QName, List<TypeReceiver>> unresolvedTypes;
     XmlSchema xsd;
     // the default extension registry
@@ -170,14 +171,14 @@ public final class XmlSchemaCollection {
     }
 
     /**
-     * Return an indication of whether a particular schema is in the working stack of schemas. This function,
+     * Return an indication of whether a particular schema is not in the working stack of schemas. This function,
      * while public, is probably not useful outside of the implementation.
      * 
      * @param pKey schema key
-     * @return true if the schema is in the stack.
+     * @return false if the schema is in the stack.
      */
     public boolean check(SchemaKey pKey) {
-        return stack.indexOf(pKey) == -1;
+        return !stack.contains(pKey);
     }
 
     public ExtensionRegistry getExtReg() {
@@ -270,7 +271,7 @@ public final class XmlSchemaCollection {
      */
     public void init() {
         
-        stack = new Stack<SchemaKey>();
+        stack = new ArrayDeque<SchemaKey>();
         unresolvedTypes = new HashMap<QName, List<TypeReceiver>>();
         extReg = new ExtensionRegistry();
         knownNamespaceMap = new HashMap<String, XmlSchema>();
