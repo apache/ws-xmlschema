@@ -53,9 +53,9 @@ public final class XmlSchemaWalker {
     private Set<QName> userRecognizedTypes;
 
     private final XmlSchemaCollection schemas;
-    private final ArrayList<XmlSchemaVisitor> visitors;
+    private final List<XmlSchemaVisitor> visitors;
     private final Map<QName, List<XmlSchemaElement>> elemsBySubstGroup;
-    private final Map<String, XmlSchema> schemasByNamespace;
+    private final SchemasByNamespace schemasByNamespace;
     private final Map<QName, XmlSchemaScope> scopeCache;
     private final Set<QName> visitedElements;
 
@@ -72,11 +72,11 @@ public final class XmlSchemaWalker {
         schemas = xmlSchemas;
         visitors = new ArrayList<XmlSchemaVisitor>(1);
 
-        schemasByNamespace = new HashMap<String, XmlSchema>();
+        schemasByNamespace = new SchemasByNamespace();
         elemsBySubstGroup = new HashMap<QName, List<XmlSchemaElement>>();
 
         for (XmlSchema schema : schemas.getXmlSchemas()) {
-            schemasByNamespace.put(schema.getTargetNamespace(), schema);
+            schemasByNamespace.addSchema(schema.getTargetNamespace(), schema);
 
             for (XmlSchemaElement elem : schema.getElements().values()) {
                 if (elem.getSubstitutionGroup() != null) {
@@ -211,8 +211,7 @@ public final class XmlSchemaWalker {
         if (schemaType == null) {
             final QName typeQName = element.getSchemaTypeName();
             if (typeQName != null) {
-                XmlSchema schema = schemasByNamespace.get(typeQName.getNamespaceURI());
-                schemaType = schema.getTypeByName(typeQName);
+                schemaType = schemasByNamespace.getTypeByName(typeQName);
             }
         }
 
@@ -233,7 +232,7 @@ public final class XmlSchemaWalker {
 
             // 2. for each visitor, call visitor.startElement(element, type);
             final boolean previouslyVisited = (!element.isAnonymous() && visitedElements.contains(element
-                .getQName()));
+                                                                                                  .getQName()));
 
             for (XmlSchemaVisitor visitor : visitors) {
                 visitor.onEnterElement(element, typeInfo, previouslyVisited);
@@ -308,7 +307,7 @@ public final class XmlSchemaWalker {
 
         } else if (!element.isAbstract()) {
             throw new IllegalStateException("Element " + element.getQName()
-                                            + " is not abstract and has no type.");
+            + " is not abstract and has no type.");
         }
 
         // 8. Now handle substitute elements, if any.
@@ -328,9 +327,10 @@ public final class XmlSchemaWalker {
             XmlSchemaGroupRef groupRef = (XmlSchemaGroupRef)particle;
             XmlSchemaGroupParticle group = groupRef.getParticle();
             if (group == null) {
-                XmlSchema schema = schemasByNamespace.get(groupRef.getRefName().getNamespaceURI());
-
-                group = schema.getGroupByName(groupRef.getRefName()).getParticle();
+                XmlSchemaGroup g = schemasByNamespace.getGroupByName(groupRef.getRefName());
+                if (g != null) {
+                    group = g.getParticle();
+                }
             }
             walk(group, groupRef.getMinOccurs(), groupRef.getMaxOccurs());
 
@@ -375,7 +375,7 @@ public final class XmlSchemaWalker {
 
         } else {
             throw new IllegalArgumentException("Unrecognized XmlSchemaGroupParticle of type "
-                                               + group.getClass().getName());
+                + group.getClass().getName());
         }
 
         // 2. Make a copy if necessary.
@@ -515,7 +515,6 @@ public final class XmlSchemaWalker {
         }
 
         final QName elemQName = getElementQName(element);
-        final XmlSchema schema = schemasByNamespace.get(elemQName.getNamespaceURI());
 
         XmlSchemaElement globalElem = null;
         if (!element.isRef()) {
@@ -523,7 +522,7 @@ public final class XmlSchemaWalker {
         } else if (element.getRef().getTarget() != null) {
             globalElem = element.getRef().getTarget();
         } else {
-            globalElem = schema.getElementByName(elemQName);
+            globalElem = schemasByNamespace.getElementByName(elemQName);
         }
 
         /*
@@ -534,6 +533,13 @@ public final class XmlSchemaWalker {
         String id = element.getId();
         if (id == null) {
             id = globalElem.getId();
+        }
+
+        XmlSchema schema = schemasByNamespace.getSchemaDefiningElement(elemQName);
+        if (schema == null) {
+            // TODO: is this correct? The previous code used whichever schema was stored in the schemasByNamespace HashMap
+            // for the element's namespace.
+            schema = element.getParent();
         }
 
         final XmlSchemaElement copy = new XmlSchemaElement(schema, false);

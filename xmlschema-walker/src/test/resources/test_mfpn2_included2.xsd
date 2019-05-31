@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License. 
+ -->
+ <!--
+ This file is included by test_multiple_files_per_namespace2.xsd
+ -->
+ <xsd:schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://avro.apache.org/AvroTest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:avro="http://avro.apache.org/AvroTest">
+
+	<xsd:attribute name="size">
+		<xsd:simpleType>
+			<xsd:restriction base="xsd:nonNegativeInteger">
+				<xsd:maxExclusive value="100" />
+			</xsd:restriction>
+		</xsd:simpleType>
+	</xsd:attribute>
+
+	<xsd:group name="group">
+		<xsd:annotation>
+			<xsd:documentation>A group of nested sequences, choices, and elements.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element ref="avro:primitive"        />
+				<xsd:element ref="avro:nonNullPrimitive" />
+				<xsd:element ref="avro:record"           />
+				<xsd:element ref="avro:list"             />
+				<xsd:element ref="avro:tuple"            />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:group>
+
+	<xsd:complexType name="recordType">
+		<xsd:group ref="avro:group" />
+	</xsd:complexType>
+
+</xsd:schema>

@@ -63,7 +63,7 @@ import org.apache.ws.commons.schema.utils.XmlSchemaNamed;
  */
 final class XmlSchemaScope {
 
-    private Map<String, XmlSchema> schemasByNamespace;
+    private SchemasByNamespace schemasByNamespace;
     private Map<QName, XmlSchemaScope> scopeCache;
 
     private XmlSchemaTypeInfo typeInfo;
@@ -100,7 +100,7 @@ final class XmlSchemaScope {
      * @param substitutions The master list of substitution groups to pull from.
      * @param userRecognizedTypes The set of types recognized by the caller.
      */
-    XmlSchemaScope(XmlSchemaType type, Map<String, XmlSchema> xmlSchemasByNamespace,
+    XmlSchemaScope(XmlSchemaType type, SchemasByNamespace xmlSchemasByNamespace,
                    Map<QName, XmlSchemaScope> scopeCache, Set<QName> userRecognizedTypes) {
 
         this();
@@ -169,9 +169,7 @@ final class XmlSchemaScope {
             XmlSchemaSimpleTypeList list = (XmlSchemaSimpleTypeList)content;
             XmlSchemaSimpleType listType = list.getItemType();
             if (listType == null) {
-                XmlSchema schema = schemasByNamespace.get(list.getItemTypeName().getNamespaceURI());
-
-                listType = (XmlSchemaSimpleType)schema.getTypeByName(list.getItemTypeName());
+                listType = (XmlSchemaSimpleType)schemasByNamespace.getTypeByName(list.getItemTypeName());
             }
             if (listType == null) {
                 throw new IllegalArgumentException("Unrecognized schema type for list "
@@ -202,8 +200,7 @@ final class XmlSchemaScope {
                 }
 
                 for (QName namedBaseType : namedBaseTypes) {
-                    XmlSchema schema = schemasByNamespace.get(namedBaseType.getNamespaceURI());
-                    XmlSchemaSimpleType baseType = (XmlSchemaSimpleType)schema.getTypeByName(namedBaseType);
+                    XmlSchemaSimpleType baseType = (XmlSchemaSimpleType)schemasByNamespace.getTypeByName(namedBaseType);
                     if (baseType != null) {
                         baseTypes.add(baseType);
                     }
@@ -247,8 +244,7 @@ final class XmlSchemaScope {
             } else {
                 XmlSchemaSimpleType baseType = restr.getBaseType();
                 if (baseType == null) {
-                    XmlSchema schema = schemasByNamespace.get(restr.getBaseTypeName().getNamespaceURI());
-                    baseType = (XmlSchemaSimpleType)schema.getTypeByName(restr.getBaseTypeName());
+                    baseType = (XmlSchemaSimpleType)schemasByNamespace.getTypeByName(restr.getBaseTypeName());
                 }
 
                 if (baseType != null) {
@@ -323,8 +319,7 @@ final class XmlSchemaScope {
         if (content instanceof XmlSchemaComplexContentExtension) {
             XmlSchemaComplexContentExtension ext = (XmlSchemaComplexContentExtension)content;
 
-            XmlSchema schema = schemasByNamespace.get(ext.getBaseTypeName().getNamespaceURI());
-            XmlSchemaType baseType = schema.getTypeByName(ext.getBaseTypeName());
+            XmlSchemaType baseType = schemasByNamespace.getTypeByName(ext.getBaseTypeName());
 
             XmlSchemaParticle baseParticle = null;
             XmlSchemaAnyAttribute baseAnyAttr = null;
@@ -418,9 +413,7 @@ final class XmlSchemaScope {
         } else if (content instanceof XmlSchemaComplexContentRestriction) {
             final XmlSchemaComplexContentRestriction rstr = (XmlSchemaComplexContentRestriction)content;
 
-            final XmlSchema schema = schemasByNamespace.get(rstr.getBaseTypeName().getNamespaceURI());
-
-            final XmlSchemaType baseType = schema.getTypeByName(rstr.getBaseTypeName());
+            final XmlSchemaType baseType = schemasByNamespace.getTypeByName(rstr.getBaseTypeName());
 
             XmlSchemaScope parentScope = null;
             if (baseType != null) {
@@ -460,8 +453,7 @@ final class XmlSchemaScope {
             XmlSchemaSimpleContentExtension ext = (XmlSchemaSimpleContentExtension)content;
             attributes = createAttributeMap(ext.getAttributes());
 
-            XmlSchema schema = schemasByNamespace.get(ext.getBaseTypeName().getNamespaceURI());
-            XmlSchemaType baseType = schema.getTypeByName(ext.getBaseTypeName());
+            XmlSchemaType baseType = schemasByNamespace.getTypeByName(ext.getBaseTypeName());
 
             if (baseType != null) {
                 final XmlSchemaScope parentScope = getScope(baseType);
@@ -484,8 +476,7 @@ final class XmlSchemaScope {
             if (rstr.getBaseType() != null) {
                 baseType = rstr.getBaseType();
             } else {
-                XmlSchema schema = schemasByNamespace.get(rstr.getBaseTypeName().getNamespaceURI());
-                baseType = schema.getTypeByName(rstr.getBaseTypeName());
+                baseType = schemasByNamespace.getTypeByName(rstr.getBaseTypeName());
             }
 
             if (baseType != null) {
@@ -505,8 +496,7 @@ final class XmlSchemaScope {
 
         XmlSchemaAttributeGroup attrGroup = groupRef.getRef().getTarget();
         if (attrGroup == null) {
-            XmlSchema schema = schemasByNamespace.get(groupRef.getTargetQName().getNamespaceURI());
-            attrGroup = schema.getAttributeGroupByName(groupRef.getTargetQName());
+            attrGroup = schemasByNamespace.getAttributeGroupByName(groupRef.getTargetQName());
         }
         return getAttributesOf(attrGroup);
     }
@@ -556,7 +546,6 @@ final class XmlSchemaScope {
         } else {
             attrQName = attribute.getQName();
         }
-        final XmlSchema schema = schemasByNamespace.get(attrQName.getNamespaceURI());
 
         if (!attribute.isRef() && (forceCopy || (attribute.getSchemaType() == null))) {
             // If we are forcing a copy, there is no reference to follow.
@@ -565,7 +554,7 @@ final class XmlSchemaScope {
             if (attribute.getRef().getTarget() != null) {
                 globalAttr = attribute.getRef().getTarget();
             } else {
-                globalAttr = schema.getAttributeByName(attrQName);
+                globalAttr = schemasByNamespace.getAttributeByName(attrQName);
             }
         }
 
@@ -573,8 +562,7 @@ final class XmlSchemaScope {
         if (schemaType == null) {
             final QName typeQName = globalAttr.getSchemaTypeName();
             if (typeQName != null) {
-                XmlSchema typeSchema = schemasByNamespace.get(typeQName.getNamespaceURI());
-                schemaType = (XmlSchemaSimpleType) typeSchema.getTypeByName(typeQName);
+                schemaType = (XmlSchemaSimpleType) schemasByNamespace.getTypeByName(typeQName);
             }
         }
 
@@ -603,6 +591,12 @@ final class XmlSchemaScope {
             attrUsage = XmlSchemaUse.OPTIONAL;
         }
 
+        XmlSchema schema = schemasByNamespace.getSchemaDefiningAttribute(attrQName);
+        if (schema == null) {
+            // TODO: is this correct? The previous code used whichever schema was stored in the schemasByNamespace HashMap
+            // for the attribute's namespace.
+            schema = attribute.getParent();
+        }
         final XmlSchemaAttribute copy = new XmlSchemaAttribute(schema, false);
         copy.setName(globalAttr.getName());
 
@@ -788,7 +782,7 @@ final class XmlSchemaScope {
             return childFacets;
         }
 
-        HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> mergedFacets 
+        HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> mergedFacets
             = new HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>>(parentFacets);
 
         // Child facets override parent facets

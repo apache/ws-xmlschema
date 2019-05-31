@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License. 
+ -->
+
+ <!--
+ This test distributes test_schema.xsd among three files, this one, test_mfpn2_included1.xsd
+ and test_mfpn2_included2.xsd 
+  -->
+<xsd:schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://avro.apache.org/AvroTest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:avro="http://avro.apache.org/AvroTest">
+	<xsd:include schemaLocation="test_mfpn2_included1.xsd"/>
+	<xsd:include schemaLocation="test_mfpn2_included2.xsd"/>	
+
+	<xsd:attribute name="id">
+		<xsd:simpleType>
+			<xsd:restriction base="xsd:ID">
+				<xsd:minLength value="1" />
+			</xsd:restriction>
+		</xsd:simpleType>
+	</xsd:attribute>
+
+
+	<xsd:simpleType name="primitiveType">
+		<xsd:restriction base="xsd:NMTOKEN">
+			<xsd:enumeration value="null" />
+			<xsd:enumeration value="boolean" />
+			<xsd:enumeration value="int" />
+			<xsd:enumeration value="long" />
+			<xsd:enumeration value="float" />
+			<xsd:enumeration value="double" />
+			<xsd:enumeration value="decimal" />
+			<xsd:enumeration value="bytes" />
+			<xsd:enumeration value="string" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:element name="root">
+		<xsd:complexType>
+			<xsd:group ref="avro:group" />
+			<xsd:attributeGroup ref="avro:attrGroup" />
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="primitive" type="avro:primitiveType" />
+	<xsd:element name="nonNullPrimitive" type="avro:nonNullPrimitiveType" />
+
+	<xsd:element name="record" type="avro:recordType" />
+	<xsd:element name="map" substitutionGroup="avro:record">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="avro:recordType">
+					<xsd:attribute ref="avro:id" use="required" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="list">
+		<xsd:complexType>
+			<xsd:choice>
+				<xsd:element ref="avro:primitive" minOccurs="1" maxOccurs="100" />
+				<xsd:element ref="avro:record"    minOccurs="1" maxOccurs="100" />
+			</xsd:choice>
+			<xsd:attribute ref="avro:size" />
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="tuple">
+		<xsd:complexType>
+			<xsd:group ref="avro:groupOfAll" />
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="nonNullRecord">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:restriction base="avro:recordType">
+					<xsd:sequence>
+						<xsd:element ref="avro:nonNullPrimitive" />
+					</xsd:sequence>
+				</xsd:restriction>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

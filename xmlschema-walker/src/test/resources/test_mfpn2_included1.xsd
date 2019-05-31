@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License. 
+ -->
+<!--
+ This file is included by test_multiple_files_per_namespace2.xsd
+ -->
+ <xsd:schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://avro.apache.org/AvroTest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:avro="http://avro.apache.org/AvroTest">
+
+	<xsd:attributeGroup name="attrGroup" id="attrGroup">
+		<xsd:annotation>
+			<xsd:documentation>An attribute group with attributes of all simple types.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="anySimpleType"        type="xsd:anySimpleType"      use="optional" />
+		<xsd:attribute name="duration"             type="xsd:duration"           use="optional" />
+		<xsd:attribute name="dateTime"             type="xsd:dateTime"           use="optional" />
+		<xsd:attribute name="date"                 type="xsd:date"               use="optional" />
+		<xsd:attribute name="time"                 type="xsd:time"               use="optional" />
+		<xsd:attribute name="gYearMonth"           type="xsd:gYearMonth"         use="optional" />
+		<xsd:attribute name="gYear"                type="xsd:gYear"              use="optional" />
+		<xsd:attribute name="gMonthDay"            type="xsd:gMonthDay"          use="optional" />
+		<xsd:attribute name="gDay"                 type="xsd:gDay"               use="optional" />
+		<xsd:attribute name="gMonth"               type="xsd:gMonth"             use="optional" />
+		<xsd:attribute name="string"               type="xsd:string"             use="optional" />
+		<xsd:attribute name="boolean"              type="xsd:boolean"            use="optional" />
+		<xsd:attribute name="base64Binary"         type="xsd:base64Binary"       use="optional" />
+		<xsd:attribute name="hexBinary"            type="xsd:hexBinary"          use="optional" />
+		<xsd:attribute name="float"                type="xsd:float"              use="optional" />
+		<xsd:attribute name="decimal"              use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:decimal">
+					<xsd:fractionDigits value="0"></xsd:fractionDigits>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="double"               type="xsd:double"             use="optional" />
+		<xsd:attribute name="anyURI"               type="xsd:anyURI"             use="optional" />
+		<xsd:attribute name="qname"                type="xsd:QName"              use="optional" />
+		<xsd:attribute name="normalizedString"     type="xsd:normalizedString"   use="optional" />
+		<xsd:attribute name="token"                type="xsd:token"              use="optional" />
+		<xsd:attribute name="language"             type="xsd:language"           use="optional" />
+		<xsd:attribute name="name"                 type="xsd:Name"               use="optional" />
+		<xsd:attribute name="ncName"               type="xsd:NCName"             use="optional" />
+		<xsd:attribute name="nmtoken"              type="xsd:NMTOKEN"            use="optional" />
+		<xsd:attribute name="nmtokens"             type="xsd:NMTOKENS"           use="optional" />
+		<xsd:attribute name="id"                   type="xsd:ID"                 use="optional" />
+		<xsd:attribute name="idref"                type="xsd:IDREF"              use="optional" />
+		<xsd:attribute name="idrefs"               type="xsd:IDREFS"             use="optional" />
+		<xsd:attribute name="entity"               type="xsd:ENTITY"             use="optional" />
+		<xsd:attribute name="entities"             type="xsd:ENTITIES"           use="optional" />
+		<xsd:attribute name="integer"              type="xsd:integer"            use="optional" />
+		<xsd:attribute name="nonPositiveInteger"   type="xsd:nonPositiveInteger" use="optional" />
+		<xsd:attribute name="nonNegativeInteger"   type="xsd:nonNegativeInteger" use="optional" />
+		<xsd:attribute name="positiveInteger"      type="xsd:positiveInteger"    use="optional" />
+		<xsd:attribute name="negativeInteger"      type="xsd:negativeInteger"    use="optional" />
+		<xsd:attribute name="long"                 type="xsd:long"               use="optional" />
+		<xsd:attribute name="int"                  type="xsd:int"                use="optional" />
+		<xsd:attribute name="short"                type="xsd:short"              use="optional" />
+		<xsd:attribute name="byte"                 type="xsd:byte"               use="optional" />
+		<xsd:attribute name="unsignedLong"         type="xsd:unsignedLong"       use="optional" />
+		<xsd:attribute name="unsignedInt"          type="xsd:unsignedInt"        use="optional" />
+		<xsd:attribute name="unsignedShort"        type="xsd:unsignedShort"      use="optional" />
+		<xsd:attribute name="unsignedByte"         type="xsd:unsignedByte"       use="optional" />
+		<xsd:attribute name="unknown"              use="optional"/>
+	</xsd:attributeGroup>
+
+	<xsd:group name="groupOfAll">
+		<xsd:annotation>
+			<xsd:documentation>An All Group</xsd:documentation>
+		</xsd:annotation>
+		<xsd:all>
+			<xsd:element ref="avro:primitive"        />
+			<xsd:element ref="avro:nonNullPrimitive" />
+			<xsd:element ref="avro:record"           />
+			<xsd:element ref="avro:list"             />
+		</xsd:all>
+	</xsd:group>
+
+	<xsd:simpleType name="nonNullPrimitiveType">
+		<xsd:restriction base="avro:primitiveType">
+			<xsd:enumeration value="boolean" />
+			<xsd:enumeration value="int" />
+			<xsd:enumeration value="long" />
+			<xsd:enumeration value="float" />
+			<xsd:enumeration value="double" />
+			<xsd:enumeration value="decimal" />
+			<xsd:enumeration value="bytes" />
+			<xsd:enumeration value="string" />
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

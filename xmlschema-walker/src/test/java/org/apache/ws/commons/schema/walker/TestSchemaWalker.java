@@ -498,12 +498,7 @@ public class TestSchemaWalker {
         private HashMap<String, List<Attribute>> attributes;
     }
 
-    /**
-     * Test for src/main/resources/test_schema.xsd
-     */
-    @SuppressWarnings("unchecked")
-    @Test
-    public void test() throws Exception {
+    public void test(File aFile) throws Exception {
         // Build the expectations.
         ArrayList<Attribute> attrGroupAttrs = new ArrayList<Attribute>(43);
 
@@ -856,11 +851,10 @@ public class TestSchemaWalker {
         XmlSchemaCollection collection = null;
         FileReader fileReader = null;
         try {
-            File file = UtilsForTests.buildFile("src", "test", "resources", "test_schema.xsd");
-            fileReader = new FileReader(file);
+            fileReader = new FileReader(aFile);
 
             collection = new XmlSchemaCollection();
-            collection.read(new StreamSource(fileReader, file.getAbsolutePath()));
+            collection.read(new StreamSource(fileReader, aFile.getAbsolutePath()));
 
         } finally {
             if (fileReader != null) {
@@ -881,6 +875,24 @@ public class TestSchemaWalker {
         }
 
         Assert.assertTrue(stack.isEmpty());
+    }
+
+    /**
+     * test for test_schema.xsd
+     */
+    @Test
+    public void testSchemaWalker() throws Exception {
+        File file = UtilsForTests.buildFile("src", "test", "resources", "test_schema.xsd");
+        test(file);
+    }
+
+    /**
+     * test for test_multiple_files_per_namespace2.xsd, which is test_schema.xsd distributed between three files
+     */
+    @Test
+    public void testMultipleFilesPerNamespace2() throws Exception {
+        File file = UtilsForTests.buildFile("src", "test", "resources", "test_multiple_files_per_namespace2.xsd");
+        test(file);
     }
 
     private static void checkFacets(String nextName, XmlSchemaTypeInfo typeInfo,
