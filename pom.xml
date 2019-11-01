@@ -60,9 +60,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/webservices/xmlschema/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/webservices/xmlschema/trunk</developerConnection>
-        <url>https://svn.apache.org/viewvc/webservices/xmlschema/trunk</url>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/ws-xmlschema.git</connection>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/ws-xmlschema.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=ws-xmlschema.git;a=summary</url>
     </scm>
     <prerequisites>
         <maven>3.0</maven>

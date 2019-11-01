@@ -52,7 +52,7 @@
                 <item name="Extensions" href="writingExtensions.html"/>
                 <item name="Javadocs" href="apidocs/index.html"/>
                 <item name="View Source"
-                      href="http://svn.apache.org/viewvc/webservices/xmlschema/trunk/?root=Apache-SVN"/>
+                      href="https://github.com/apache/ws-xmlschema"/>
             </item>
             <item name="Project Information" href="project-info.html">
                 <item name="Mailing Lists" href="mail-lists.html"/>
