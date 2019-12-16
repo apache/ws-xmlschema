@@ -86,21 +86,21 @@ public class ExtensionRegistry {
     }
 
     /**
-     * remove the registration for a serializer with a QName
+     * remove the registration for a serializer with a Class
      * 
-     * @param name - the QName of the element/attribute the serializer is associated with
+     * @param classOfType - the Class of the element/attribute the serializer is associated with
      */
-    public void unregisterSerializer(QName name) {
-        extensionSerializers.remove(name);
+    public void unregisterSerializer(Class<?> classOfType) {
+        extensionSerializers.remove(classOfType);
     }
 
     /**
      * remove the registration for a deserializer with a QName
      * 
-     * @param classOfType - the the deserializer is associated with
+     * @param name - the QName fo the element that the deserializer is associated with
      */
-    public void unregisterDeserializer(Class<?> classOfType) {
-        extensionDeserializers.remove(classOfType);
+    public void unregisterDeserializer(QName name) {
+        extensionDeserializers.remove(name);
     }
 
     /**

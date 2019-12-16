@@ -95,10 +95,6 @@ final class XmlSchemaScope {
      * Initializes a new {@link XmlSchemaScope} with a base
      * {@link XmlSchemaElement}. The element type and attributes will be
      * traversed, and attribute lists and element children will be retrieved.
-     *
-     * @param element The base element to build the scope from.
-     * @param substitutions The master list of substitution groups to pull from.
-     * @param userRecognizedTypes The set of types recognized by the caller.
      */
     XmlSchemaScope(XmlSchemaType type, SchemasByNamespace xmlSchemasByNamespace,
                    Map<QName, XmlSchemaScope> scopeCache, Set<QName> userRecognizedTypes) {

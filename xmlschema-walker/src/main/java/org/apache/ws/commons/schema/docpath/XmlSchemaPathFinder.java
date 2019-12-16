@@ -1681,7 +1681,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         } while ((iter != null)
                  && !iter.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT));
 
-        if (!iter.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
+        if (iter == null || !iter.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
             || !iter.getStateMachineNode().getElement().getQName().equals(element)) {
             throw new IllegalStateException("Walked up tree and stopped at node "
                                             + currentPath.getStateMachineNode()

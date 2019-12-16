@@ -508,7 +508,7 @@ public class XmlSchemaSerializer {
             String attGroupName = attributeGroupObj.getName();
             attributeGroup.setAttributeNS(null, "name", attGroupName);
         } else {
-            throw new XmlSchemaSerializerException("Attribute group must" + "have name");
+            throw new XmlSchemaSerializerException("Attribute group must have name");
         }
         if (attributeGroupObj.getId() != null) {
             attributeGroup.setAttributeNS(null, "id", attributeGroupObj.getId());
@@ -1624,7 +1624,7 @@ public class XmlSchemaSerializer {
         if (schemaObj.getAttributeFormDefault() != null) {
             String formQualified = schemaObj.getAttributeFormDefault().toString();
 
-            if (!formQualified.equals(XmlSchemaForm.NONE)) {
+            if (!formQualified.equals(XmlSchemaForm.NONE.toString())) {
                 serializedSchema.setAttributeNS(null, "attributeFormDefault", formQualified);
             }
         }
@@ -1632,7 +1632,7 @@ public class XmlSchemaSerializer {
         if (schemaObj.getElementFormDefault() != null) {
             String formQualified = schemaObj.getElementFormDefault().toString();
 
-            if (!formQualified.equals(XmlSchemaForm.NONE)) {
+            if (!formQualified.equals(XmlSchemaForm.NONE.toString())) {
                 serializedSchema.setAttributeNS(null, "elementFormDefault", formQualified);
             }
         }

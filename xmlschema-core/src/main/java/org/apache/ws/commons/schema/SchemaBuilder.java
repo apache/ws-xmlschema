@@ -145,11 +145,10 @@ public class SchemaBuilder {
     }
 
     /**
-     * build method taking in a document and a validation handler
+     * build method taking in a document and a uri
      *
      * @param doc
      * @param uri
-     * @param veh
      */
     XmlSchema build(Document doc, String uri) {
         Element schemaEl = doc.getDocumentElement();
@@ -275,7 +274,7 @@ public class SchemaBuilder {
      * @param schema
      * @param complexEl
      * @param schemaEl
-     * @param b
+     * @param topLevel
      */
     XmlSchemaComplexType handleComplexType(XmlSchema schema, Element complexEl, Element schemaEl,
                                            boolean topLevel) {
