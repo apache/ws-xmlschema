@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
@@ -1491,9 +1490,13 @@ public class SchemaBuilder {
         currentSchema.setAttributeFormDefault(this.getFormDefault(schemaEl, "attributeFormDefault"));
         currentSchema.setBlockDefault(this.getDerivation(schemaEl, "blockDefault"));
         currentSchema.setFinalDefault(this.getDerivation(schemaEl, "finalDefault"));
-        /* set id attribute */
+
+        /* set id and version attributes */
         if (schemaEl.hasAttribute("id")) {
             currentSchema.setId(schemaEl.getAttribute("id"));
+        }
+        if (schemaEl.hasAttribute("version")) {
+            currentSchema.setVersion(schemaEl.getAttribute("version"));
         }
 
         currentSchema.setSourceURI(systemId);
@@ -1759,14 +1762,13 @@ public class SchemaBuilder {
         if (unionEl.hasAttribute("memberTypes")) {
             String memberTypes = unionEl.getAttribute("memberTypes");
             union.setMemberTypesSource(memberTypes);
-            Vector<QName> v = new Vector<QName>();
+            List<QName> v = new ArrayList<QName>();
             StringTokenizer tokenizer = new StringTokenizer(memberTypes, " ");
             while (tokenizer.hasMoreTokens()) {
                 String member = tokenizer.nextToken();
                 v.add(getRefQName(member, unionEl));
             }
-            union.setMemberTypesQNames(new QName[v.size()]);
-            v.copyInto(union.getMemberTypesQNames());
+            union.setMemberTypesQNames(v.toArray(new QName[v.size()]));
         }
 
         Element inlineUnionType = XDOMUtil.getFirstChildElementNS(unionEl, XmlSchema.SCHEMA_NS, "simpleType");
@@ -1828,7 +1830,7 @@ public class SchemaBuilder {
      * @param schemaObject
      * @param parentElement
      */
-    private void processExtensibilityComponents(XmlSchemaObject schemaObject, 
+    private void processExtensibilityComponents(XmlSchemaObject schemaObject,
                                                 Element parentElement,
                                                 boolean namespaces) {
 
@@ -1843,7 +1845,7 @@ public class SchemaBuilder {
 
                 if (namespaceURI != null && !"".equals(namespaceURI) // ignore unqualified attributes
                     // ignore namespaces
-                    && (namespaces || !namespaceURI.startsWith(Constants.XMLNS_ATTRIBUTE_NS_URI)) 
+                    && (namespaces || !namespaceURI.startsWith(Constants.XMLNS_ATTRIBUTE_NS_URI))
                     // does not belong to the schema namespace by any chance!
                     && !Constants.URI_2001_SCHEMA_XSD.equals(namespaceURI)) {
                     QName qName = new QName(namespaceURI, name);
