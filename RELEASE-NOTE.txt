@@ -1,8 +1,8 @@
  ====================================
- Apache XMLSchema 2.2.4 Release Notes
+ Apache XMLSchema 2.2.5 Release Notes
  ====================================
 
-This is the release of Apache XMLSchema 2.2.4.
+This is the release of Apache XMLSchema 2.2.5.
 
 XMLSchema is a lightweight schema object model that can be used to manipulate 
 and generate XML schema representations. It has few external dependencies
@@ -14,8 +14,14 @@ to the documentation, and reporting bugs are always welcome.
 
 This release fixes the following defects:
 
-** Bug
-* [XMLSCHEMA-53] - Illegal reflective access by org.apache.ws.commons.schema.utils.DOMUtil 
+Bug
+
+    [XMLSCHEMA-56] - Element defined in a base type sometimes isn't visited by an XmlSchemaWalker's visitor
+    [XMLSCHEMA-58] - Schema version not set
+
+Question
+
+    [XMLSCHEMA-51] - Problem with included schemas with attribute group references
 
 
 Thanks for your interest in XMLSchema!
