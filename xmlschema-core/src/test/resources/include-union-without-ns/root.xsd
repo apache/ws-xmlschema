@@ -1,0 +1,9 @@
+<xs:schema targetNamespace="urn:apache-org" xmlns="urn:apache-org" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:include schemaLocation="datatypes.xsd"/>
+	<xs:complexType name="Root">
+		<xs:sequence>
+            <xs:element name="number" type="xs:integer"/>
+		</xs:sequence>
+        <xs:attribute name="root" type="uid" use="required"/>
+	</xs:complexType>
+</xs:schema>

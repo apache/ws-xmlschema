@@ -38,6 +38,10 @@ import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaExternal;
 import org.apache.ws.commons.schema.XmlSchemaInclude;
+import org.apache.ws.commons.schema.XmlSchemaSimpleType;
+import org.apache.ws.commons.schema.XmlSchemaSimpleTypeContent;
+import org.apache.ws.commons.schema.XmlSchemaSimpleTypeUnion;
+import org.apache.ws.commons.schema.XmlSchemaType;
 import org.apache.ws.commons.schema.constants.Constants;
 
 import org.junit.Assert;
@@ -182,4 +186,35 @@ public class IncludeTest extends Assert {
         assertNotNull(el);
         assertNull(el.getAttributeNodeNS(null, "targetNamespace"));
     }
+
+
+    /**
+     * Schema included does not have a namespace and defines a union whose members 
+     * should inherit the root (includer) namespace.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testSchemaIncludeUnionWithoutNamespace() throws Exception {
+    	String uri = Resources.asURI("include-union-without-ns/root.xsd");
+        InputSource isource = new InputSource(new FileInputStream(uri));
+        isource.setSystemId(uri);
+        XmlSchemaCollection schemaCol = new XmlSchemaCollection();
+        XmlSchema schema = schemaCol.read(isource);
+        assertNotNull(schema);
+
+        XmlSchemaType uidType = schemaCol.getTypeByQName(new QName("urn:apache-org", "uid"));
+        assertNotNull(uidType);
+        XmlSchemaType oidType = schemaCol.getTypeByQName(new QName("urn:apache-org", "oid"));
+        assertNotNull(oidType);
+        assertTrue(uidType instanceof XmlSchemaSimpleType);
+        XmlSchemaSimpleTypeContent content = ((XmlSchemaSimpleType) uidType).getContent();
+        assertTrue(content instanceof XmlSchemaSimpleTypeUnion);
+        QName oid = ((XmlSchemaSimpleTypeUnion) content).getMemberTypesQNames()[0];
+        assertEquals("oid", oid.getLocalPart());
+        assertEquals("urn:apache-org", oid.getNamespaceURI());
+    }
+    
+    
+
 }

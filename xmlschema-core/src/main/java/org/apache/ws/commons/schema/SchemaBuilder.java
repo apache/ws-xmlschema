@@ -804,6 +804,13 @@ public class SchemaBuilder {
         if (offset == -1) {
             uri = pContext.getNamespaceURI(Constants.DEFAULT_NS_PREFIX);
             if (Constants.NULL_NS_URI.equals(uri)) {
+            	if (currentSchema.getTargetNamespace() == null 
+            			&& !currentSchema.getLogicalTargetNamespace().isEmpty()) {
+					// If object is unqualified in a schema without a target namespace then it could
+					// be that this schema is included in another one. The including namespace
+					// should then be used for this reference
+                    return new QName(currentSchema.getLogicalTargetNamespace(), pName);
+            	}
                 return new QName(Constants.NULL_NS_URI, pName);
             }
             localName = pName;
