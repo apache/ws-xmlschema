@@ -51,7 +51,7 @@ public class IncludeTest extends Assert {
 
     /**
      * This method will test the include.
-     * 
+     *
      * @throws Exception Any exception encountered
      */
     @Test
@@ -89,7 +89,7 @@ public class IncludeTest extends Assert {
                 XmlSchemaElement xse = s.getElementByName(new QName("http://soapinterop.org/types",
                                                                     "test1include"));
                 assertEquals("test1include", xse.getName());
-                assertEquals(new QName("http://www.w3.org/2001/XMLSchema", "string"), 
+                assertEquals(new QName("http://www.w3.org/2001/XMLSchema", "string"),
                              xse.getSchemaTypeName());
             } else if (schemaLocation.equals(Resources.asURI("include3.xsd"))) {
                 XmlSchemaElement xse = s.getElementByName(new QName("http://soapinterop.org/types",
@@ -142,7 +142,7 @@ public class IncludeTest extends Assert {
 
     /**
      * Schema included defined xmlns="http://www.w3.org/2001/XMLSchema"
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -157,7 +157,7 @@ public class IncludeTest extends Assert {
 
     /**
      * Schema included does not define xmlns="http://www.w3.org/2001/XMLSchema"
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -169,11 +169,11 @@ public class IncludeTest extends Assert {
         XmlSchema schema = schemaCol.read(isource);
         assertNotNull(schema);
     }
-    
-    
-    
+
+
+
     @Test
-    public void testSerializeSchema() throws Exception { 
+    public void testSerializeSchema() throws Exception {
         String uri = Resources.asURI("XMLSCHEMA-20/test.xsd");
         InputSource isource = new InputSource(new FileInputStream(uri));
         isource.setSystemId(uri);
@@ -189,9 +189,9 @@ public class IncludeTest extends Assert {
 
 
     /**
-     * Schema included does not have a namespace and defines a union whose members 
+     * Schema included does not have a namespace and defines a union whose members
      * should inherit the root (includer) namespace.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -214,7 +214,5 @@ public class IncludeTest extends Assert {
         assertEquals("oid", oid.getLocalPart());
         assertEquals("urn:apache-org", oid.getNamespaceURI());
     }
-    
-    
 
 }
