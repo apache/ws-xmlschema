@@ -35,18 +35,18 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 </subsection>
 <subsection name="Current official release (closest mirror site selected automatically)">
 <p>
-The current stable release is Apache XMLSchema 2.2.4:
+The current stable release is Apache XMLSchema 2.2.5:
 </p>
 <ul>
 <li>
-<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip">xmlschema-2.2.4-source-release.zip</a>
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.asc">PGP</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-2.2.4-source-release.zip.sha512">SHA-512</a>)
+<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.5/xmlschema-2.2.5-source-release.zip">xmlschema-2.2.5-source-release.zip</a>
+(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-2.2.5-source-release.zip.asc">PGP</a>)
+(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-2.2.5-source-release.zip.sha512">SHA-512</a>)
 </li>
 <li>
-<a href="http://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip">xmlschema-core-2.2.4-bin.zip</a>
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.asc">PGP</a>)
-(<a href="https://www.apache.org/dist/ws/xmlschema/2.2.4/xmlschema-core-2.2.4-bin.zip.sha512">SHA-512</a>
+<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.5/xmlschema-core-2.2.5-bin.zip">xmlschema-core-2.2.5-bin.zip</a>
+(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-core-2.2.5-bin.zip.asc">PGP</a>)
+(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-core-2.2.5-bin.zip.sha512">SHA-512</a>
 </li>
 </ul>
 </subsection>
@@ -54,7 +54,7 @@ The current stable release is Apache XMLSchema 2.2.4:
 <p>
 When downloading from a mirror please check the (SHA-512) checksums as well
 as verifying the OpenPGP compatible signature available from the main Apache
-site. The <a href="https://www.apache.org/dist/ws/xmlschema/KEYS">KEYS</a> file
+site. The <a href="https://downloads.apache.org/ws/xmlschema/KEYS">KEYS</a> file
 contains the public keys used for signing the release. It is recommended that a
 web of trust is used to confirm the identity of these keys.
 </p>
@@ -74,7 +74,7 @@ You can check the SHA-512 digests with:
 </subsection>
 <subsection name="Archive of old releases">
 <p>
-Older releases are available in the <a href="http://archive.apache.org/dist/ws/xmlschema/">archive</a>.
+Older releases are available in the <a href="https://archive.apache.org/dist/ws/xmlschema/">archive</a>.
 </p>
 </subsection>
 </section>
