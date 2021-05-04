@@ -52,7 +52,7 @@
         </plugins>
     </build>
     <properties>
-        <exam.version>4.9.1</exam.version>
+        <exam.version>4.13.1</exam.version>
         <!-- don't deploy this as this is just test data and a large amount of it -->
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>org.eclipse.tycho</groupId>
             <artifactId>org.eclipse.osgi</artifactId>
-            <version>3.11.0.v20160603-1336</version>
+            <version>3.13.0.v20180226-1711</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -114,7 +114,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.26</version>
+            <version>1.7.30</version>
         </dependency>
     </dependencies>
 </project>
