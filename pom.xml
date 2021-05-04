@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>21</version>
+        <version>23</version>
     </parent>
     <groupId>org.apache.ws.xmlschema</groupId>
     <artifactId>xmlschema</artifactId>
@@ -114,7 +114,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.4.1</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -204,7 +204,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18</version>
+                    <version>2.22.2</version>
                     <configuration>
                         <systemPropertyVariables>
                             <org.apache.ws.commons.schema.protectReadOnlyCollections>true</org.apache.ws.commons.schema.protectReadOnlyCollections>
@@ -224,7 +224,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.10.4</version>
+                    <version>3.2.0</version>
                     <configuration>
                         <attach>true</attach>
                         <quiet>true</quiet>
@@ -233,7 +233,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.4</version>
+                    <version>3.9.1</version>
                 </plugin>
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
                 <plugin>
@@ -304,6 +304,28 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.6.1</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
     <profiles>
         <profile>
@@ -424,7 +446,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-eclipse-plugin</artifactId>
-                        <version>2.9</version>
+                        <version>2.10</version>
                         <inherited>false</inherited>
                         <executions>
                             <execution>
@@ -491,19 +513,8 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.0.0</version>
                         <inherited>false</inherited>
-                        <dependencies>
-                            <dependency>
-                                <groupId>ant</groupId>
-                                <artifactId>ant-nodeps</artifactId>
-                                <version>1.6.5</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>ant</groupId>
-                                <artifactId>ant-trax</artifactId>
-                                <version>1.6.5</version>
-                            </dependency>
-                        </dependencies>
                         <executions>
                             <execution>
                                 <id>setup.workspace</id>
@@ -622,7 +633,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.9</version>
+                <version>3.1.2</version>
                 <!--configuration>
                     <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
                     <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
