@@ -463,6 +463,15 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
     }
 
     /**
+     * Set the declared XML Schema version of this schema
+     *
+     * @param version the new version.
+     */
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    /**
      * Set the default attribute form for this schema.
      *
      * @param value the form. This may not be null.
@@ -829,10 +838,6 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
 
     void setSyntacticalTargetNamespace(String syntacticalTargetNamespace) {
         this.syntacticalTargetNamespace = syntacticalTargetNamespace;
-    }
-
-    void setVersion(String version) {
-        this.version = version;
     }
 
     /**
