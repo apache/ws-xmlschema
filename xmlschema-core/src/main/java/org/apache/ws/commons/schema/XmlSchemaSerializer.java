@@ -2146,9 +2146,21 @@ public class XmlSchemaSerializer {
         }
 
         if (unionObj.getMemberTypesSource() != null) {
+            QName[] memberTypesQNames = unionObj.getMemberTypesQNames();            
+            for (QName qn : memberTypesQNames) {
+                String namespace = qn.getNamespaceURI();
+                if (namespace.length() != 0 && qn.getPrefix().length() != 0) {
+                    String prefix = schemaNamespace.get(namespace);
+                    if (!qn.getPrefix().equals(prefix)) {
+                        prefix = union.lookupPrefix(namespace);
+                    }
+                    if (!qn.getPrefix().equals(prefix)) {
+                        union.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:" + qn.getPrefix(), qn.getNamespaceURI());
+                    }
+                }
+            }
             union.setAttributeNS(null, "memberTypes", unionObj.getMemberTypesSource());
-        }
-        else {
+        } else {
             QName[] memberTypesQNames = unionObj.getMemberTypesQNames();
             if (memberTypesQNames != null && memberTypesQNames.length > 0) {
                 StringBuilder memberTypes = new StringBuilder();
@@ -2163,7 +2175,7 @@ public class XmlSchemaSerializer {
                     }
                     memberTypes.append(memberTypesQName.getLocalPart());
                     if (i != n) {
-                      memberTypes.append(' ');
+                        memberTypes.append(' ');
                     }
                 }
                 

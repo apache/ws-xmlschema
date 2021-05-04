@@ -21,6 +21,8 @@ package tests;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -80,6 +82,37 @@ public class UnionTest extends Assert {
 
         assertEquals("float decimal", xsstu.getMemberTypesSource());
 
+    }
+    
+    @Test
+    public void testUnionNamespacePrefix() throws Exception {
+
+        QName elementQName = new QName("http://some.uri", "myDateTime");
+        InputStream is = new FileInputStream(Resources.asURI("union-schema.xsd"));
+        XmlSchemaCollection schemaCol = new XmlSchemaCollection();
+        schemaCol.read(new StreamSource(is));
+
+        XmlSchemaSimpleType simpleType = (XmlSchemaSimpleType)schemaCol.getTypeByQName(elementQName);
+        assertNotNull(simpleType);
+
+        XmlSchemaSimpleTypeUnion xsstu = (XmlSchemaSimpleTypeUnion)simpleType.getContent();
+        assertNotNull(xsstu);
+
+        QName[] qname = xsstu.getMemberTypesQNames();
+        Set<QName> s = new HashSet<QName>();
+        s.add(new QName("http://some.uri", "emptyString"));
+        s.add(new QName("http://www.w3.org/2001/XMLSchema", "dateTime"));
+        for (QName element : qname) {
+            assertTrue(s.remove(element));
+        }
+        assertTrue("The set should have been empty, but instead contained: " + s + ".", s.isEmpty());
+        
+        StringWriter writer = new StringWriter();
+        schemaCol.schemaForNamespace("http://some.uri").write(writer);
+        String sc = writer.toString();
+        assertTrue(sc, sc.contains("xmlns:q2"));
+        
+        new XmlSchemaCollection().read(new StringReader(sc));
     }
 
 }

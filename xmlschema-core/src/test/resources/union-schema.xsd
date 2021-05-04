@@ -1,0 +1,17 @@
+<xs:schema elementFormDefault="qualified" targetNamespace="http://some.uri" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="DynamicObject">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="DatePicker1" xmlns:q1="http://some.uri" type="q1:myDateTime"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:simpleType name="emptyString">
+		<xs:restriction base="xs:string">
+			<xs:length value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="myDateTime">
+		<xs:union xmlns:q2="http://some.uri" memberTypes="q2:emptyString xs:dateTime"/>
+	</xs:simpleType>
+</xs:schema>
