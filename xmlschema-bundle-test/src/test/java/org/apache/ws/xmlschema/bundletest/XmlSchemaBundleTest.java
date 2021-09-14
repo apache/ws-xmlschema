@@ -50,17 +50,19 @@ public class XmlSchemaBundleTest {
                 url("link:classpath:org.apache.ws.xmlschema.walker.link"));
     }
 
-    @Test(expected = java.lang.NoClassDefFoundError.class)
-    public void testInternalsExcluded() {
-        new DummyInternalClass();
-    }
-
     @Test
     public void testSchemaAvailable() {
         XmlSchemaCollection collection = new XmlSchemaCollection();
         Assert.assertNotNull(collection);
         XmlSchemaWalker walker = new XmlSchemaWalker(collection);
         Assert.assertNotNull(walker);
+
+        try {
+            DummyInternalClass d = new DummyInternalClass();
+            Assert.assertNull("Should not be able to create internal class", d);
+        } catch (java.lang.NoClassDefFoundError cnfe) {
+            //ignore
+        }
     }
-    
+
 }
