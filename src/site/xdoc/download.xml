@@ -35,18 +35,18 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 </subsection>
 <subsection name="Current official release (closest mirror site selected automatically)">
 <p>
-The current stable release is Apache XMLSchema 2.2.5:
+The current stable release is Apache XMLSchema 2.3.0:
 </p>
 <ul>
 <li>
-<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.5/xmlschema-2.2.5-source-release.zip">xmlschema-2.2.5-source-release.zip</a>
-(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-2.2.5-source-release.zip.asc">PGP</a>)
-(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-2.2.5-source-release.zip.sha512">SHA-512</a>)
+<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.3.0/xmlschema-2.3.0-source-release.zip">xmlschema-2.3.0-source-release.zip</a>
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.0/xmlschema-2.3.0-source-release.zip.asc">PGP</a>)
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.0/xmlschema-2.3.0-source-release.zip.sha512">SHA-512</a>)
 </li>
 <li>
-<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.2.5/xmlschema-core-2.2.5-bin.zip">xmlschema-core-2.2.5-bin.zip</a>
-(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-core-2.2.5-bin.zip.asc">PGP</a>)
-(<a href="https://downloads.apache.org/ws/xmlschema/2.2.5/xmlschema-core-2.2.5-bin.zip.sha512">SHA-512</a>
+<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.3.0/xmlschema-core-2.3.0-bin.zip">xmlschema-core-2.3.0-bin.zip</a>
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.0/xmlschema-core-2.3.0-bin.zip.asc">PGP</a>)
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.0/xmlschema-core-2.3.0-bin.zip.sha512">SHA-512)</a>
 </li>
 </ul>
 </subsection>

@@ -5,7 +5,7 @@ Overview
    into memory and analyze or modify them, or to create entirely new schemas from
    scratch.
 
-   XMLSchema 2.0 is a major revision that takes advantage of the facilities of Java 1.5.
+   XMLSchema 2.0 is a major revision that takes advantage of the facilities of Java 1.5.  XMLSchema 2.3.0 requires Java8 or higher.
 
    For information on how to use the XmlSchema API, please
    see the {{{./xmlschema-core/apidocs/index.html}javadocs}} or the {{{./xmlschema-core/schematutorial.html}tutorial}}.
@@ -17,7 +17,7 @@ Overview
 Issues
 
    Note that historical JIRA issues for XmlSchema are in the WSCOMMONS project, while 
-   new issues (open as of November 2010) are in the XMLSCHEMA project.
+   new issues are in the XMLSCHEMA project.
 
 Downloads
 
