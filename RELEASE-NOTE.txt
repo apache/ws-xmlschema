@@ -1,8 +1,8 @@
  ====================================
- Apache XMLSchema 2.2.5 Release Notes
+ Apache XMLSchema 2.3.0 Release Notes
  ====================================
 
-This is the release of Apache XMLSchema 2.2.5.
+This is the release of Apache XMLSchema 2.3.0.
 
 XMLSchema is a lightweight schema object model that can be used to manipulate 
 and generate XML schema representations. It has few external dependencies
@@ -12,16 +12,11 @@ You are welcome to kick the tires and get XMLSchema on the move.  Any
 contribution in the form of coding, testing, submitting improvements
 to the documentation, and reporting bugs are always welcome.
 
-This release fixes the following defects:
+The primary change in this release is adding support for Java 17 and
+dropping support for Java 7.   It also contains a few bug fixes:
 
-Bug
-
-    [XMLSCHEMA-56] - Element defined in a base type sometimes isn't visited by an XmlSchemaWalker's visitor
-    [XMLSCHEMA-58] - Schema version not set
-
-Question
-
-    [XMLSCHEMA-51] - Problem with included schemas with attribute group references
+[XMLSCHEMA-57] Fix namespace prefixes not being defined for unions
+[XMLSCHEMA-59] Make setVersion public
 
 
 Thanks for your interest in XMLSchema!
