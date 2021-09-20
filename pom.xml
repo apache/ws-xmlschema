@@ -70,7 +70,7 @@
     </prerequisites>
     <distributionManagement>
         <site>
-            <id>apache.cxf.site</id>
+            <id>webservices-website</id>
             <url>scm:svn:https://svn.apache.org/repos/asf/webservices/website/xmlschema/</url>
         </site>
     </distributionManagement>
@@ -234,6 +234,23 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.9.1</version>
+                    <dependencies>
+                      <dependency>
+                        <groupId>org.apache.maven.wagon</groupId>
+                        <artifactId>wagon-scm</artifactId>
+                        <version>3.4.3</version>
+                      </dependency>
+                      <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-api</artifactId>
+                        <version>1.11.2</version>
+                      </dependency>
+                      <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-svnexe</artifactId>
+                        <version>1.11.2</version>
+                      </dependency>
+                    </dependencies>
                 </plugin>
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
                 <plugin>
