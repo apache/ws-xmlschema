@@ -408,51 +408,6 @@
             </build>
         </profile>
         <profile>
-            <id>DefaultTest</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-        </profile>
-        <profile>
-            <id>IBMTest</id>
-            <activation>
-                <property>
-                    <name>java.vendor</name>
-                    <value>IBM Corporation</value>
-                </property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.bcel</groupId>
-                    <artifactId>bcel</artifactId>
-                    <version>5.2</version>
-                </dependency>
-                <dependency>
-                    <groupId>xalan</groupId>
-                    <artifactId>xalan</artifactId>
-                    <version>2.7.1</version>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <!--
-                                The default xalan TransformerFactory on the ibm jdk is
-                                org.apache.xalan.processor.TransformerFactoryImpl which has a
-                                known issue with implicit namespaces. Set this property to use
-                                the xsltc TransformerFactory (which the sun jdk seems to
-                                default to). -->
-                                <javax.xml.transform.TransformerFactory>org.apache.xalan.xsltc.trax.TransformerFactoryImpl</javax.xml.transform.TransformerFactory>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
             <id>setup.eclipse</id>
             <properties>
                 <eclipse.workspace.dir>${basedir}/../workspace</eclipse.workspace.dir>
