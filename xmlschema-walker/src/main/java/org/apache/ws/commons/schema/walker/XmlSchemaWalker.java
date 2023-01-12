@@ -238,7 +238,7 @@ public final class XmlSchemaWalker {
                 visitor.onEnterElement(element, typeInfo, previouslyVisited);
             }
 
-            if (!element.isAnonymous() && !previouslyVisited) {
+            if (!element.isAnonymous() && !previouslyVisited && (element.isTopLevel() || schemaType.isTopLevel())) {
                 visitedElements.add(element.getQName());
             }
 
