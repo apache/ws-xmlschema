@@ -22,6 +22,7 @@ package org.apache.ws.commons.schema.walker;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,7 @@ import org.apache.ws.commons.schema.XmlSchemaParticle;
 import org.apache.ws.commons.schema.XmlSchemaSequence;
 import org.apache.ws.commons.schema.XmlSchemaSequenceMember;
 import org.apache.ws.commons.schema.XmlSchemaType;
+import org.apache.ws.commons.schema.utils.XmlSchemaNamed;
 
 /**
  * Walks an {@link XmlSchema} from a starting {@link XmlSchemaElement},
@@ -57,7 +59,7 @@ public final class XmlSchemaWalker {
     private final Map<QName, List<XmlSchemaElement>> elemsBySubstGroup;
     private final SchemasByNamespace schemasByNamespace;
     private final Map<QName, XmlSchemaScope> scopeCache;
-    private final Set<QName> visitedElements;
+    private final IdentityHashMap<XmlSchemaType, XmlSchemaType> visitedTypes;
 
     /**
      * Initializes the {@link XmlSchemaWalker} with the
@@ -91,7 +93,7 @@ public final class XmlSchemaWalker {
         }
 
         scopeCache = new HashMap<QName, XmlSchemaScope>();
-        visitedElements = new java.util.HashSet<QName>();
+        visitedTypes = new IdentityHashMap<XmlSchemaType, XmlSchemaType>();
         userRecognizedTypes = null;
     }
 
@@ -143,7 +145,7 @@ public final class XmlSchemaWalker {
      */
     public void clear() {
         scopeCache.clear();
-        visitedElements.clear();
+        visitedTypes.clear();
     }
 
     /**
@@ -231,16 +233,19 @@ public final class XmlSchemaWalker {
             final XmlSchemaTypeInfo typeInfo = scope.getTypeInfo();
 
             // 2. for each visitor, call visitor.startElement(element, type);
-            final boolean previouslyVisited = (!element.isAnonymous() && visitedElements.contains(element
-                                                                                                  .getQName()));
+
+	        // Notes:
+	        // * (infinite) recursion can happen via both toplevel elements and toplevel types
+	        // * but element names are not unique, and types can be anonymous, so we cannot reference names
+	        // * however, because references work properly (i.e., they resolve to the same instance),
+	        //   all instances ARE unique! Thus, we can use reference equality on types to avoid infinite recursion
+            final boolean previouslyVisited = visitedTypes.containsKey(schemaType);
 
             for (XmlSchemaVisitor visitor : visitors) {
                 visitor.onEnterElement(element, typeInfo, previouslyVisited);
             }
 
-            if (!element.isAnonymous() && !previouslyVisited && (element.isTopLevel() || schemaType.isTopLevel())) {
-                visitedElements.add(element.getQName());
-            }
+			visitedTypes.put(schemaType, schemaType);
 
             // If we already visited this element, skip the attributes and
             // child.
