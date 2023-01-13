@@ -30,3 +30,4 @@ xmlschema-eclipse/target/
 .project
 .settings/
 .svn*
+.idea/
