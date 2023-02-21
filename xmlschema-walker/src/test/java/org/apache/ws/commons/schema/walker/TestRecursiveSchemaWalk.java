@@ -52,6 +52,7 @@ public class TestRecursiveSchemaWalk {
 	    expected.add("{http://avro.apache.org/AvroTest}WrappedNumber");
 	    expected.add("{http://avro.apache.org/AvroTest}Array"); // Not a duplicate: different type
 	    expected.add("{http://avro.apache.org/AvroTest}NumberElement");
+	    expected.add("{http://avro.apache.org/AvroTest}StringElement (duplicate)"); // Repeated
 
         MyVisitor v = new MyVisitor(expected);
 

@@ -36,6 +36,7 @@ import org.apache.ws.commons.schema.XmlSchemaAny;
 import org.apache.ws.commons.schema.XmlSchemaChoice;
 import org.apache.ws.commons.schema.XmlSchemaChoiceMember;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
+import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaGroup;
 import org.apache.ws.commons.schema.XmlSchemaGroupParticle;
@@ -245,7 +246,9 @@ public final class XmlSchemaWalker {
                 visitor.onEnterElement(element, typeInfo, previouslyVisited);
             }
 
-			visitedTypes.put(schemaType, schemaType);
+            if (schemaType instanceof XmlSchemaComplexType) {
+                visitedTypes.put(schemaType, schemaType);
+            }
 
             // If we already visited this element, skip the attributes and
             // child.
