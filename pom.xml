@@ -80,6 +80,7 @@
     </organization>
     <properties>
         <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
+        <project.build.outputTimestamp>2023-07-15T16:42:39Z</project.build.outputTimestamp>
     </properties>
     <modules>
         <module>xmlschema-core</module>
@@ -94,7 +95,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>2.4.0</version>
+                    <version>5.1.9</version>
                     <extensions>true</extensions>
                     <configuration>
                         <instructions>
@@ -153,7 +154,7 @@
 
                 <plugin>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
+                    <version>3.0.1</version>
                     <configuration>
                         <useReleaseProfile>false</useReleaseProfile>
                         <goals>site:site deploy</goals>
