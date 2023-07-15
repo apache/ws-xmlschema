@@ -1,0 +1,16 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+	"features": {
+		"ghcr.io/devcontainers/features/java:1": {
+			"version": "8",
+			"installMaven": "true"
+		},
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"github.vscode-github-actions"
+			]
+		}
+	},
+}
