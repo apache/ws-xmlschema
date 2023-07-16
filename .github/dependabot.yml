@@ -25,6 +25,9 @@ updates:
       - dependency-name: "jakarta.xml.bind:jakarta.xml.bind-api"
         versions:
           - ">= 3.0"
+      - dependency-name: "com.github.veithen.alta:alta-maven-plugin"
+        versions:
+          - ">= 0.8.0"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
