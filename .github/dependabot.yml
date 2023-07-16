@@ -18,6 +18,10 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "jakarta.activation:jakarta.activation-api"
+        versions:
+          - ">= 1.2.2"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
