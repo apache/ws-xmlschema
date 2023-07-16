@@ -18,8 +18,6 @@
  */
 
 /**
- * <h1>Walking XML Schemas</h1>
- *
  * This package simplifies walking over an
  * {@link org.apache.ws.commons.schema.XmlSchemaCollection}.
  *

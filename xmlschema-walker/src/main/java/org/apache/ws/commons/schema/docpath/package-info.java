@@ -18,8 +18,6 @@
  */
 
 /**
- * <h1>Building an XML Document's Conforming Path</h1>
- *
  * This package is dedicated to walking an XML Document using the SAX API,
  * and building a path through its
  * {@link org.apache.ws.commons.schema.XmlSchemaCollection} to determine
