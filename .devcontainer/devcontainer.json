@@ -5,6 +5,8 @@
 			"version": "8",
 			"installMaven": "true"
 		},
+		// docker is useful to run diffoscope
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
 	},
 	"customizations": {
 		"vscode": {
@@ -12,5 +14,5 @@
 				"github.vscode-github-actions"
 			]
 		}
-	},
+	}
 }
