@@ -79,6 +79,7 @@
         <url>https://www.apache.org/</url>
     </organization>
     <properties>
+        <javaVersion>1.8</javaVersion>
         <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
         <project.build.outputTimestamp>2023-07-15T16:42:39Z</project.build.outputTimestamp>
     </properties>
@@ -168,8 +169,8 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
                         <encoding>UTF-8</encoding>
-                        <source>1.8</source>
-                        <target>1.8</target>
+                        <source>${javaVersion}</source>
+                        <target>${javaVersion}</target>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -227,6 +228,7 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>3.5.0</version>
                     <configuration>
+                        <source>${javaVersion}</source>
                         <attach>true</attach>
                         <quiet>true</quiet>
                     </configuration>
