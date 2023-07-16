@@ -131,8 +131,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.sun.activation</groupId>
-            <artifactId>jakarta.activation</artifactId>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
             <version>1.2.2</version>
             <scope>test</scope>
         </dependency>

@@ -43,7 +43,6 @@ public class XmlSchemaBundleTest {
     public static Option[] configuration() {
         return CoreOptions.options(
                 junitBundles(),
-                url("link:classpath:com.sun.activation.jakarta.activation.link"),
                 url("link:classpath:jakarta.activation-api.link"),
                 url("link:classpath:jakarta.xml.bind-api.link"),
                 url("link:classpath:org.apache.ws.xmlschema.core.link"),
