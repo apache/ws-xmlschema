@@ -28,7 +28,7 @@
     <artifactId>xmlschema</artifactId>
     <packaging>pom</packaging>
     <name>XmlSchema</name>
-    <version>2.3.1-SNAPSHOT</version>
+    <version>2.3.1</version>
     <description>Apache XMLSchema is a light weight schema object model that can be used to manipulate or generate XML schema.</description>
     <url>https://ws.apache.org/commons/xmlschema20/</url>
     <issueManagement>
@@ -63,7 +63,7 @@
         <connection>scm:git:https://gitbox.apache.org/repos/asf/ws-xmlschema.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/ws-xmlschema.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=ws-xmlschema.git;a=summary</url>
-        <tag>HEAD</tag>
+        <tag>xmlschema-2.3.1</tag>
     </scm>
     <prerequisites>
         <maven>3.7</maven>
@@ -81,7 +81,7 @@
     <properties>
         <javaVersion>1.8</javaVersion>
         <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
-        <project.build.outputTimestamp>2023-07-15T16:42:39Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2023-09-07T19:19:10Z</project.build.outputTimestamp>
     </properties>
     <modules>
         <module>xmlschema-core</module>
