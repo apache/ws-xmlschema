@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://avro.apache.org/AvroTest" xmlns="http://avro.apache.org/AvroTest"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:element name="Recursive">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="HoleInTheGround" type="RecursiveComplexType"/>
+				<xs:element ref="Recursive"/>
+				<xs:element name="WrappedStringArray">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Array" minOccurs="0" maxOccurs="unbounded">
+								<!-- This element has the same name but a different type as the one below -->
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="StringElement"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="WrappedNumber">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Array" minOccurs="0" maxOccurs="unbounded">
+								<!-- This element has the same name but a different type as the one above -->
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="NumberElement"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element ref="StringElement"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="RecursiveComplexType">
+		<xs:sequence>
+			<xs:element name="level" type="xs:int"/>
+			<xs:element ref="RabbitHole"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="RabbitHole" type="RecursiveComplexType"/>
+	<xs:element name="StringElement">
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:string"/>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="NumberElement">
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:int"/>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
