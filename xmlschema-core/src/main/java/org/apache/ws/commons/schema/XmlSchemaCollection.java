@@ -31,6 +31,7 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -276,7 +277,7 @@ public final class XmlSchemaCollection {
         extReg = new ExtensionRegistry();
         knownNamespaceMap = new HashMap<String, XmlSchema>();
         schemaResolver = new DefaultURIResolver();
-        schemas = new HashMap<SchemaKey, XmlSchema>();
+        schemas = new LinkedHashMap<SchemaKey, XmlSchema>();
         // LAST, since the ctor for XmlSchema will reach back into here. 
         xsd = new XmlSchema(XmlSchema.SCHEMA_NS, this);
         /*
