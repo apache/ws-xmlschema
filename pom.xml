@@ -206,7 +206,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.2</version>
+                    <version>3.2.2</version>
                     <configuration>
                         <systemPropertyVariables>
                             <org.apache.ws.commons.schema.protectReadOnlyCollections>true</org.apache.ws.commons.schema.protectReadOnlyCollections>
