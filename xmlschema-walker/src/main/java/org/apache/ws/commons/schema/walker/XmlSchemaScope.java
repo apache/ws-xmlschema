@@ -383,7 +383,7 @@ final class XmlSchemaScope {
 
                 StringBuilder nsAsString = new StringBuilder();
                 for (String namespace : namespaces) {
-                    nsAsString.append(namespace).append(" ");
+                    nsAsString.append(namespace).append(' ');
                 }
 
                 anyAttr = new XmlSchemaAnyAttribute();
@@ -717,8 +717,10 @@ final class XmlSchemaScope {
             switch (XmlSchemaBaseSimpleType.getBaseSimpleTypeFor(simpleType)) {
             case ANYTYPE:
                 checkAnyType = false;
+                break;
             case ANYSIMPLETYPE:
                 checkAnySimpleType = false;
+                break;
             default:
             }
 

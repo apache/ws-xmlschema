@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<ruleset name="santuario-pmd" xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+  <description>
+  A PMD ruleset for Apache XML Schema
+  </description>
+
+  <rule ref="category/java/bestpractices.xml">
+     <exclude name="AbstractClassWithoutAbstractMethod" />
+     <exclude name="AccessorMethodGeneration" />
+     <exclude name="ArrayIsStoredDirectly" />
+     <exclude name="AvoidReassigningParameters" />
+     <exclude name="AvoidReassigningLoopVariables" />
+     <exclude name="AvoidUsingHardCodedIP" />
+     <exclude name="AvoidMessageDigestField" />
+     <exclude name="AvoidStringBufferField" />
+     <exclude name="ConstantsInInterface" />
+     <exclude name="ForLoopCanBeForeach" />
+     <exclude name="ForLoopVariableCount" />
+     <exclude name="GuardLogStatement" />
+     <exclude name="LooseCoupling" />
+     <exclude name="JUnitAssertionsShouldIncludeMessage"/>
+     <exclude name="JUnitTestContainsTooManyAsserts" />
+     <exclude name="JUnitTestsShouldIncludeAssert" />
+     <exclude name="JUnitUseExpected" />
+     <exclude name="JUnit5TestShouldBePackagePrivate" />
+     <exclude name="LiteralsFirstInComparisons" />
+     <exclude name="MethodReturnsInternalArray" />
+     <exclude name="MissingOverride" />
+     <exclude name="OneDeclarationPerLine" />
+     <exclude name="PreserveStackTrace" />
+     <exclude name="SwitchStmtsShouldHaveDefault" />
+     <exclude name="SystemPrintln" />
+     <exclude name="UnusedAssignment" />
+     <exclude name="UnusedFormalParameter" />
+     <exclude name="UnusedPrivateMethod" />
+     <exclude name="UseAssertSameInsteadOfAssertTrue" />
+     <exclude name="UseVarargs" />
+  </rule>
+
+  <rule ref="category/java/design.xml" >
+     <exclude name="AvoidCatchingGenericException" />
+     <exclude name="AvoidDeeplyNestedIfStmts" />
+     <exclude name="AvoidRethrowingException" />
+     <exclude name="AvoidThrowingNullPointerException" />
+     <exclude name="AvoidThrowingRawExceptionTypes" />
+     <exclude name="AvoidUncheckedExceptionsInSignatures" />
+     <exclude name="CognitiveComplexity" />
+     <exclude name="CouplingBetweenObjects" />
+     <exclude name="CyclomaticComplexity" />
+     <exclude name="DataClass" />
+     <exclude name="ExceptionAsFlowControl" />
+     <exclude name="ExcessiveClassLength" />
+     <exclude name="ExcessiveImports" />
+     <exclude name="ExcessiveMethodLength" />
+     <exclude name="ExcessivePublicCount" />
+     <exclude name="GodClass" />
+     <exclude name="ImmutableField" />
+     <exclude name="LawOfDemeter" />
+     <exclude name="NcssCount" />
+     <exclude name="NPathComplexity" />
+     <exclude name="SignatureDeclareThrowsException" />
+     <exclude name="SingularField" />
+     <exclude name="SwitchDensity" />
+     <exclude name="TooManyFields" />
+     <exclude name="TooManyMethods" />
+     <exclude name="UseObjectForClearerAPI" />
+     <exclude name="UselessOverridingMethod" />
+     <exclude name="UseUtilityClass" />
+  </rule>
+
+  <rule ref="category/java/errorprone.xml">
+     <exclude name="AssignmentInOperand" />
+     <exclude name="AssignmentToNonFinalStatic" />
+     <exclude name="AvoidCatchingNPE" />
+     <exclude name="AvoidCatchingThrowable" />
+     <exclude name="AvoidDuplicateLiterals" />
+     <exclude name="AvoidFieldNameMatchingMethodName" />
+     <exclude name="AvoidFieldNameMatchingTypeName" />
+     <exclude name="AvoidLiteralsInIfCondition" />
+     <exclude name="CompareObjectsWithEquals" />
+     <exclude name="ConstructorCallsOverridableMethod" />
+     <exclude name="DataflowAnomalyAnalysis" />
+     <exclude name="DoNotCallGarbageCollectionExplicitly" />
+     <exclude name="EmptyCatchBlock" />
+     <exclude name="InvalidLogMessageFormat" />
+     <exclude name="JUnitSpelling" />
+     <exclude name="MissingSerialVersionUID" />
+     <exclude name="NullAssignment" />
+     <exclude name="ReturnEmptyCollectionRatherThanNull" />
+     <exclude name="SingletonClassReturningNewInstance" />
+     <exclude name="SingleMethodSingleton" />
+     <exclude name="SuspiciousEqualsMethodName" />
+     <exclude name="UseLocaleWithCaseConversions" />
+     <exclude name="UseProperClassLoader" />
+  </rule>
+
+  <rule ref="category/java/multithreading.xml">
+     <exclude name="AvoidSynchronizedAtMethodLevel" />
+     <exclude name="AvoidUsingVolatile" />
+     <exclude name="DoNotUseThreads" />
+     <exclude name="NonThreadSafeSingleton" />
+     <exclude name="UseConcurrentHashMap" />
+  </rule>
+
+  <rule ref="category/java/performance.xml">
+     <exclude name="AddEmptyString" />
+     <exclude name="AvoidInstantiatingObjectsInLoops" />
+     <exclude name="AvoidFileStream" />
+     <exclude name="ConsecutiveAppendsShouldReuse" />
+     <exclude name="ConsecutiveLiteralAppends" />
+     <exclude name="InefficientEmptyStringCheck" />
+     <exclude name="InsufficientStringBufferDeclaration" />
+     <exclude name="OptimizableToArrayCall" />
+     <exclude name="RedundantFieldInitializer" />
+     <exclude name="UseStringBufferForStringAppends" />
+  </rule>
+
+  <rule ref="category/java/security.xml" >
+     <exclude name="HardCodedCryptoKey" />
+  </rule>
+      
+</ruleset>

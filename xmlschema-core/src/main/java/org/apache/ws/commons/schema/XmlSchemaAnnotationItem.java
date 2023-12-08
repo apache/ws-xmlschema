@@ -22,6 +22,6 @@ package org.apache.ws.commons.schema;
 /**
  * Common base class of the items that can live inside an annotation.
  */
-public abstract class XmlSchemaAnnotationItem
+public abstract class XmlSchemaAnnotationItem   //NOPMD
     extends XmlSchemaObject {
 }
