@@ -64,7 +64,7 @@ import org.apache.ws.commons.schema.utils.XDOMUtil;
 public class SchemaBuilder {
 
     // default access for unit tests.
-    static ThreadLocal<Map<String, SoftReference<XmlSchema>>> resolvedSchemas =
+    static ThreadLocal<Map<String, SoftReference<XmlSchema>>> resolvedSchemas = //NOPMD
         new ThreadLocal<Map<String, SoftReference<XmlSchema>>>();
     private static final Set<String> RESERVED_ATTRIBUTES = new HashSet<String>();
     private static final String[] RESERVED_ATTRIBUTES_LIST = {
@@ -789,7 +789,7 @@ public class SchemaBuilder {
         for (Node n = content.getFirstChild(); n != null; n = n.getNextSibling()) {
             result.add(n);
         }
-        if (result.size() == 0) {
+        if (result.isEmpty()) {
             return null;
         } else {
             return result;
@@ -1001,9 +1001,9 @@ public class SchemaBuilder {
                 attrs.add(att);
                 String value = att.getValue();
 
-                if (value.indexOf(":") > -1) {
+                if (value.indexOf(':') > -1) {
                     // there is a possibility of some namespace mapping
-                    String prefix = value.substring(0, value.indexOf(":"));
+                    String prefix = value.substring(0, value.indexOf(':'));
                     if (ctx == null) {
                         ctx = NodeNamespaceContext.getNamespaceContext(attrEl);
                     }
@@ -1018,7 +1018,7 @@ public class SchemaBuilder {
             }
         }
 
-        if (attrs.size() > 0) {
+        if (!attrs.isEmpty()) {
             attr.setUnhandledAttributes(attrs.toArray(new Attr[attrs.size()]));
         }
 

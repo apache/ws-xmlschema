@@ -22,6 +22,6 @@ package org.apache.ws.commons.schema;
 /**
  * Common type for items that can serve as the particle of a group.
  */
-public abstract class XmlSchemaGroupParticle extends XmlSchemaParticle {
+public abstract class XmlSchemaGroupParticle extends XmlSchemaParticle {    //NOPMD
 
 }

@@ -94,7 +94,7 @@ public class XmlSchemaSerializer {
     private static String[] getParts(String name) {
         String[] parts = new String[2];
 
-        int index = name.indexOf(":");
+        int index = name.indexOf(':');
         if (index > -1) {
             parts[0] = name.substring(0, index);
             parts[1] = name.substring(index + 1);
@@ -446,19 +446,19 @@ public class XmlSchemaSerializer {
                 if ("xmlns".equals(name)) {
                     namespaces.put("", value);
                 } else if (name.startsWith("xmlns")) {
-                    namespaces.put(name.substring(name.indexOf(":") + 1), value);
+                    namespaces.put(name.substring(name.indexOf(':') + 1), value);
                 }
             }
 
             for (Attr element : unhandled) {
                 String value = element.getNodeValue();
                 String nodeName = element.getNodeName();
-                if (value.indexOf(":") > -1 && !nodeName.startsWith("xmlns")) {
-                    String prefix = value.substring(0, value.indexOf(":"));
+                if (value.indexOf(':') > -1 && !nodeName.startsWith("xmlns")) {
+                    String prefix = value.substring(0, value.indexOf(':'));
                     String oldNamespace;
                     oldNamespace = namespaces.get(prefix);
                     if (oldNamespace != null) {
-                        value = value.substring(value.indexOf(":") + 1);
+                        value = value.substring(value.indexOf(':') + 1);
                         NamespacePrefixList ctx = schema.getNamespaceContext();
                         String[] prefixes = ctx.getDeclaredPrefixes();
                         for (String pref : prefixes) {
@@ -940,7 +940,7 @@ public class XmlSchemaSerializer {
         }
 
         List<XmlSchemaAttributeOrGroupRef> attrColl = complexTypeObj.getAttributes();
-        if (attrColl.size() > 0) {
+        if (!attrColl.isEmpty()) {
             setupAttr(doc, attrColl, schema, serializedComplexType);
         }
 
@@ -2346,11 +2346,11 @@ public class XmlSchemaSerializer {
                 schemaNamespace.put(namespace, prefix);
 
                 // setting xmlns in schema
-                schemaElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:" + prefix.toString(), namespace);
+                schemaElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:" + prefix.toString(), namespace); //NOPMD
             }
         }
 
-        prefixStr = prefix.toString();
+        prefixStr = prefix.toString();  //NOPMD
         prefixStr = prefixStr.trim().length() > 0 ? prefixStr + ":" : "";
 
         return prefixStr + typeName;

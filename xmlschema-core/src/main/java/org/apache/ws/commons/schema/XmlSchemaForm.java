@@ -34,7 +34,7 @@ public enum XmlSchemaForm {
 
     @Override
     public String toString() {
-        switch (this) {
+        switch (this) { //NOPMD
         case QUALIFIED:
             return "qualified";
         case UNQUALIFIED:

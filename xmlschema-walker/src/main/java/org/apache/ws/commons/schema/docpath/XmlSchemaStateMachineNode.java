@@ -240,7 +240,7 @@ public final class XmlSchemaStateMachineNode {
         case ELEMENT:
             name.append(": ").append(element.getQName()).append(" [");
             name.append(minOccurs).append(", ");
-            name.append(maxOccurs).append("]");
+            name.append(maxOccurs).append(']');
             break;
         case ANY:
             name.append(": NS: \"").append(any.getNamespace()).append("\", ");
@@ -251,6 +251,7 @@ public final class XmlSchemaStateMachineNode {
         default:
             name.append(" [").append(minOccurs).append(", ").append(maxOccurs);
             name.append(']');
+            break;
         }
         return name.toString();
     }
