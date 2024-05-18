@@ -352,7 +352,15 @@ final class XmlSchemaScope {
             } else {
                 XmlSchemaSequence seq = new XmlSchemaSequence();
                 seq.getItems().add((XmlSchemaSequenceMember)baseParticle);
-                seq.getItems().add((XmlSchemaSequenceMember)ext.getParticle());
+                // we cannot cast a SchemaAll instance to SequenceMember
+                if (ext.getParticle() instanceof XmlSchemaAll) {
+                    XmlSchemaAll all = (XmlSchemaAll) ext.getParticle();
+                    for (XmlSchemaAllMember allMember : all.getItems()) {
+                        seq.getItems().add((XmlSchemaSequenceMember) allMember);
+                    }
+                } else {
+                    seq.getItems().add((XmlSchemaSequenceMember) ext.getParticle());
+                }
                 child = seq;
             }
 

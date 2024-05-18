@@ -210,13 +210,7 @@ public final class XmlSchemaWalker {
             element.setMaxOccurs(XmlSchemaParticle.DEFAULT_MAX_OCCURS);
         }
 
-        XmlSchemaType schemaType = element.getSchemaType();
-        if (schemaType == null) {
-            final QName typeQName = element.getSchemaTypeName();
-            if (typeQName != null) {
-                schemaType = schemasByNamespace.getTypeByName(typeQName);
-            }
-        }
+        XmlSchemaType schemaType = getSchemaTypeOfElement(element);
 
         if (schemaType != null) {
             XmlSchemaScope scope = null;
@@ -581,5 +575,22 @@ public final class XmlSchemaWalker {
         } else {
             return element.getQName();
         }
+    }
+
+
+    private XmlSchemaType getSchemaTypeOfElement(XmlSchemaElement element) {
+        XmlSchemaType schemaType = element.getSchemaType();
+        if (schemaType == null) {
+            final QName typeQName = element.getSchemaTypeName();
+            if (typeQName != null) {
+                schemaType = schemasByNamespace.getTypeByName(typeQName);
+            } else {
+                final QName substitutionGroupQName = element.getSubstitutionGroup();
+                if (substitutionGroupQName != null) {
+                    schemaType = getSchemaTypeOfElement(schemasByNamespace.getElementByName(substitutionGroupQName));
+                }
+            }
+        }
+        return schemaType;
     }
 }
