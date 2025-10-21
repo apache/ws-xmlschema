@@ -111,7 +111,7 @@ final class XmlSchemaElementValidator {
             }
 
             // Confirm the attribute is used correctly.
-            switch (use) {
+            switch (use) { //NOPMD
             case OPTIONAL:
                 break;
             case PROHIBITED:

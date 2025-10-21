@@ -98,7 +98,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         }
 
         @Override
-        public int compareTo(PathSegment<U, V> o) {
+        public int compareTo(PathSegment<U, V> o) { //NOPMD
             if (this == o) {
                 return 0;
             }

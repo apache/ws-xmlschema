@@ -55,7 +55,7 @@ final class XmlSchemaPathManager<U, V> {
             if (position != null) {
                 position = position.getParent();
             }
-        case SIBLING:
+        case SIBLING: //NOPMD
         case CONTENT:
             if (position == null) {
                 throw new IllegalStateException(

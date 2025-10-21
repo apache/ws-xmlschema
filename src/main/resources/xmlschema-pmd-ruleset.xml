@@ -37,6 +37,7 @@
      <exclude name="ForLoopCanBeForeach" />
      <exclude name="ForLoopVariableCount" />
      <exclude name="GuardLogStatement" />
+     <exclude name="ImplicitFunctionalInterface" />
      <exclude name="LooseCoupling" />
      <exclude name="JUnitAssertionsShouldIncludeMessage"/>
      <exclude name="JUnitTestContainsTooManyAsserts" />

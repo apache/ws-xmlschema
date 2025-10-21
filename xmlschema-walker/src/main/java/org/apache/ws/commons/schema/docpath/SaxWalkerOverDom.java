@@ -286,10 +286,7 @@ public final class SaxWalkerOverDom {
      * @return <code>true</code> if it was found, <code>false</code> if not.
      */
     public boolean removeContentHandler(ContentHandler contentHandler) {
-        if (listeners != null) {
-            return listeners.remove(contentHandler);
-        }
-        return false;
+        return listeners != null && listeners.remove(contentHandler);
     }
 
     /**
