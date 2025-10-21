@@ -28,6 +28,7 @@ import org.apache.ws.commons.schema.XmlSchemaCollection;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.w3c.dom.Document;
 
 public class CircularSchemaTest extends Assert {
     @Test
@@ -42,5 +43,19 @@ public class CircularSchemaTest extends Assert {
         XmlSchema[] xmlSchemas = schemas.getXmlSchemas();
         assertNotNull(xmlSchemas);
         assertEquals(3, xmlSchemas.length);
+    }
+    
+    @Test
+    public void testCircularSerialization() throws Exception {
+        XmlSchemaCollection schemas = new XmlSchemaCollection();
+        File file = new File(Resources.asURI("circular/a.xsd"));
+        InputSource source = new InputSource(new FileInputStream(file));
+        source.setSystemId(file.toURI().toURL().toString());
+
+        XmlSchema xmlSchema = schemas.read(source);
+        
+        Document[] allSchemas = xmlSchema.getAllSchemas();
+        assertNotNull(allSchemas);
+        assertEquals(2, allSchemas.length);
     }
 }

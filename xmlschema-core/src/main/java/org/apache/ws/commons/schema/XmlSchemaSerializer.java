@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
@@ -71,6 +73,11 @@ public class XmlSchemaSerializer {
 
     public static final String XSD_NAMESPACE = XMLConstants.W3C_XML_SCHEMA_NS_URI;
     private static final String XMLNS_NAMESPACE_URI = "http://www.w3.org/2000/xmlns/";
+
+    /**
+     * Keeps track of already serialized schemas.
+     */
+    private static ThreadLocal<Set<XmlSchema>> serializedSchemaElements = new ThreadLocal<>();
 
     String xsdPrefix = "xs";
     List<Document> docs;
@@ -129,7 +136,10 @@ public class XmlSchemaSerializer {
      */
     public Document[] serializeSchema(XmlSchema schemaObj, boolean serializeIncluded)
         throws XmlSchemaSerializerException {
-        return serializeSchemaElement(schemaObj, serializeIncluded);
+        serializedSchemaElements.set(new HashSet<>());
+        Document[] result = serializeSchemaElement(schemaObj, serializeIncluded);
+        serializedSchemaElements.remove();
+        return result;
     }
 
     /**
@@ -1543,6 +1553,10 @@ public class XmlSchemaSerializer {
 
     Document[] serializeSchemaElement(XmlSchema schemaObj,
                                       boolean serializeIncluded) throws XmlSchemaSerializerException {
+        // skip already serialized schemas
+        if (!serializedSchemaElements.get().add(schemaObj)) {
+            return new Document[0];
+        }
 
         List<XmlSchemaObject> items = schemaObj.getItems();
         Document serializedSchemaDocs;
