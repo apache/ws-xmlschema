@@ -54,7 +54,7 @@
         </plugins>
     </build>
     <properties>
-        <exam.version>4.13.5</exam.version>
+        <exam.version>4.14.0</exam.version>
         <slf4j.version>2.0.17</slf4j.version>
         <!-- don't deploy this as this is just test data and a large amount of it -->
         <maven.deploy.skip>true</maven.deploy.skip>
