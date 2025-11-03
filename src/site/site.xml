@@ -52,7 +52,6 @@
             </item>
             <item name="License" href="licenses.html"/>
         </menu>
-        <menu ref="modules" />
         <menu name="Apache">
             <item name="License" href="http://www.apache.org/licenses/"/>
             <item name="Sponsorship" href="http://www.apache.org/foundation/sponsorship.html"/>
