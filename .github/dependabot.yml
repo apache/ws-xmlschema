@@ -18,6 +18,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 5
     ignore:
       - dependency-name: "jakarta.activation:jakarta.activation-api"
         versions:
@@ -32,3 +34,5 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 5
