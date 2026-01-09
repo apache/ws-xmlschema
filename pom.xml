@@ -79,7 +79,7 @@
         <url>https://www.apache.org/</url>
     </organization>
     <properties>
-        <javaVersion>1.8</javaVersion>
+        <javaVersion>8</javaVersion>
         <xmlschema-eclipse-version>2.0</xmlschema-eclipse-version>
         <project.build.outputTimestamp>2025-10-29T15:21:21Z</project.build.outputTimestamp>
     </properties>
