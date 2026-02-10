@@ -17,7 +17,7 @@
   ~ under the License.
   -->
 
-<xdoc>
+<document>
   <properties>
     <title>Apache XMLSchema Tutorial</title>
   </properties>
@@ -110,4 +110,4 @@ manipulate and generate XML Schemas. It has minimum dependencies and can be
 used inside another project with ease.</p>
 </section>
 </body>
-</xdoc>
+</document>
