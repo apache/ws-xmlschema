@@ -19,7 +19,7 @@
 <body>
 <section name="Obtain the Apache XMLSchema&#8482; distribution">
 <p> 
-XMLSchema is a lightweight Java object model that can be used to manipulate
+Apache XMLSchema is a lightweight Java object model that can be used to manipulate
 and generate XML schema representations. You can use it to read XML Schema
 (xsd) files into memory and analyze or modify them, or to create entirely new
 schemas from scratch.

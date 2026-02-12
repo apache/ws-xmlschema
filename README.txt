@@ -2,7 +2,7 @@
   Apache XMLSchema Release Notes 
 ====================================
 
-XMLSchema is a lightweight schema object model that can be used to manipulate and
+Apache XMLSchema is a lightweight schema object model that can be used to manipulate and
 generate XML schema representations. It has very few external dependencies and can
 be easily integrated into an existing project.
 
@@ -14,7 +14,7 @@ welcome.
 Thanks for your interest in XMLSchema!
 
 -The XMLSchema Development Team
-http://ws.apache.org/commons/xmlschema20/
+https://ws.apache.org/xmlschema/
 
 ===================
    Documentation
