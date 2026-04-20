@@ -137,9 +137,11 @@ public class XmlSchemaSerializer {
     public Document[] serializeSchema(XmlSchema schemaObj, boolean serializeIncluded)
         throws XmlSchemaSerializerException {
         serializedSchemaElements.set(new HashSet<>());
-        Document[] result = serializeSchemaElement(schemaObj, serializeIncluded);
-        serializedSchemaElements.remove();
-        return result;
+        try {
+            return serializeSchemaElement(schemaObj, serializeIncluded);
+        } finally {
+            serializedSchemaElements.remove();
+        }
     }
 
     /**
