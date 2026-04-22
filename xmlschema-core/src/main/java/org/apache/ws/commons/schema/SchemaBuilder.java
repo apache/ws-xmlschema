@@ -31,7 +31,6 @@ import java.util.StringTokenizer;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -73,7 +72,6 @@ public class SchemaBuilder {
     XmlSchemaCollection collection;
     Document currentDocument;
     XmlSchema currentSchema;
-    DocumentBuilderFactory docFac;
 
     private final TargetNamespaceValidator currentValidator;
     /**
