@@ -17,7 +17,7 @@
   under the License.
 -->
 
-# Apache XMLSchema Security Threat Model (draft)
+# Apache XMLSchema Security Threat Model
 
 ## §1 Header
 
@@ -25,29 +25,29 @@
   that can be used to manipulate and generate XML schema
   representations"* *(documented: `README.txt`)*.
 - **Repository**: `apache/ws-xmlschema`.
-- **Version / commit**: this model is drafted against the default branch
+- **Version / commit**: this model is based on the default branch
   at clone time. A report against project release *N* should be triaged
   against the model as it stood at *N*, not at HEAD. Latest release
   documented in `RELEASE-NOTE.txt`: 2.3.0.
 - **Date**: 2026-05-30.
-- **Authors**: ASF Security team draft, awaiting XMLSchema / Webservices
+- **Authors**: ASF Security team, awaiting XMLSchema / Webservices
   PMC review.
-- **Status**: draft — under maintainer review.
+- **Status**: under maintainer review.
 - **Reporting**: vulnerabilities that fall under §8 (claimed
   properties) should be reported per the Apache Security Team disclosure
   channel (<https://www.apache.org/security/>); reports that fall under
   §3 (out of scope) or §9 (properties not provided) will be closed by
   XMLSchema triagers citing this document. The project does not ship
-  an in-repo `SECURITY.md` at draft time *(inferred — §14 Q1)*.
+  an in-repo `SECURITY.md` at assessment time *(inferred — §14 Q1)*.
 - **Provenance legend** —
   *(documented)* = drawn from in-repo docs / source comments / project
   website with citation;
   *(maintainer)* = stated by an XMLSchema maintainer in response to this
-  draft;
+  threat model;
   *(inferred)* = synthesized by the producer from code structure or
   domain knowledge, awaiting PMC ratification (every *(inferred)* tag has
   a matching §14 question).
-- **Draft confidence**: 21 documented / 0 maintainer / 24 inferred.
+- **Model confidence**: 21 documented / 0 maintainer / 24 inferred.
 
 XMLSchema is a Java library that parses, models, walks, and serializes
 W3C XML Schema documents (`.xsd` files). It is *not* a document
@@ -471,6 +471,26 @@ The embedding Java application **must**:
    string, not from anywhere an attacker can influence.
 7. Run on a release-supported branch (currently 2.3.0 line)
    *(documented: `RELEASE-NOTE.txt`)*.
+
+The embedding Java application **should** additionally implement these
+defense-in-depth controls:
+
+1. Enforce URL scheme and destination restrictions in the resolver:
+  allow only `https://` to approved hosts; deny `file://`, `jar:`,
+  loopback, link-local, and RFC1918/private address ranges.
+2. Set explicit XML parser anti-XXE features in addition to
+  `FEATURE_SECURE_PROCESSING=true`: `disallow-doctype-decl=true`,
+  `external-general-entities=false`, and
+  `external-parameter-entities=false`.
+3. Apply import-fetch budgets at the caller boundary: maximum import
+  depth, total imported bytes, and total import count per top-level
+  parse.
+4. Use connect/read timeouts for import fetches and fail closed on
+  timeout or policy-check errors.
+5. Log import-resolution decisions (requested URI, normalized target,
+  allow/deny result, reason) for incident response and triage.
+6. Prefer integrity-controlled schema sources (pinned internal mirror
+  or checksum-verified artifacts) instead of live internet fetches.
 
 ## §11 Known misuse patterns
 
