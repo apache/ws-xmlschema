@@ -1346,6 +1346,59 @@ public class TestXmlSchemaElementValidator {
         XmlSchemaElementValidator.validateContent(stateMachine, "128", nsContext);
     }
 
+    @Test(expected = ValidationException.class)
+    public void testInvalidStringLengthFacetValue() throws Exception {
+        HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> facets = new HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>>();
+
+        facets.put(XmlSchemaRestriction.Type.LENGTH,
+                  Collections
+                      .<XmlSchemaRestriction> singletonList(new XmlSchemaRestriction(
+                                                                                     XmlSchemaRestriction.Type.LENGTH,
+                                                                                     "bogus", false)));
+
+        XmlSchemaTypeInfo typeInfo = new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.STRING, facets);
+
+        XmlSchemaStateMachineNode stateMachine = new XmlSchemaStateMachineNode(xmlElement, null, typeInfo);
+
+        XmlSchemaElementValidator.validateContent(stateMachine, "123", nsContext);
+    }
+
+    @Test(expected = ValidationException.class)
+    public void testInvalidListLengthFacetValue() throws Exception {
+        XmlSchemaTypeInfo baseType = new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.STRING);
+
+        HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> listFacets = new HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>>();
+
+        listFacets.put(XmlSchemaRestriction.Type.LENGTH,
+                       Collections
+                           .<XmlSchemaRestriction> singletonList(new XmlSchemaRestriction(
+                                                                                          XmlSchemaRestriction.Type.LENGTH,
+                                                                                          "bogus", false)));
+
+        XmlSchemaTypeInfo listType = new XmlSchemaTypeInfo(baseType, listFacets);
+
+        XmlSchemaStateMachineNode stateMachine = new XmlSchemaStateMachineNode(xmlElement, null, listType);
+
+        XmlSchemaElementValidator.validateContent(stateMachine, "1 2 3", nsContext);
+    }
+
+    @Test(expected = ValidationException.class)
+    public void testInvalidDigitsFacetValue() throws Exception {
+        HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> facets = new HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>>();
+
+        facets.put(XmlSchemaRestriction.Type.DIGITS_TOTAL,
+                  Collections
+                      .<XmlSchemaRestriction> singletonList(new XmlSchemaRestriction(
+                                                                                     XmlSchemaRestriction.Type.DIGITS_TOTAL,
+                                                                                     "bogus", false)));
+
+        XmlSchemaTypeInfo type = new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.DECIMAL, facets);
+
+        XmlSchemaStateMachineNode stateMachine = new XmlSchemaStateMachineNode(xmlElement, null, type);
+
+        XmlSchemaElementValidator.validateContent(stateMachine, "12345", nsContext);
+    }
+
     @Test
     public void testValidStringNoFacets() throws Exception {
         XmlSchemaTypeInfo typeInfo = new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.STRING);
@@ -1752,6 +1805,51 @@ public class TestXmlSchemaElementValidator {
         XmlSchemaStateMachineNode stateMachine = new XmlSchemaStateMachineNode(xmlElement, null, unionType);
 
         XmlSchemaElementValidator.validateContent(stateMachine, "fail!", nsContext);
+    }
+
+    @Test
+    public void testUnionSkipsMemberWithMalformedFacet() throws Exception {
+        HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> malformedFacets = new HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>>();
+
+        malformedFacets.put(XmlSchemaRestriction.Type.INCLUSIVE_MAX,
+                            Collections
+                                .<XmlSchemaRestriction> singletonList(new XmlSchemaRestriction(
+                                                                                               XmlSchemaRestriction.Type.INCLUSIVE_MAX,
+                                                                                               "bogus", false)));
+
+        ArrayList<XmlSchemaTypeInfo> unionTypes = new ArrayList<XmlSchemaTypeInfo>(2);
+
+        unionTypes.add(new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.DECIMAL, malformedFacets));
+        unionTypes.add(new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.STRING));
+
+        XmlSchemaTypeInfo unionType = new XmlSchemaTypeInfo(unionTypes);
+
+        XmlSchemaStateMachineNode stateMachine = new XmlSchemaStateMachineNode(xmlElement, null, unionType);
+
+        // The DECIMAL member's malformed facet must not abort the whole union check.
+        XmlSchemaElementValidator.validateContent(stateMachine, "not-a-number", nsContext);
+    }
+
+    @Test(expected = ValidationException.class)
+    public void testUnionAllMembersFailIncludingMalformedFacet() throws Exception {
+        HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>> malformedFacets = new HashMap<XmlSchemaRestriction.Type, List<XmlSchemaRestriction>>();
+
+        malformedFacets.put(XmlSchemaRestriction.Type.INCLUSIVE_MAX,
+                            Collections
+                                .<XmlSchemaRestriction> singletonList(new XmlSchemaRestriction(
+                                                                                               XmlSchemaRestriction.Type.INCLUSIVE_MAX,
+                                                                                               "bogus", false)));
+
+        ArrayList<XmlSchemaTypeInfo> unionTypes = new ArrayList<XmlSchemaTypeInfo>(2);
+
+        unionTypes.add(new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.DECIMAL, malformedFacets));
+        unionTypes.add(new XmlSchemaTypeInfo(XmlSchemaBaseSimpleType.BOOLEAN));
+
+        XmlSchemaTypeInfo unionType = new XmlSchemaTypeInfo(unionTypes);
+
+        XmlSchemaStateMachineNode stateMachine = new XmlSchemaStateMachineNode(xmlElement, null, unionType);
+
+        XmlSchemaElementValidator.validateContent(stateMachine, "not-a-number", nsContext);
     }
 
     @Test
