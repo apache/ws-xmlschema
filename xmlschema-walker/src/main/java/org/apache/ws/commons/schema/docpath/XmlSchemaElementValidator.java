@@ -522,7 +522,7 @@ final class XmlSchemaElementValidator {
 
         if ((rangeFacets != null) && !rangeFacets.isEmpty()) {
             for (XmlSchemaRestriction rangeFacet : rangeFacets) {
-                compareTo = getBigDecimalOf(rangeFacet.getValue());
+                compareTo = getBigDecimalOf(name, rangeType, rangeFacet.getValue());
                 final int comparison = value.compareTo(compareTo);
 
                 switch (rangeType) {
@@ -554,7 +554,8 @@ final class XmlSchemaElementValidator {
         }
     }
 
-    private static BigDecimal getBigDecimalOf(Object numericValue) {
+    private static BigDecimal getBigDecimalOf(String name, XmlSchemaRestriction.Type rangeType,
+                                              Object numericValue) throws ValidationException {
         BigDecimal newValue = null;
 
         if (numericValue instanceof BigDecimal) {
@@ -573,7 +574,13 @@ final class XmlSchemaElementValidator {
             newValue = new BigDecimal(((Number)numericValue).longValue());
 
         } else if (numericValue instanceof String) {
-            newValue = new BigDecimal(numericValue.toString());
+            try {
+                newValue = new BigDecimal(numericValue.toString());
+            } catch (NumberFormatException e) {
+                throw new ValidationException(name + " has a " + rangeType
+                                              + " restriction with a malformed numeric value \""
+                                              + numericValue + "\".", e);
+            }
 
         } else {
             throw new IllegalArgumentException(numericValue.getClass().getName()
@@ -608,7 +615,13 @@ final class XmlSchemaElementValidator {
 
         if (lengthFacets != null) {
             for (XmlSchemaRestriction lengthFacet : lengthFacets) {
-                lengthRestriction = Integer.parseInt(lengthFacet.getValue().toString());
+                try {
+                    lengthRestriction = Integer.parseInt(lengthFacet.getValue().toString());
+                } catch (NumberFormatException e) {
+                    throw new ValidationException(name + " has a " + facetType
+                                                  + " restriction with a malformed numeric value \""
+                                                  + lengthFacet.getValue() + "\".", e);
+                }
 
                 switch (facetType) {
                 case LENGTH:
@@ -660,7 +673,13 @@ final class XmlSchemaElementValidator {
 
         if (lengthFacets != null) {
             for (XmlSchemaRestriction lengthFacet : lengthFacets) {
-                lengthRestriction = Integer.parseInt(lengthFacet.getValue().toString());
+                try {
+                    lengthRestriction = Integer.parseInt(lengthFacet.getValue().toString());
+                } catch (NumberFormatException e) {
+                    throw new ValidationException(name + " has a " + facetType
+                                                  + " restriction with a malformed numeric value \""
+                                                  + lengthFacet.getValue() + "\".", e);
+                }
 
                 switch (facetType) {
                 case LENGTH:
@@ -712,7 +731,13 @@ final class XmlSchemaElementValidator {
 
         if (digitsFacets != null) {
             for (XmlSchemaRestriction digitsFacet : digitsFacets) {
-                numDigits = Integer.parseInt(digitsFacet.getValue().toString());
+                try {
+                    numDigits = Integer.parseInt(digitsFacet.getValue().toString());
+                } catch (NumberFormatException e) {
+                    throw new ValidationException(name + " has a " + facetType
+                                                  + " restriction with a malformed numeric value \""
+                                                  + digitsFacet.getValue() + "\".", e);
+                }
                 switch (facetType) {
                 case DIGITS_FRACTION:
                     satisfied = (value.scale() <= numDigits);
