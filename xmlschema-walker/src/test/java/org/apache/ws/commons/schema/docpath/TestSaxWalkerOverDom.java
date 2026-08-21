@@ -37,7 +37,6 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import org.apache.ws.commons.schema.docpath.SaxWalkerOverDom;
 import org.apache.ws.commons.schema.testutils.UtilsForTests;
 import org.junit.Test;
 
