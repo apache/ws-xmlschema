@@ -322,7 +322,44 @@ public final class SaxWalkerOverDom {
         }
     }
 
+    /*
+     * Walks the element depth-first using an explicit heap stack, so JVM stack
+     * consumption is constant in the nesting depth of the document.
+     */
     private void walk(Element element) throws SAXException {
+        final List<ElementFrame> walkStack = new ArrayList<ElementFrame>();
+        walkStack.add(startElement(element));
+
+        while (!walkStack.isEmpty()) {
+            final ElementFrame frame = walkStack.get(walkStack.size() - 1);
+
+            boolean descended = false;
+            while (frame.childIndex < frame.children.getLength()) {
+                final Node node = frame.children.item(frame.childIndex);
+                ++frame.childIndex;
+
+                if (node instanceof Element) {
+                    walkStack.add(startElement((Element)node));
+                    descended = true;
+                    break;
+                } else if (node instanceof Text) {
+                    walk((Text)node);
+                } else if (node instanceof org.w3c.dom.Comment) {
+                    // Ignored.
+                } else {
+                    throw new SAXException("Unrecognized child of " + frame.element.getTagName()
+                                           + " of type " + node.getClass().getName());
+                }
+            }
+
+            if (!descended) {
+                endElement(frame);
+                walkStack.remove(walkStack.size() - 1);
+            }
+        }
+    }
+
+    private ElementFrame startElement(Element element) throws SAXException {
         DomAttrsAsSax attrs = new DomAttrsAsSax(element.getAttributes());
 
         final List<String> prefixes = startPrefixMappings(element);
@@ -333,30 +370,32 @@ public final class SaxWalkerOverDom {
                                   convertNullToEmptyString(element.getNodeName()), attrs);
         }
 
-        NodeList children = element.getChildNodes();
+        return new ElementFrame(element, prefixes);
+    }
 
-        for (int childIndex = 0; childIndex < children.getLength(); ++childIndex) {
-            Node node = children.item(childIndex);
-            if (node instanceof Element) {
-                walk((Element)node);
-            } else if (node instanceof Text) {
-                walk((Text)node);
-            } else if (node instanceof org.w3c.dom.Comment) {
-                // Ignored.
-            } else {
-                throw new SAXException("Unrecognized child of " + element.getTagName() + " of type "
-                                       + node.getClass().getName());
-            }
-        }
-
+    private void endElement(ElementFrame frame) throws SAXException {
         for (ContentHandler listener : listeners) {
-            listener.endElement(convertNullToEmptyString(element.getNamespaceURI()),
-                                convertNullToEmptyString(element.getLocalName()),
-                                convertNullToEmptyString(element.getNodeName()));
+            listener.endElement(convertNullToEmptyString(frame.element.getNamespaceURI()),
+                                convertNullToEmptyString(frame.element.getLocalName()),
+                                convertNullToEmptyString(frame.element.getNodeName()));
 
-            for (String prefix : prefixes) {
+            for (String prefix : frame.prefixes) {
                 listener.endPrefixMapping(prefix);
             }
+        }
+    }
+
+    private static final class ElementFrame {
+        private final Element element;
+        private final NodeList children;
+        private final List<String> prefixes;
+        private int childIndex;
+
+        ElementFrame(Element element, List<String> prefixes) {
+            this.element = element;
+            this.prefixes = prefixes;
+            this.children = element.getChildNodes();
+            this.childIndex = 0;
         }
     }
 
