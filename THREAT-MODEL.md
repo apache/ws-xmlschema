@@ -179,7 +179,12 @@ A finding is in-model only if it reaches a row marked **yes**.
   `DocumentBuilderFactory` decided that. In-model for whatever the
   schema-model semantics imply about the DOM contents.
 - **`xmlschema-walker`**: in-model when the visitor walks an
-  attacker-controlled schema. The walker is purely in-memory.
+  attacker-controlled schema. The walker is purely in-memory. Before cycle
+  detection, malformed but parseable schemas could create cycles in type
+  derivation, substitution groups, model groups, or attribute groups and
+  recurse until `StackOverflowError`. The walker now tracks these expansion
+  paths and rejects cyclic re-entry with `XmlSchemaException`; recursion that
+  crosses an element declaration remains supported.
 - **`XmlSchemaPathFinder`**: in-model when caller-supplied SAX events
   are matched against an attacker-controlled schema. Its backtracking
   work is bounded per document by configurable decision-point and
@@ -209,7 +214,9 @@ A finding is in-model only if it reaches a row marked **yes**.
   *(inferred — §14 Q7)*.
 - **Memory**: schemas are held in memory; XMLSchema has no built-in
   ceiling on schema-document size, number of imports, or import-graph
-  depth *(inferred — §14 Q8)*.
+  depth *(inferred — §14 Q8)*. The walker has active-path cycle detection
+  for the schema expansion graphs it traverses, but large acyclic schemas
+  may still consume substantial memory and CPU.
 - **System properties**: `org.apache.ws.commons.schema.extension_registry`
   is consulted at `XmlSchemaCollection` construction time, and the
   named class is loaded via `Class.forName()` *(documented:
@@ -299,6 +306,10 @@ feature is the intended defense and is sufficient) or `MODEL-GAP`
 - No documented limit on schema-document size *(inferred — §14 Q8)*.
 - No documented limit on the import-graph depth or breadth
   *(inferred — §14 Q8)*.
+- Walker expansion cycles are rejected for type derivation, substitution
+  groups, model groups, and attribute groups. This prevents recursive
+  stack exhaustion for malformed but parseable schemas; it is not a general
+  limit on the size or cost of an acyclic schema.
 - No rate limit on URL fetches when following `xs:import`
   *(inferred — §14 Q12)*.
 - `XmlSchemaPathFinder` bounds decision points and replayed events per
@@ -374,6 +385,19 @@ feature is the intended defense and is sufficient) or `MODEL-GAP`
   same model, breaking caller assumptions.
 - **Severity**: **correctness-only**.
 - *(inferred — §14 Q17)*
+
+### P5 — Bounded recursive schema walking
+
+- **Condition**: an attacker-controlled schema is passed to
+  `XmlSchemaWalker.walk(XmlSchemaElement)`.
+- **Property**: cyclic type derivation, substitution-group, model-group,
+  and attribute-group expansions terminate with `XmlSchemaException` rather
+  than recursing indefinitely. Legal recursive content that passes through
+  an element declaration remains walkable.
+- **Violation symptom**: a parseable schema causes the walker to recurse
+  until `StackOverflowError` or another resource-exhaustion failure.
+- **Severity**: **medium** availability impact when the embedding
+  application accepts untrusted schemas *(inferred — §14 Q23)*.
 
 ## §9 Security properties the project does *not* provide
 
@@ -452,7 +476,8 @@ matching disclaimer.
 - **Billion-laughs / quadratic blowup** — partially mitigated by
   `FEATURE_SECURE_PROCESSING=true`, but not universally.
 - **Schema-amplification DoS** — a deeply nested or heavily-recursive
-  schema can exhaust memory.
+  acyclic schema can exhaust memory or CPU; cyclic walker expansion is
+  rejected as described in §8 P5.
 - **Confused-deputy fetch via untrusted `baseUri` + relative
   `schemaLocation`** — the operator-supplied base URI is trusted.
 
@@ -760,6 +785,14 @@ sees recur in inbound reports. *(meta — §11a)*
 **Q22.** What kind of change to XMLSchema should trigger a revision
 (proposed list in §12 — confirm or correct)? *(meta — §12)*
 
+**Q23.** `xmlschema-walker` cycle handling: should rejection of cyclic
+type derivation, substitution-group, model-group, and attribute-group
+expansions be treated as a claimed medium-severity availability property
+for attacker-controlled schemas? Proposed: **yes**; malformed but
+parseable cycles must terminate with `XmlSchemaException`, while legal
+recursive content through element declarations remains supported. *(maps
+to §4, §6, §8 P5)*
+
 ---
 
 ## Appendix: SECURITY.md / website → §x back-map
@@ -781,3 +814,4 @@ source comments. The project website is
 | `xmlschema-core/src/main/java/.../resolver/URIResolver.java` | Resolver interface — caller-pluggable | §2 caller-roles, §10 item 1 |
 | `xmlschema-walker/src/main/java/.../docpath/DomBuilderFromSax.java` line 81 | `factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, TRUE)` | §5a, §8 P2 |
 | `xmlschema-walker/src/main/java/.../docpath/XmlSchemaPathFinder.java` | Configurable per-document limits on decision points and replayed events | §4, §5a, §6, §12 |
+| `xmlschema-walker/src/main/java/.../walker/XmlSchemaWalker.java` and `XmlSchemaScope.java` | Active-path cycle detection for schema expansion | §4, §6, §8 P5 |

@@ -22,6 +22,7 @@ package org.apache.ws.commons.schema.walker;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.apache.ws.commons.schema.XmlSchemaChoiceMember;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaElement;
+import org.apache.ws.commons.schema.XmlSchemaException;
 import org.apache.ws.commons.schema.XmlSchemaGroup;
 import org.apache.ws.commons.schema.XmlSchemaGroupParticle;
 import org.apache.ws.commons.schema.XmlSchemaGroupRef;
@@ -45,7 +47,6 @@ import org.apache.ws.commons.schema.XmlSchemaParticle;
 import org.apache.ws.commons.schema.XmlSchemaSequence;
 import org.apache.ws.commons.schema.XmlSchemaSequenceMember;
 import org.apache.ws.commons.schema.XmlSchemaType;
-import org.apache.ws.commons.schema.utils.XmlSchemaNamed;
 
 /**
  * Walks an {@link XmlSchema} from a starting {@link XmlSchemaElement},
@@ -61,6 +62,8 @@ public final class XmlSchemaWalker {
     private final SchemasByNamespace schemasByNamespace;
     private final Map<QName, XmlSchemaScope> scopeCache;
     private final IdentityHashMap<XmlSchemaType, XmlSchemaType> visitedTypes;
+    private Set<QName> substGroupsInProgress = new HashSet<QName>();
+    private Set<QName> groupsInProgress = new HashSet<QName>();
 
     /**
      * Initializes the {@link XmlSchemaWalker} with the
@@ -147,6 +150,8 @@ public final class XmlSchemaWalker {
     public void clear() {
         scopeCache.clear();
         visitedTypes.clear();
+        substGroupsInProgress.clear();
+        groupsInProgress.clear();
     }
 
     /**
@@ -301,7 +306,16 @@ public final class XmlSchemaWalker {
                 // 6. Walk the child groups and elements (if any), depth-first.
                 final XmlSchemaParticle child = scope.getParticle();
                 if (child != null) {
-                    walk(child);
+                    final Set<QName> outerSubstGroupsInProgress = substGroupsInProgress;
+                    final Set<QName> outerGroupsInProgress = groupsInProgress;
+                    substGroupsInProgress = new HashSet<QName>();
+                    groupsInProgress = new HashSet<QName>();
+                    try {
+                        walk(child);
+                    } finally {
+                        substGroupsInProgress = outerSubstGroupsInProgress;
+                        groupsInProgress = outerGroupsInProgress;
+                    }
                 }
             }
 
@@ -320,12 +334,21 @@ public final class XmlSchemaWalker {
 
         // 8. Now handle substitute elements, if any.
         if (substitutes != null) {
-            for (XmlSchemaElement substitute : substitutes) {
-                walk(substitute);
+            final QName substGroupName = getElementQName(substGroupElem);
+            if (!substGroupsInProgress.add(substGroupName)) {
+                throw new XmlSchemaException("Cyclic substitution group detected involving "
+                                             + substGroupName + '.');
             }
+            try {
+                for (XmlSchemaElement substitute : substitutes) {
+                    walk(substitute);
+                }
 
-            for (XmlSchemaVisitor visitor : visitors) {
-                visitor.onExitSubstitutionGroup(substGroupElem);
+                for (XmlSchemaVisitor visitor : visitors) {
+                    visitor.onExitSubstitutionGroup(substGroupElem);
+                }
+            } finally {
+                substGroupsInProgress.remove(substGroupName);
             }
         }
     }
@@ -333,14 +356,25 @@ public final class XmlSchemaWalker {
     private void walk(XmlSchemaParticle particle) {
         if (particle instanceof XmlSchemaGroupRef) {
             XmlSchemaGroupRef groupRef = (XmlSchemaGroupRef)particle;
-            XmlSchemaGroupParticle group = groupRef.getParticle();
-            if (group == null) {
-                XmlSchemaGroup g = schemasByNamespace.getGroupByName(groupRef.getRefName());
-                if (g != null) {
-                    group = g.getParticle();
+            final QName groupName = groupRef.getRefName();
+            if ((groupName != null) && !groupsInProgress.add(groupName)) {
+                throw new XmlSchemaException("Cyclic group reference detected involving group "
+                                             + groupName + '.');
+            }
+            try {
+                XmlSchemaGroupParticle group = groupRef.getParticle();
+                if (group == null) {
+                    XmlSchemaGroup g = schemasByNamespace.getGroupByName(groupName);
+                    if (g != null) {
+                        group = g.getParticle();
+                    }
+                }
+                walk(group, groupRef.getMinOccurs(), groupRef.getMaxOccurs());
+            } finally {
+                if (groupName != null) {
+                    groupsInProgress.remove(groupName);
                 }
             }
-            walk(group, groupRef.getMinOccurs(), groupRef.getMaxOccurs());
 
         } else if (particle instanceof XmlSchemaGroupParticle) {
             walk((XmlSchemaGroupParticle)particle, particle.getMinOccurs(), particle.getMaxOccurs());
