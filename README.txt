@@ -24,6 +24,26 @@ Documentation can be found in the 'documents' distribution of this release and i
 the main site.
 
 ===================
+    Configuration
+===================
+
+The XML Schema path finder limits the work it performs while backtracking
+through ambiguous schema content models. The following JVM system properties
+adjust the per-document limits:
+
+  org.apache.ws.commons.schema.walker.maxDecisionPoints
+      Maximum decision points created while matching a document. The default is
+      10000.
+
+  org.apache.ws.commons.schema.walker.maxReplayedEvents
+      Maximum previously traversed events replayed while backtracking. The
+      default is 1000000.
+
+For example, set a limit with:
+
+  -Dorg.apache.ws.commons.schema.walker.maxDecisionPoints=20000
+
+===================
       Support
 ===================
  

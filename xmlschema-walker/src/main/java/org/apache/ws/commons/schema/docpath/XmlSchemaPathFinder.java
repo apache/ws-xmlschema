@@ -58,6 +58,19 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
      */
     private static final int MAX_DEPTH = 256;
 
+    /*
+     * The backtracking search creates a DecisionPoint per ambiguous element
+     * and replays traversed elements on every backtrack; without a budget an
+     * ambiguous (Unique Particle Attribution violating) schema, which this
+     * library does not reject, drives the search through an exponential
+     * cross-product of choices. Both bounds are configurable via system
+     * properties.
+     */
+    private static final int MAX_DECISION_POINTS =
+        getIntProperty("org.apache.ws.commons.schema.walker.maxDecisionPoints", 10000);
+    private static final long MAX_REPLAYED_EVENTS =
+        getIntProperty("org.apache.ws.commons.schema.walker.maxReplayedEvents", 1000000);
+
     private final XmlSchemaNamespaceContext nsContext;
 
     private XmlSchemaPathNode<U, V> rootPathNode;
@@ -66,6 +79,8 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
 
     private ArrayList<TraversedElement> traversedElements;
     private ArrayList<DecisionPoint<U, V>> decisionPoints;
+    private int decisionPointCount;
+    private long replayedEventCount;
 
     private ArrayList<QName> elementStack;
     private ArrayList<QName> anyStack;
@@ -431,6 +446,40 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         decisionPoints = null; // Hopefully there won't be any!
     }
 
+    private void recordDecisionPoint() {
+        ++decisionPointCount;
+        if (decisionPointCount > MAX_DECISION_POINTS) {
+            throw new IllegalStateException("More than " + MAX_DECISION_POINTS
+                + " decision points were created while matching this document; the schema"
+                + " likely contains ambiguous (Unique Particle Attribution violating)"
+                + " content models. The limit may be changed with the"
+                + " org.apache.ws.commons.schema.walker.maxDecisionPoints system property.");
+        }
+    }
+
+    private void recordReplayedEvent() {
+        ++replayedEventCount;
+        if (replayedEventCount > MAX_REPLAYED_EVENTS) {
+            throw new IllegalStateException("More than " + MAX_REPLAYED_EVENTS
+                + " traversed elements were replayed while backtracking through this"
+                + " document; the schema likely contains ambiguous (Unique Particle"
+                + " Attribution violating) content models. The limit may be changed with the"
+                + " org.apache.ws.commons.schema.walker.maxReplayedEvents system property.");
+        }
+    }
+
+    private static int getIntProperty(String name, int defaultValue) {
+        try {
+            Integer value = Integer.getInteger(name);
+            if (value != null) {
+                return value.intValue();
+            }
+        } catch (SecurityException e) {
+            // fall through to the default
+        }
+        return defaultValue;
+    }
+
     /**
      * Kick-starts a new SAX walk, building new <code>XmlSchemaPathNode</code>
      * and <code>XmlSchemaDocumentNode</code> traversals in the process.
@@ -443,6 +492,9 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
 
         traversedElements.clear();
         elementStack.clear();
+
+        decisionPointCount = 0;
+        replayedEventCount = 0;
 
         if (decisionPoints != null) {
             decisionPoints.clear();
@@ -523,6 +575,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                     if (decisionPoints == null) {
                         decisionPoints = new ArrayList<DecisionPoint<U, V>>(4);
                     }
+                    recordDecisionPoint();
                     decisionPoints.add(decisionPoint);
 
                     nextPath = decisionPoint.tryNextPath();
@@ -587,6 +640,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
 
                     int index = priorPoint.traversedElementIndex + 1;
                     for (; index < traversedElements.size(); ++index) {
+                        recordReplayedEvent();
                         nextPath = null;
 
                         final TraversedElement te = traversedElements.get(index);
@@ -601,6 +655,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                                 final DecisionPoint<U, V> decisionPoint =
                                     new DecisionPoint<U, V>(currentPath, possiblePaths, index, elementStack, anyStack);
 
+                                recordDecisionPoint();
                                 decisionPoints.add(decisionPoint);
                                 nextPath = decisionPoint.tryNextPath();
 
@@ -691,6 +746,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                             new DecisionPoint<U, V>(currentPath, possiblePaths, traversedElements.size(),
                                                     elementStack, anyStack);
 
+                        recordDecisionPoint();
                         decisionPoints.add(decisionPoint);
                         nextPath = decisionPoint.tryNextPath();
                     } else {

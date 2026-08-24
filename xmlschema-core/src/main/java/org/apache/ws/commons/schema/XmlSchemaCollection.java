@@ -28,6 +28,7 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -449,9 +450,7 @@ public final class XmlSchemaCollection {
         restriction.setBaseType((XmlSchemaSimpleType)xsd.getTypeByName(parent));
 
         if (facets != null) {
-        	for (XmlSchemaFacet facet : facets) {
-        		restriction.getFacets().add(facet);
-        	}
+            restriction.getFacets().addAll(Arrays.asList(facets));
         }
 
         simple.setContent(restriction);
