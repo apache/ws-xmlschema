@@ -21,8 +21,10 @@ package org.apache.ws.commons.schema.walker;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +44,7 @@ import org.apache.ws.commons.schema.XmlSchemaComplexContentRestriction;
 import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaContent;
 import org.apache.ws.commons.schema.XmlSchemaElement;
+import org.apache.ws.commons.schema.XmlSchemaException;
 import org.apache.ws.commons.schema.XmlSchemaFacet;
 import org.apache.ws.commons.schema.XmlSchemaParticle;
 import org.apache.ws.commons.schema.XmlSchemaSequence;
@@ -71,6 +74,8 @@ final class XmlSchemaScope {
     private XmlSchemaParticle child;
     private XmlSchemaAnyAttribute anyAttr;
     private Set<QName> userRecognizedTypes;
+    private Set<XmlSchemaType> typesInProgress;
+    private final Set<QName> attributeGroupsInProgress = new HashSet<QName>();
 
     /**
      * Initialization of members to be filled in during the walk.
@@ -87,8 +92,9 @@ final class XmlSchemaScope {
         this.schemasByNamespace = child.schemasByNamespace;
         this.scopeCache = child.scopeCache;
         this.userRecognizedTypes = child.userRecognizedTypes;
+        this.typesInProgress = child.typesInProgress;
 
-        walk(type);
+        walkWithCycleCheck(type);
     }
 
     /**
@@ -104,8 +110,22 @@ final class XmlSchemaScope {
         schemasByNamespace = xmlSchemasByNamespace;
         this.scopeCache = scopeCache;
         this.userRecognizedTypes = userRecognizedTypes;
+        this.typesInProgress =
+            Collections.newSetFromMap(new IdentityHashMap<XmlSchemaType, Boolean>());
 
-        walk(type);
+        walkWithCycleCheck(type);
+    }
+
+    private void walkWithCycleCheck(XmlSchemaType type) {
+        if (!typesInProgress.add(type)) {
+            throw new XmlSchemaException("Cyclic type derivation detected involving type "
+                                         + getName(type, "{Anonymous}") + '.');
+        }
+        try {
+            walk(type);
+        } finally {
+            typesInProgress.remove(type);
+        }
     }
 
     /**
@@ -494,7 +514,19 @@ final class XmlSchemaScope {
         if (attrGroup == null) {
             attrGroup = schemasByNamespace.getAttributeGroupByName(groupRef.getTargetQName());
         }
-        return getAttributesOf(attrGroup);
+
+        final QName groupName = groupRef.getTargetQName();
+        if ((groupName != null) && !attributeGroupsInProgress.add(groupName)) {
+            throw new XmlSchemaException("Cyclic attribute group reference detected involving "
+                                         + groupName + '.');
+        }
+        try {
+            return getAttributesOf(attrGroup);
+        } finally {
+            if (groupName != null) {
+                attributeGroupsInProgress.remove(groupName);
+            }
+        }
     }
 
     private ArrayList<XmlSchemaAttrInfo> getAttributesOf(XmlSchemaAttributeGroup attrGroup) {
