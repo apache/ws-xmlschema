@@ -103,6 +103,7 @@ filesystem IO** when it follows `<xs:include>` / `<xs:import>` /
 | `xmlschema-core` resource loader (internal) — `DocumentBuilderFactory` and `TransformerFactory` instances configured with `FEATURE_SECURE_PROCESSING=true` | invoked by `XmlSchemaCollection.read(InputSource, ...)` and `XmlSchemaSerializer` | **no** | **yes** |
 | `xmlschema-walker` visitor — `XmlSchemaWalker`, `XmlSchemaVisitor`, `XmlSchemaScope` | walked by a caller-supplied `XmlSchemaVisitor` | **no** | **yes** |
 | `xmlschema-walker` element validator — `XmlSchemaElementValidator` | walked at SAX-event time; consults the schema model | **no** (operates on caller-supplied SAX events) | **yes** |
+| `xmlschema-walker` document path finder — `XmlSchemaPathFinder` | walked at SAX-event time; matches events against the schema model | **no** (operates on caller-supplied SAX events) | **yes** |
 | `xmlschema-walker` DOM-from-SAX helper — `DomBuilderFromSax` | builds a DOM out of SAX events for validator inspection | **no** | **yes** |
 | `xmlschema-bundle-test` | OSGi packaging regression test | n/a | **out of model** *(§3)* |
 | `w3c-testcases/` | W3C schema test data | n/a | **out of model** *(§3)* |
@@ -179,6 +180,10 @@ A finding is in-model only if it reaches a row marked **yes**.
   schema-model semantics imply about the DOM contents.
 - **`xmlschema-walker`**: in-model when the visitor walks an
   attacker-controlled schema. The walker is purely in-memory.
+- **`XmlSchemaPathFinder`**: in-model when caller-supplied SAX events
+  are matched against an attacker-controlled schema. Its backtracking
+  work is bounded per document by configurable decision-point and
+  replay-event limits.
 - **`XmlSchemaElementValidator` / `DomBuilderFromSax`**: in-model only
   insofar as they parse SAX events the caller hands in. `DomBuilderFromSax`
   sets `FEATURE_SECURE_PROCESSING=true` on its
@@ -243,6 +248,8 @@ points*:
 | `org.apache.ws.commons.schema.extension_registry` system property | unset *(documented: `XmlSchemaCollection.java` line 361)* | dev-time customization; if set by an untrusted actor the named class is loaded into the JVM | extension-registry class is `Class.forName`-loaded at `XmlSchemaCollection` ctor time |
 | `XmlSchemaCollection.setSchemaResolver(URIResolver)` | `DefaultURIResolver` *(documented: `DefaultURIResolver.java`)* | **maintainer ruling required** — is the documented expectation that production deployments install a *restricted* resolver that refuses untrusted hosts (proposed: **yes, §10**), or is the default resolver supported as production-safe? *(inferred — §14 Q12)* | controls whether `xs:include`/`xs:import` may reach the network |
 | `XmlSchemaCollection.setBaseUri(String)` | unset *(documented)* | caller-supplied | base URI against which relative `schemaLocation` values resolve |
+| `org.apache.ws.commons.schema.walker.maxDecisionPoints` system property | `10000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum decision points created while matching one document |
+| `org.apache.ws.commons.schema.walker.maxReplayedEvents` system property | `1000000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum previously traversed events replayed while backtracking through one document |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / `read(InputStream)` paths |
 
 ### The insecure-default case
@@ -282,6 +289,7 @@ feature is the intended defense and is sufficient) or `MODEL-GAP`
 | `XmlSchemaCollection.setExtReg(ExtensionRegistry)` | registry | caller-supplied | caller's choice |
 | `XmlSchema.write(OutputStream)` / `XmlSchema.write(Writer)` | output sink | caller-supplied | caller's choice; `FEATURE_SECURE_PROCESSING=true` is set on the internal `TransformerFactory` *(documented: `XmlSchema.java` line 886)* |
 | `XmlSchemaWalker.walk(XmlSchemaElement)` | walked schema | as untrusted as the schema | none — pure in-memory walking |
+| `XmlSchemaPathFinder` | SAX events + schema model | as untrusted as both | configure backtracking limits for the deployment; defaults bound decision points and replayed events per document |
 | `XmlSchemaElementValidator` (walker module) | SAX events + schema model | as untrusted as both | caller validates / sanitizes outside |
 | `DomBuilderFromSax` | SAX events | as untrusted as the source of the events | `FEATURE_SECURE_PROCESSING=true` is set *(documented: `DomBuilderFromSax.java` line 81)* |
 | System property `org.apache.ws.commons.schema.extension_registry` | class name | **trusted by §3 item 7** | operator must lock down property setting in shared-JVM deployments |
@@ -293,6 +301,11 @@ feature is the intended defense and is sufficient) or `MODEL-GAP`
   *(inferred — §14 Q8)*.
 - No rate limit on URL fetches when following `xs:import`
   *(inferred — §14 Q12)*.
+- `XmlSchemaPathFinder` bounds decision points and replayed events per
+  document by default; these limits are configurable through the
+  `org.apache.ws.commons.schema.walker.maxDecisionPoints` and
+  `org.apache.ws.commons.schema.walker.maxReplayedEvents` system
+  properties *(documented: `XmlSchemaPathFinder.java`)*.
 
 ## §7 Adversary model
 
@@ -579,7 +592,8 @@ Revise this document when any of the following lands:
   e.g. adding explicit `disallow-doctype-decl=true`.
 - A new public entry point on `XmlSchemaCollection` that accepts new
   input shapes.
-- A new built-in resource limit on schema size or import-graph depth.
+- A new built-in resource limit, or a change to an existing resource
+  limit.
 - A new feature flag in `xmlschema-walker`'s validator that turns it
   into a claimed-conformant document validator.
 - An upgrade of the supported JDK minimum that changes the JDK XML
@@ -601,7 +615,7 @@ A report against XMLSchema receives exactly one of the following:
 | `OUT-OF-MODEL: unsupported-component` | Lands in `w3c-testcases/`, `*/src/test/`, `etc/`, `xmlschema-bundle-test/`. | §3 items 4, 8 |
 | `OUT-OF-MODEL: non-default-build` | Only manifests under a §5a configuration the maintainer rules dev/test (e.g. an unsafe custom `URIResolver`). | §5a |
 | `OUT-OF-MODEL: out-of-layer` | Concerns a *document* validation step delegated to `javax.xml.validation.Validator`, or a WSDL parser upstream. | §3 items 1–3 |
-| `BY-DESIGN: property-disclaimed` | Concerns a §9 property the project explicitly does not provide (no SSRF defense, no XXE defense beyond secure-processing, no resource ceiling). | §9 |
+| `BY-DESIGN: property-disclaimed` | Concerns a §9 property the project explicitly does not provide (no SSRF defense, no XXE defense beyond secure-processing, no schema-size or import-graph resource ceiling). | §9 |
 | `KNOWN-NON-FINDING` | Matches a §11a recurring false positive. | §11a |
 | `MODEL-GAP` | Cannot be cleanly routed to any of the above — triggers §12 model revision. | §12 |
 
@@ -766,3 +780,4 @@ source comments. The project website is
 | `xmlschema-core/src/main/java/.../resolver/DefaultURIResolver.java` | URL composed from `baseUri` + `schemaLocation`; no filtering | §3 item 7, §9 SSRF disclaim, §10 item 1, §11 first bullet |
 | `xmlschema-core/src/main/java/.../resolver/URIResolver.java` | Resolver interface — caller-pluggable | §2 caller-roles, §10 item 1 |
 | `xmlschema-walker/src/main/java/.../docpath/DomBuilderFromSax.java` line 81 | `factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, TRUE)` | §5a, §8 P2 |
+| `xmlschema-walker/src/main/java/.../docpath/XmlSchemaPathFinder.java` | Configurable per-document limits on decision points and replayed events | §4, §5a, §6, §12 |
