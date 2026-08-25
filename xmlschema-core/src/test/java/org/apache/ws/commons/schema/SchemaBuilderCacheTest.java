@@ -19,12 +19,15 @@
 
 package org.apache.ws.commons.schema;
 
+import java.io.StringReader;
 import java.lang.ref.SoftReference;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.ws.commons.schema.resolver.URIResolver;
 import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -169,6 +172,37 @@ public class SchemaBuilderCacheTest extends Assert {
         // If the cache is not in use, then it should be null
         // The thread-local cannot be null
         assertNull(getThreadResolvedSchemaHashtable());
+    }
+
+    @Test
+    public void testCacheKeySeparatesComponents() {
+        try {
+            SchemaBuilder.initCache();
+            XmlSchemaCollection schemaCollection = new XmlSchemaCollection();
+            CountingResolver resolver = new CountingResolver();
+            schemaCollection.setSchemaResolver(resolver);
+            SchemaBuilder builder = new SchemaBuilder(schemaCollection, null);
+
+            XmlSchema first = builder.resolveXmlSchema("urn:test", "a", "bc", null);
+            XmlSchema second = builder.resolveXmlSchema("urn:test", "ab", "c", null);
+
+            assertNotSame(first, second);
+            assertEquals(2, resolver.resolveCount);
+        } finally {
+            resetResolvedSchemasHashtable();
+        }
+    }
+
+    private static final class CountingResolver implements URIResolver {
+        private int resolveCount;
+
+        public InputSource resolveEntity(String targetNamespace, String schemaLocation, String baseUri) {
+            resolveCount++;
+            InputSource source = new InputSource(new StringReader(
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:test\"/>"));
+            source.setSystemId("memory:" + schemaLocation);
+            return source;
+        }
     }
 
     /**

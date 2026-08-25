@@ -669,8 +669,12 @@ public class SchemaBuilder {
     XmlSchema resolveXmlSchema(String targetNamespace, String schemaLocation, String baseUri,
                                TargetNamespaceValidator validator) {
 
-        if (getCachedSchema(targetNamespace, schemaLocation, baseUri) != null) {
-            return getCachedSchema(targetNamespace, schemaLocation, baseUri);
+        final XmlSchema cachedSchema = getCachedSchema(targetNamespace, schemaLocation, baseUri);
+        if (cachedSchema != null) {
+            if (validator != null) {
+                validator.validate(cachedSchema);
+            }
+            return cachedSchema;
         }
 
         // use the entity resolver provided if the schema location is present
@@ -772,7 +776,7 @@ public class SchemaBuilder {
                 // only by a trailing slash. As it is now, we assume a single
                 // character difference
                 // means it's a schema that has yet to be resolved.
-                String schemaKey = targetNamespace + schemaLocation + baseUri;
+                String schemaKey = getCacheKey(targetNamespace, schemaLocation, baseUri);
                 SoftReference<XmlSchema> softref = threadResolvedSchemas.get(schemaKey);
                 if (softref != null) {
                     resolvedSchema = softref.get();
@@ -780,6 +784,22 @@ public class SchemaBuilder {
             }
         }
         return resolvedSchema;
+    }
+
+    private static String getCacheKey(String targetNamespace, String schemaLocation, String baseUri) {
+        StringBuilder key = new StringBuilder();
+        appendCacheKeyComponent(key, targetNamespace);
+        appendCacheKeyComponent(key, schemaLocation);
+        appendCacheKeyComponent(key, baseUri);
+        return key.toString();
+    }
+
+    private static void appendCacheKeyComponent(StringBuilder key, String component) {
+        if (component == null) {
+            key.append("-|");
+        } else {
+            key.append(component.length()).append('|').append(component);
+        }
     }
 
     private List<Node> getChildren(Element content) {
@@ -1893,7 +1913,7 @@ public class SchemaBuilder {
         if (resolvedSchemas != null) {
             Map<String, SoftReference<XmlSchema>> threadResolvedSchemas = resolvedSchemas.get();
             if (threadResolvedSchemas != null) {
-                String schemaKey = targetNamespace + schemaLocation + baseUri;
+                String schemaKey = getCacheKey(targetNamespace, schemaLocation, baseUri);
                 threadResolvedSchemas.put(schemaKey, new SoftReference<XmlSchema>(readSchema));
             }
         }
