@@ -213,10 +213,13 @@ A finding is in-model only if it reaches a row marked **yes**.
   sanitization of `schemaLocation` values that begin with `file://`
   *(inferred — §14 Q7)*.
 - **Memory**: schemas are held in memory; XMLSchema has no built-in
-  ceiling on schema-document size, number of imports, or import-graph
-  depth *(inferred — §14 Q8)*. The walker has active-path cycle detection
+  ceiling on schema-document size, imported bytes, or fetch rate. Import
+  and include resolution is bounded per read by a default maximum depth of
+  64 and maximum of 1000 resolved schema documents; both are configurable
+  with JVM system properties. The walker has active-path cycle detection
   for the schema expansion graphs it traverses, but large acyclic schemas
-  may still consume substantial memory and CPU.
+  may still consume substantial memory and CPU *(documented:
+  `README.txt`)*.
 - **System properties**: `org.apache.ws.commons.schema.extension_registry`
   is consulted at `XmlSchemaCollection` construction time, and the
   named class is loaded via `Class.forName()` *(documented:
@@ -257,6 +260,8 @@ points*:
 | `XmlSchemaCollection.setBaseUri(String)` | unset *(documented)* | caller-supplied | base URI against which relative `schemaLocation` values resolve |
 | `org.apache.ws.commons.schema.walker.maxDecisionPoints` system property | `10000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum decision points created while matching one document |
 | `org.apache.ws.commons.schema.walker.maxReplayedEvents` system property | `1000000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum previously traversed events replayed while backtracking through one document |
+| `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
+| `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / `read(InputStream)` paths |
 
 ### The insecure-default case
@@ -304,8 +309,10 @@ feature is the intended defense and is sufficient) or `MODEL-GAP`
 ### Size / shape / rate
 
 - No documented limit on schema-document size *(inferred — §14 Q8)*.
-- No documented limit on the import-graph depth or breadth
-  *(inferred — §14 Q8)*.
+- Import/include resolution has a default maximum depth of 64 and a
+  default maximum of 1000 resolved schema documents per top-level read;
+  both limits are configurable with JVM system properties *(documented:
+  `README.txt`)*.
 - Walker expansion cycles are rejected for type derivation, substitution
   groups, model groups, and attribute groups. This prevents recursive
   stack exhaustion for malformed but parseable schemas; it is not a general
@@ -424,10 +431,11 @@ matching disclaimer.
   `Element`.** The hardening on the internal `DocumentBuilderFactory`
   is moot — the caller's parser produced the DOM *(documented:
   `XmlSchemaCollection.read(Document)` / `.read(Element)`)*.
-- **No bound on schema-document size, import-graph depth, or import
-  fan-out.** A schema that includes thousands of imports, or imports
-  recursively, will be processed to completion or until JVM resources
-  are exhausted *(inferred — §14 Q8)*.
+- **No bound on schema-document size, imported bytes, or fetch rate.**
+  Import/include depth and total resolved documents per top-level read are
+  bounded, but a schema can still consume substantial resources within
+  those limits *(inferred — §14 Q8; depth and resolution limits documented
+  in `README.txt`)*.
 - **No protection of imported schemas at rest.** Schemas pulled from
   HTTP are fetched in cleartext if the URL is `http://`. The caller
   must use TLS-protected URLs or install a restricting resolver
@@ -499,9 +507,10 @@ The embedding Java application **must**:
    against attacker-controlled bytes, verify the JDK XML provider in
    use treats `FEATURE_SECURE_PROCESSING=true` as sufficient defense
    *(inferred — §14 Q6)*.
-4. Bound the maximum allowable schema size and the maximum import-graph
-   depth at the *caller* level. XMLSchema imposes no such limit
-   *(inferred — §14 Q8)*.
+4. Bound maximum schema size, imported bytes, and fetch rate at the
+  *caller* level. XMLSchema provides configurable import/include depth
+  and per-read resolution limits, but these do not replace deployment-
+  specific resource budgets *(inferred — §14 Q8)*.
 5. Set `org.apache.ws.commons.schema.extension_registry` only at JVM
    startup from a trusted source; do not allow untrusted actors to set
    it.
@@ -520,9 +529,9 @@ defense-in-depth controls:
   `FEATURE_SECURE_PROCESSING=true`: `disallow-doctype-decl=true`,
   `external-general-entities=false`, and
   `external-parameter-entities=false`.
-3. Apply import-fetch budgets at the caller boundary: maximum import
-  depth, total imported bytes, and total import count per top-level
-  parse.
+3. Supplement XMLSchema's import/include depth and per-read resolution
+  limits with caller-boundary budgets for total imported bytes and fetch
+  rate per top-level parse.
 4. Use connect/read timeouts for import fetches and fail closed on
   timeout or policy-check errors.
 5. Log import-resolution decisions (requested URI, normalized target,
@@ -640,7 +649,7 @@ A report against XMLSchema receives exactly one of the following:
 | `OUT-OF-MODEL: unsupported-component` | Lands in `w3c-testcases/`, `*/src/test/`, `etc/`, `xmlschema-bundle-test/`. | §3 items 4, 8 |
 | `OUT-OF-MODEL: non-default-build` | Only manifests under a §5a configuration the maintainer rules dev/test (e.g. an unsafe custom `URIResolver`). | §5a |
 | `OUT-OF-MODEL: out-of-layer` | Concerns a *document* validation step delegated to `javax.xml.validation.Validator`, or a WSDL parser upstream. | §3 items 1–3 |
-| `BY-DESIGN: property-disclaimed` | Concerns a §9 property the project explicitly does not provide (no SSRF defense, no XXE defense beyond secure-processing, no schema-size or import-graph resource ceiling). | §9 |
+| `BY-DESIGN: property-disclaimed` | Concerns a §9 property the project explicitly does not provide (no SSRF defense, no XXE defense beyond secure-processing, no schema-size, imported-byte, or fetch-rate ceiling). | §9 |
 | `KNOWN-NON-FINDING` | Matches a §11a recurring false positive. | §11a |
 | `MODEL-GAP` | Cannot be cleanly routed to any of the above — triggers §12 model revision. | §12 |
 
@@ -702,10 +711,11 @@ inheritance from JDK Xerces.** *(maps to §5a, §8 P2, §9, §11a)*
 when it begins with `file://`, `jar:`, etc. (proposed: no sanitization;
 operator's `URIResolver` is the gate). *(maps to §5, §11a)*
 
-**Q8.** No documented bound on schema-document size or
-import-graph depth (proposed: confirm "no bound, operator's
-responsibility to cap"). Are there *de facto* bounds inside XMLSchema?
-*(maps to §5, §9, §10 item 4)*
+**Q8.** XMLSchema has no documented bound on schema-document size,
+imported bytes, or fetch rate. Import/include resolution does have
+configurable defaults of 64 levels and 1000 resolved schema documents per
+top-level read. The caller remains responsible for additional deployment-
+specific resource budgets. *(maps to §5, §9, §10 item 4)*
 
 **Q9.** `org.apache.ws.commons.schema.extension_registry` system
 property: confirm that production deployments are expected to set
