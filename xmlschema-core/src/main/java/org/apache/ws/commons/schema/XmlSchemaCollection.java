@@ -166,6 +166,21 @@ public final class XmlSchemaCollection {
     private Map<SchemaKey, XmlSchema> schemas;
 
     /**
+     * Maximum depth of the import/include resolution stack, and maximum
+     * number of schema resolutions per top-level read. Both bound the total
+     * work a single parse can trigger regardless of what fetched documents
+     * contain: exact-key cycle detection alone is defeated by per-level
+     * variation of the schema location (for example an ever-changing query
+     * string), which otherwise recurses until the thread stack overflows.
+     */
+    private static final int MAX_IMPORT_DEPTH =
+        getIntProperty("org.apache.ws.commons.schema.maxImportDepth", 64);
+    private static final int MAX_RESOLUTIONS_PER_READ =
+        getIntProperty("org.apache.ws.commons.schema.maxSchemaResolutions", 1000);
+
+    private int resolutionsSinceTopLevelRead;
+
+    /**
      * Creates new XmlSchemaCollection
      */
     public XmlSchemaCollection() {
@@ -480,6 +495,26 @@ public final class XmlSchemaCollection {
      * @param pKey the schema key.
      */
     public void push(SchemaKey pKey) {
+        if (stack.isEmpty()) {
+            // A new top-level read is starting.
+            resolutionsSinceTopLevelRead = 0;
+        }
+        if (stack.size() >= MAX_IMPORT_DEPTH) {
+            throw new XmlSchemaException("Maximum schema import/include depth of " + MAX_IMPORT_DEPTH
+                                         + " exceeded while resolving " + pKey
+                                         + "; the import graph is too deep or does not terminate."
+                                         + " The limit may be changed with the"
+                                         + " org.apache.ws.commons.schema.maxImportDepth system property.");
+        }
+        resolutionsSinceTopLevelRead++;
+        if (resolutionsSinceTopLevelRead > MAX_RESOLUTIONS_PER_READ) {
+            throw new XmlSchemaException("More than " + MAX_RESOLUTIONS_PER_READ
+                                         + " schema documents were resolved by a single read; the import"
+                                         + " graph is too large or does not terminate. The limit may be"
+                                         + " changed with the"
+                                         + " org.apache.ws.commons.schema.maxSchemaResolutions"
+                                         + " system property.");
+        }
         stack.push(pKey);
     }
 
@@ -856,6 +891,22 @@ public final class XmlSchemaCollection {
             }
         }
         return null;
+    }
+
+    private static int getIntProperty(final String name, int defaultValue) {
+        try {
+            String value = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty(name);
+                }
+            });
+            if (value != null) {
+                return Integer.parseInt(value);
+            }
+        } catch (RuntimeException e) {
+            // fall through to the default
+        }
+        return defaultValue;
     }
 
 }

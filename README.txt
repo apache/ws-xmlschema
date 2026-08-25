@@ -39,9 +39,22 @@ adjust the per-document limits:
       Maximum previously traversed events replayed while backtracking. The
       default is 1000000.
 
+  The schema collection limits the work performed while resolving imported and
+  included schemas. The following JVM system properties adjust the limits:
+
+    org.apache.ws.commons.schema.maxImportDepth
+      Maximum import/include resolution depth for a schema read. The default
+      is 64.
+
+    org.apache.ws.commons.schema.maxSchemaResolutions
+      Maximum number of schema documents resolved during a single top-level
+      read. The default is 1000.
+
 For example, set a limit with:
 
   -Dorg.apache.ws.commons.schema.walker.maxDecisionPoints=20000
+
+    -Dorg.apache.ws.commons.schema.maxImportDepth=128
 
 ===================
       Support
