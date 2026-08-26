@@ -714,10 +714,10 @@ public final class XmlSchemaCollection {
     void addSchema(SchemaKey pKey, XmlSchema pSchema) {
         if (schemas.containsKey(pKey)) {
             throw 
-                new IllegalStateException("A schema with target namespace " 
-                                          + pKey.getNamespace()
-                                          + " and system ID " 
-                                          + pKey.getSystemId() + " is already present.");
+                new XmlSchemaException("A schema with target namespace "
+                                       + pKey.getNamespace()
+                                       + " and system ID "
+                                       + pKey.getSystemId() + " is already present.");
         }
         schemas.put(pKey, pSchema);
     }
