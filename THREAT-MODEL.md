@@ -29,7 +29,7 @@
   at clone time. A report against project release *N* should be triaged
   against the model as it stood at *N*, not at HEAD. Latest release
   documented in `RELEASE-NOTE.txt`: 2.3.0.
-- **Date**: 2026-05-30.
+- **Date**: 2026-08-26.
 - **Authors**: ASF Security team, awaiting XMLSchema / Webservices
   PMC review.
 - **Status**: under maintainer review.
@@ -47,7 +47,7 @@
   *(inferred)* = synthesized by the producer from code structure or
   domain knowledge, awaiting PMC ratification (every *(inferred)* tag has
   a matching §14 question).
-- **Model confidence**: 21 documented / 0 maintainer / 24 inferred.
+- **Model confidence**: 22 documented / 0 maintainer / 24 inferred.
 
 XMLSchema is a Java library that parses, models, walks, and serializes
 W3C XML Schema documents (`.xsd` files). It is *not* a document
@@ -215,11 +215,12 @@ A finding is in-model only if it reaches a row marked **yes**.
 - **Memory**: schemas are held in memory; XMLSchema has no built-in
   ceiling on schema-document size, imported bytes, or fetch rate. Import
   and include resolution is bounded per read by a default maximum depth of
-  64 and maximum of 1000 resolved schema documents; both are configurable
-  with JVM system properties. The walker has active-path cycle detection
-  for the schema expansion graphs it traverses, but large acyclic schemas
-  may still consume substantial memory and CPU *(documented:
-  `README.txt`)*.
+  64 and maximum of 1000 resolved schema documents, and schema-model
+  construction is bounded by a default structural nesting depth of 512;
+  these limits are configurable with JVM system properties. The walker has
+  active-path cycle detection for the schema expansion graphs it traverses,
+  but large acyclic schemas may still consume substantial memory and CPU
+  *(documented: `README.txt`)*.
 - **System properties**: `org.apache.ws.commons.schema.extension_registry`
   is consulted at `XmlSchemaCollection` construction time, and the
   named class is loaded via `Class.forName()` *(documented:
@@ -262,6 +263,7 @@ points*:
 | `org.apache.ws.commons.schema.walker.maxReplayedEvents` system property | `1000000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum previously traversed events replayed while backtracking through one document |
 | `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
+| `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / `read(InputStream)` paths |
 
 ### The insecure-default case
@@ -312,6 +314,10 @@ feature is the intended defense and is sufficient) or `MODEL-GAP`
 - Import/include resolution has a default maximum depth of 64 and a
   default maximum of 1000 resolved schema documents per top-level read;
   both limits are configurable with JVM system properties *(documented:
+  `README.txt`)*.
+- Schema-model construction has a default maximum structural nesting depth
+  of 512, including nested include/import/redefine document resolutions;
+  the limit is configurable with a JVM system property *(documented:
   `README.txt`)*.
 - Walker expansion cycles are rejected for type derivation, substitution
   groups, model groups, and attribute groups. This prevents recursive
@@ -406,6 +412,18 @@ feature is the intended defense and is sufficient) or `MODEL-GAP`
 - **Severity**: **medium** availability impact when the embedding
   application accepts untrusted schemas *(inferred — §14 Q23)*.
 
+### P6 — Bounded schema-model structural descent
+
+- **Condition**: attacker-controlled schema bytes or DOM content are passed
+  to `XmlSchemaCollection.read(...)`.
+- **Property**: deeply nested schema structure, including depth split across
+  nested include/import/redefine document resolutions, terminates with
+  `XmlSchemaException` instead of exhausting the Java thread stack.
+- **Violation symptom**: a parseable schema causes `SchemaBuilder` to recurse
+  until `StackOverflowError` or another resource-exhaustion failure.
+- **Severity**: **medium** availability impact when the embedding
+  application accepts untrusted schemas.
+
 ## §9 Security properties the project does *not* provide
 
 State each plainly so a triager can route an inbound report to the
@@ -432,10 +450,10 @@ matching disclaimer.
   is moot — the caller's parser produced the DOM *(documented:
   `XmlSchemaCollection.read(Document)` / `.read(Element)`)*.
 - **No bound on schema-document size, imported bytes, or fetch rate.**
-  Import/include depth and total resolved documents per top-level read are
-  bounded, but a schema can still consume substantial resources within
-  those limits *(inferred — §14 Q8; depth and resolution limits documented
-  in `README.txt`)*.
+  Import/include depth, total resolved documents per top-level read, and
+  structural nesting depth are bounded, but a schema can still consume
+  substantial resources within those limits *(inferred — §14 Q8; resource
+  limits documented in `README.txt`)*.
 - **No protection of imported schemas at rest.** Schemas pulled from
   HTTP are fetched in cleartext if the URL is `http://`. The caller
   must use TLS-protected URLs or install a restricting resolver
@@ -483,9 +501,10 @@ matching disclaimer.
 - **SSRF via `xs:import schemaLocation`** — see §9 first bullet.
 - **Billion-laughs / quadratic blowup** — partially mitigated by
   `FEATURE_SECURE_PROCESSING=true`, but not universally.
-- **Schema-amplification DoS** — a deeply nested or heavily-recursive
-  acyclic schema can exhaust memory or CPU; cyclic walker expansion is
-  rejected as described in §8 P5.
+- **Schema-amplification DoS** — large or heavily-recursive acyclic schemas
+  can exhaust memory or CPU within the documented resource limits;
+  structural nesting and cyclic walker expansion are rejected as described
+  in §8 P5 and §8 P6.
 - **Confused-deputy fetch via untrusted `baseUri` + relative
   `schemaLocation`** — the operator-supplied base URI is trusted.
 
@@ -509,8 +528,8 @@ The embedding Java application **must**:
    *(inferred — §14 Q6)*.
 4. Bound maximum schema size, imported bytes, and fetch rate at the
   *caller* level. XMLSchema provides configurable import/include depth
-  and per-read resolution limits, but these do not replace deployment-
-  specific resource budgets *(inferred — §14 Q8)*.
+  per-read resolution, and structural nesting limits, but these do not
+  replace deployment-specific resource budgets *(inferred — §14 Q8)*.
 5. Set `org.apache.ws.commons.schema.extension_registry` only at JVM
    startup from a trusted source; do not allow untrusted actors to set
    it.
@@ -529,9 +548,9 @@ defense-in-depth controls:
   `FEATURE_SECURE_PROCESSING=true`: `disallow-doctype-decl=true`,
   `external-general-entities=false`, and
   `external-parameter-entities=false`.
-3. Supplement XMLSchema's import/include depth and per-read resolution
-  limits with caller-boundary budgets for total imported bytes and fetch
-  rate per top-level parse.
+3. Supplement XMLSchema's import/include depth, per-read resolution, and
+  structural nesting limits with caller-boundary budgets for total imported
+  bytes and fetch rate per top-level parse.
 4. Use connect/read timeouts for import fetches and fail closed on
   timeout or policy-check errors.
 5. Log import-resolution decisions (requested URI, normalized target,
@@ -817,6 +836,7 @@ source comments. The project website is
 | `README.txt` | "lightweight schema object model that can be used to manipulate and generate XML schema representations" | §1, §2 intended use |
 | `RELEASE-NOTE.txt` (2.3.0) | Java 17 minimum, Java 7 dropped | §5 environment |
 | `xmlschema-core/src/main/java/org/apache/ws/commons/schema/XmlSchemaCollection.java` line 361 | `org.apache.ws.commons.schema.extension_registry` system property loaded via `Class.forName` | §5a, §6, §11 |
+| `xmlschema-core/src/main/java/org/apache/ws/commons/schema/SchemaBuilder.java` | `org.apache.ws.commons.schema.maxNestingDepth` structural descent limit | §5, §5a, §6, §8 P6 |
 | `XmlSchemaCollection.java` line 713 | `docFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, TRUE)` | §5a, §8 P2 |
 | `XmlSchemaCollection.java` line 745 | `AccessController.doPrivileged` wrapper for the SAX parse | §5 |
 | `XmlSchema.java` line 886 | `trFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, TRUE)` for serializer | §5a, §8 P2 |
