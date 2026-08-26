@@ -198,6 +198,20 @@ public final class XmlSchemaCollection {
         return !stack.contains(pKey);
     }
 
+    /**
+     * Structural nesting depth of the schema build currently in progress on
+     * this collection. Maintained by SchemaBuilder (balanced increments and
+     * finally-decrements, so it always returns to zero when the outermost
+     * read completes or throws). It lives here rather than on SchemaBuilder
+     * because read() creates a fresh SchemaBuilder for every
+     * include/import/redefine document that SchemaBuilder.resolveXmlSchema
+     * pulls in, while all those documents are built on a single thread
+     * stack: the bound has to be carried across the nested reads, not reset
+     * per document. Package-private and accessed directly by SchemaBuilder,
+     * like {@link #baseUri}.
+     */
+    int builderNestingDepth;
+
     public ExtensionRegistry getExtReg() {
         return extReg;
     }

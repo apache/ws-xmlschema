@@ -50,11 +50,18 @@ adjust the per-document limits:
       Maximum number of schema documents resolved during a single top-level
       read. The default is 1000.
 
+    org.apache.ws.commons.schema.maxNestingDepth
+      Maximum structural nesting depth while building the schema model,
+      including nested include/import/redefine document resolutions. The
+      default is 512.
+
 For example, set a limit with:
 
   -Dorg.apache.ws.commons.schema.walker.maxDecisionPoints=20000
 
     -Dorg.apache.ws.commons.schema.maxImportDepth=128
+
+    -Dorg.apache.ws.commons.schema.maxNestingDepth=256
 
 ===================
       Support
