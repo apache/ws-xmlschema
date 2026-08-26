@@ -30,7 +30,12 @@ final class EnumUtil {
     }
     
     static <T extends Enum<T>> T valueOf(Class<T> enumClass, String name) {
-        return Enum.valueOf(enumClass, name.toUpperCase(Locale.ENGLISH));
+        try {
+            return Enum.valueOf(enumClass, name.toUpperCase(Locale.ENGLISH));
+        } catch (IllegalArgumentException e) {
+            throw new XmlSchemaException("Invalid value \"" + name + "\" for "
+                                         + enumClass.getSimpleName() + ".", e);
+        }
     }
 
 }

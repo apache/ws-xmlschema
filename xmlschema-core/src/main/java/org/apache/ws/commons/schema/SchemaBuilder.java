@@ -584,7 +584,7 @@ public class SchemaBuilder {
                 if (isEmpty(uri)) {
                     valid = isEmpty(pSchema.getSyntacticalTargetNamespace());
                 } else {
-                    valid = pSchema.getSyntacticalTargetNamespace().equals(uri);
+                    valid = uri.equals(pSchema.getSyntacticalTargetNamespace());
                 }
                 if (!valid) {
                     throw new XmlSchemaException("An imported schema was announced to have the namespace "
@@ -931,7 +931,7 @@ public class SchemaBuilder {
             }
 
             if (uri == null || Constants.NULL_NS_URI.equals(uri)) {
-                throw new IllegalStateException("The prefix " + prefix + " is not bound.");
+                throw new XmlSchemaException("The prefix " + prefix + " is not bound.");
             }
             localName = pName.substring(offset + 1);
         }
@@ -1355,6 +1355,10 @@ public class SchemaBuilder {
             }
 
             if (constraintEl.hasAttribute("refer")) {
+                if (!(constraint instanceof XmlSchemaKeyref)) {
+                    throw new XmlSchemaException("A \"refer\" attribute is only permitted on xs:keyref,"
+                                                 + " not on xs:" + constraintEl.getLocalName() + ".");
+                }
                 String name = constraintEl.getAttribute("refer");
                 ((XmlSchemaKeyref)constraint).refer = getRefQName(name, constraintEl);
             }
