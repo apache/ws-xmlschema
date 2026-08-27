@@ -2379,18 +2379,23 @@ public class XmlSchemaSerializer {
      * @param element
      */
     private void serializeMaxMinOccurs(XmlSchemaParticle particle, Element element) {
-        if (particle.getMaxOccurs() < Long.MAX_VALUE
-            && (particle.getMaxOccurs() > 1 || particle.getMaxOccurs() == 0)) {
-            element.setAttributeNS(null, "maxOccurs", particle.getMaxOccurs() + "");
-        } else if (particle.getMaxOccurs() == Long.MAX_VALUE) {
+        long maxOccurs = particle.getMaxOccurs();
+        long minOccurs = particle.getMinOccurs();
+        if (minOccurs < 0 || maxOccurs < 0) {
+            throw new XmlSchemaException("Negative occurrence bounds cannot be serialized.");
+        }
+        if (maxOccurs == Long.MAX_VALUE) {
             element.setAttributeNS(null, "maxOccurs", "unbounded");
-            // else not serialized
+        } else if (maxOccurs > 1 || maxOccurs == 0) {
+            element.setAttributeNS(null, "maxOccurs", maxOccurs + "");
         }
 
-        // 1 is the default and hence not serialized
-        // there is no valid case where min occurs can be unbounded!
-        if (particle.getMinOccurs() > 1 || particle.getMinOccurs() == 0) {
-            element.setAttributeNS(null, "minOccurs", particle.getMinOccurs() + "");
+        if (minOccurs == Long.MAX_VALUE) {
+            throw new XmlSchemaException("minOccurs == Long.MAX_VALUE cannot be serialized: "
+                                         + "unbounded is only permitted on maxOccurs.");
+        }
+        if (minOccurs > 1 || minOccurs == 0) {
+            element.setAttributeNS(null, "minOccurs", minOccurs + "");
         }
     }
 
