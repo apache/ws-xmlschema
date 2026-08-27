@@ -228,35 +228,39 @@ public class SchemaBuilder {
     }
 
     long getMaxOccurs(Element el) {
-        try {
-            if (el.getAttributeNode("maxOccurs") != null) {
-                String value = el.getAttribute("maxOccurs");
-                if ("unbounded".equals(value)) {
-                    return Long.MAX_VALUE;
-                } else {
-                    return Long.parseLong(value);
-                }
+        if (el.getAttributeNode("maxOccurs") != null) {
+            String value = el.getAttribute("maxOccurs").trim();
+            if ("unbounded".equals(value)) {
+                return Long.MAX_VALUE;
             }
-            return 1;
-        } catch (java.lang.NumberFormatException e) {
-            return 1;
+            try {
+                long parsed = Long.parseLong(value);
+                if (parsed < 0 || parsed == Long.MAX_VALUE) {
+                    throw new XmlSchemaException("Invalid maxOccurs value \"" + value + "\".");
+                }
+                return parsed;
+            } catch (java.lang.NumberFormatException e) {
+                throw new XmlSchemaException("Invalid maxOccurs value \"" + value + "\".", e);
+            }
         }
+        return 1;
     }
 
     long getMinOccurs(Element el) {
-        try {
-            if (el.getAttributeNode("minOccurs") != null) {
-                String value = el.getAttribute("minOccurs");
-                if ("unbounded".equals(value)) {
-                    return Long.MAX_VALUE;
-                } else {
-                    return Long.parseLong(value);
+        if (el.getAttributeNode("minOccurs") != null) {
+            String value = el.getAttribute("minOccurs").trim();
+            try {
+                long parsed = Long.parseLong(value);
+                if (parsed < 0 || parsed == Long.MAX_VALUE) {
+                    throw new XmlSchemaException("Invalid minOccurs value \"" + value + "\".");
                 }
+                return parsed;
+            } catch (java.lang.NumberFormatException e) {
+                throw new XmlSchemaException("Invalid minOccurs value \"" + value
+                                             + "\" (\"unbounded\" is only permitted on maxOccurs).", e);
             }
-            return 1;
-        } catch (java.lang.NumberFormatException e) {
-            return 1;
         }
+        return 1;
     }
 
     /**
