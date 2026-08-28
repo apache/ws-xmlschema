@@ -149,7 +149,7 @@ A finding is in-model only if it reaches a row marked **yes**.
 
 | # | Transition | Authentication | Authorization |
 | --- | --- | --- | --- |
-| B1 | Caller → `XmlSchemaCollection.read(InputSource | InputStream | Reader | URL | Document | Element)` | none — caller is trusted | none |
+| B1 | Caller → `XmlSchemaCollection.read(InputSource | Reader | Source | Document | Element)` | none — caller is trusted | none |
 | B2 | `XmlSchemaCollection.read(InputSource, ...)` → hardened JDK `DocumentBuilder` | none | DOCTYPE rejected by default; external DTD/entity resolution disabled |
 | B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` does **no host filtering**: it constructs `new URL(new URL(baseUri), schemaLocation)` and hands back an `InputSource` pointing at it |
 | B4 | Resolved `InputSource` → `XmlSchemaCollection.read(InputSource, ...)` (recursive) | none | none |
@@ -159,7 +159,8 @@ A finding is in-model only if it reaches a row marked **yes**.
 ### Reachability preconditions per family
 
 - **`xmlschema-core` parser** (`XmlSchemaCollection.read(InputSource)`,
-  `.read(InputStream)`, `.read(Reader)`): in-model when the bytes are
+  `.read(Reader)`, `.read(Source)` for non-`DOMSource` sources): in-model
+  when the bytes are
   attacker-controllable. XMLSchema sets `FEATURE_SECURE_PROCESSING=true`
   on its internal `DocumentBuilderFactory`, rejects DOCTYPE declarations
   by default, disables external general entities, external parameter
@@ -265,7 +266,7 @@ points*:
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
 | `org.apache.ws.commons.schema.allowDTD` system property | `false` *(documented: `README.txt`)* | compatibility toggle for operator-controlled deployments | allows DOCTYPE declarations in schema documents; external DTD and external entity resolution remain disabled |
-| `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / `read(InputStream)` paths |
+| `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / stream-shaped `read(Source)` paths |
 
 ### The insecure-default case
 
@@ -279,7 +280,8 @@ required to install a restricting resolver per §10).
 
 XMLSchema's internal schema parser rejects DOCTYPE declarations by
 default and disables external DTD and external entity resolution. This
-applies both to top-level `read(InputSource | InputStream | Reader)`
+applies both to top-level `read(InputSource | Reader | Source)` non-DOMSource
+paths
 parses and to recursive import/include/redefine reparses. Operators may
 set `org.apache.ws.commons.schema.allowDTD=true` to accept
 DOCTYPE-bearing schemas for compatibility; external DTD and external
@@ -292,9 +294,8 @@ entity resolution remain disabled in that mode.
 | Entry point | Parameter | Attacker-controllable? | Caller must enforce |
 | --- | --- | --- | --- |
 | `XmlSchemaCollection.read(InputSource is)` | `is` bytes | **yes** | XMLSchema rejects DOCTYPE by default and disables external DTD/entity resolution; caller may need to install a restricting `URIResolver` if the source contains untrusted `xs:include`/`xs:import` |
-| `XmlSchemaCollection.read(InputStream in)` | `in` bytes | **yes** | same as above |
 | `XmlSchemaCollection.read(Reader r)` | `r` characters | **yes** | same as above |
-| `XmlSchemaCollection.read(URL url)` | `url` | caller-supplied | caller controls; XMLSchema fetches via JDK URL handlers |
+| `XmlSchemaCollection.read(Source src)` | `src` | **yes** | `SAXSource`/`StreamSource`/other route through the internal hardened factory (same as `read(InputSource)`); a `DOMSource` routes to the pre-parsed `read(Document)`/`read(Element)` path, so the upstream parser's XXE/DTD posture applies |
 | `XmlSchemaCollection.read(Document doc)` | `doc` | **yes if doc was parsed from untrusted bytes** | caller's `DocumentBuilderFactory` is responsible for XXE / DTD posture; XMLSchema does not re-parse |
 | `XmlSchemaCollection.read(Element el)` | `el` | same as `read(Document)` | same as above |
 | `XmlSchemaCollection.setSchemaResolver(URIResolver)` | resolver | caller-supplied | replacing the default is the documented path for production hardening *(inferred — §14 Q12)* |
@@ -368,8 +369,8 @@ entity resolution remain disabled in that mode.
 
 ### P2 — Internal parser DTD and external-entity hardening
 
-- **Condition**: XMLSchema's `read(InputSource | InputStream | Reader)`
-  paths take the internal `DocumentBuilderFactory`.
+- **Condition**: XMLSchema's `read(InputSource | Reader | Source)`
+  non-DOMSource paths take the internal `DocumentBuilderFactory`.
 - **Property**: DOCTYPE declarations are rejected by default. External
   general entities, external parameter entities, external DTD loading,
   and JAXP external-DTD access are disabled; a no-op `EntityResolver` is
@@ -625,8 +626,10 @@ model, the section that licenses the call.
   top-level `w3c-testcases/`)*. → `OUT-OF-MODEL: unsupported-component`.
 - **"`ExtensionRegistry` is `Class.forName`-loaded — RCE."** Trusted
   system property per §3 item 7. → `OUT-OF-MODEL: trusted-input`.
-- **"`XmlSchemaCollection.read(URL)` follows `file://` to read
-  arbitrary local files."** Caller passed the URL; trusted entry point.
+- **"`XmlSchemaCollection.read(InputSource)` with a `file://` system ID
+  follows it to read arbitrary local files."** (No `read(URL)` or
+  `read(InputStream)` overload exists; earlier revisions of this table
+  listed both in error.) Caller passed the URL; trusted entry point.
   → `OUT-OF-MODEL: trusted-input`.
 
 ## §12 Conditions that would change this model
