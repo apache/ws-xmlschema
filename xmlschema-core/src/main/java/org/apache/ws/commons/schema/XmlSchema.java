@@ -886,6 +886,13 @@ public class XmlSchema extends XmlSchemaAnnotated implements NamespaceContextOwn
             trFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
 
             try {
+                trFac.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+                trFac.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+            } catch (IllegalArgumentException e) {
+                // The provider does not recognize the JAXP 1.5 attributes.
+            }
+
+            try {
                 trFac.setAttribute("indent-number", "4");
             } catch (IllegalArgumentException e) {
                 // do nothing - we'll just silently let this pass if it

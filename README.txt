@@ -55,6 +55,17 @@ adjust the per-document limits:
       including nested include/import/redefine document resolutions. The
       default is 512.
 
+  The internal parser used by XmlSchemaCollection.read(InputSource),
+  read(Reader), stream-backed read(Source), and recursive
+  xs:import/xs:include/xs:redefine reparses rejects DOCTYPE declarations
+  by default and disables external DTD and external entity resolution.
+  To accept schema documents that contain a DOCTYPE declaration, set:
+
+    org.apache.ws.commons.schema.allowDTD
+      Set to true to allow DOCTYPE declarations. The default is false.
+      External DTD and external entity resolution remain disabled when this
+      property is true.
+
 For example, set a limit with:
 
   -Dorg.apache.ws.commons.schema.walker.maxDecisionPoints=20000
@@ -62,6 +73,8 @@ For example, set a limit with:
     -Dorg.apache.ws.commons.schema.maxImportDepth=128
 
     -Dorg.apache.ws.commons.schema.maxNestingDepth=256
+
+    -Dorg.apache.ws.commons.schema.allowDTD=true
 
 ===================
       Support
