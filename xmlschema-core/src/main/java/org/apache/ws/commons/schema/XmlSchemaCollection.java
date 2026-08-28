@@ -633,6 +633,12 @@ public final class XmlSchemaCollection {
     /**
      * Read an XML schema into the collection from a TRaX source. Schemas in a collection must be unique in
      * the concatenation of system ID and targetNamespace. In this API, the systemID is taken from the Source.
+        * <p>
+        * Note: a {@link DOMSource} is read through the pre-parsed {@link #read(Document)} /
+        * {@link #read(Element)} path, so the XXE/DTD posture of that parse is whatever the upstream
+        * parser that produced the DOM was configured with &mdash; this collection's internally hardened
+        * parser is not involved. All other source types are parsed with the internal hardened parser.
+        * </p>
      * 
      * @param source the XSD document.
      * @return the XML schema object.
@@ -642,10 +648,15 @@ public final class XmlSchemaCollection {
             return read(((SAXSource)source).getInputSource());
         } else if (source instanceof DOMSource) {
             Node node = ((DOMSource)source).getNode();
+            String systemId = source.getSystemId();
             if (node instanceof Document) {
-                node = ((Document)node).getDocumentElement();
+                return read((Document)node, systemId);
+            } else if (node instanceof Element) {
+                return read((Element)node, systemId);
             }
-            return read((Document)node);
+            throw new XmlSchemaException("A DOMSource must wrap a Document or an Element node, but "
+                                         + (node == null ? "no node was provided."
+                                             : "a " + node.getClass().getName() + " was provided."));
         } else if (source instanceof StreamSource) {
             StreamSource ss = (StreamSource)source;
             InputSource isource = new InputSource(ss.getSystemId());
