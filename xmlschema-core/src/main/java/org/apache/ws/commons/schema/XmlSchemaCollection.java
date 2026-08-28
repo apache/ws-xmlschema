@@ -21,6 +21,7 @@ package org.apache.ws.commons.schema;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -50,6 +51,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -70,6 +72,16 @@ public final class XmlSchemaCollection {
      * base URI is used as the base for loading the imports
      */
     String baseUri;
+
+    /**
+     * Prevents external DTD and entity content from being fetched by the
+     * internal parser, even if a JAXP provider ignores hardening features.
+     */
+    private static final EntityResolver NO_OP_ENTITY_RESOLVER = new EntityResolver() {
+        public InputSource resolveEntity(String publicId, String systemId) {
+            return new InputSource(new StringReader(""));
+        }
+    };
 
     /**
      * Key that identifies a schema in a collection, composed of a targetNamespace and a system ID.
@@ -760,7 +772,9 @@ public final class XmlSchemaCollection {
             DocumentBuilderFactory docFac = DocumentBuilderFactory.newInstance();
             docFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
             docFac.setNamespaceAware(true);
+            hardenAgainstDtdProcessing(docFac);
             final DocumentBuilder builder = docFac.newDocumentBuilder();
+            builder.setEntityResolver(NO_OP_ENTITY_RESOLVER);
             Document doc = null;
             doc = parseDoPriv(inputSource, builder, doc);
             return read(doc, inputSource.getSystemId(), namespaceValidator);
@@ -808,6 +822,46 @@ public final class XmlSchemaCollection {
             }
         }
         return doc;
+    }
+
+    /**
+     * DTD-bearing schema documents are legal XML, but DTD processing is not
+     * required to build schema components and is unsafe for untrusted input.
+     */
+    private static void hardenAgainstDtdProcessing(DocumentBuilderFactory docFac) {
+        if (!isDtdAllowed()) {
+            trySetFeature(docFac, "http://apache.org/xml/features/disallow-doctype-decl", true);
+        }
+        trySetFeature(docFac, "http://xml.org/sax/features/external-general-entities", false);
+        trySetFeature(docFac, "http://xml.org/sax/features/external-parameter-entities", false);
+        trySetFeature(docFac, "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        try {
+            docFac.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        } catch (IllegalArgumentException e) {
+            // The provider does not recognize the JAXP 1.5 attribute.
+        }
+        docFac.setExpandEntityReferences(false);
+    }
+
+    private static void trySetFeature(DocumentBuilderFactory docFac, String feature, boolean value) {
+        try {
+            docFac.setFeature(feature, value);
+        } catch (ParserConfigurationException e) {
+            // The provider does not support this feature; the remaining
+            // hardening settings still apply.
+        }
+    }
+
+    private static boolean isDtdAllowed() {
+        try {
+            return Boolean.parseBoolean(AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty("org.apache.ws.commons.schema.allowDTD");
+                }
+            }));
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
     
     /**
