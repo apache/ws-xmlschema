@@ -36,3 +36,7 @@ updates:
       interval: "daily"
     cooldown:
       default-days: 5
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
