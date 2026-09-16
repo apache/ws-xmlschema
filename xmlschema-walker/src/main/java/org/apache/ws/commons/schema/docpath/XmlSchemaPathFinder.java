@@ -28,6 +28,7 @@ import javax.xml.namespace.QName;
 
 import org.apache.ws.commons.schema.XmlSchemaAny;
 import org.apache.ws.commons.schema.XmlSchemaElement;
+import org.apache.ws.commons.schema.XmlSchemaException;
 import org.apache.ws.commons.schema.walker.XmlSchemaTypeInfo;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -449,7 +450,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
     private void recordDecisionPoint() {
         ++decisionPointCount;
         if (decisionPointCount > MAX_DECISION_POINTS) {
-            throw new IllegalStateException("More than " + MAX_DECISION_POINTS
+            throw new XmlSchemaException("More than " + MAX_DECISION_POINTS
                 + " decision points were created while matching this document; the schema"
                 + " likely contains ambiguous (Unique Particle Attribution violating)"
                 + " content models. The limit may be changed with the"
@@ -460,7 +461,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
     private void recordReplayedEvent() {
         ++replayedEventCount;
         if (replayedEventCount > MAX_REPLAYED_EVENTS) {
-            throw new IllegalStateException("More than " + MAX_REPLAYED_EVENTS
+            throw new XmlSchemaException("More than " + MAX_REPLAYED_EVENTS
                 + " traversed elements were replayed while backtracking through this"
                 + " document; the schema likely contains ambiguous (Unique Particle"
                 + " Attribution violating) content models. The limit may be changed with the"
