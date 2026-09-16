@@ -71,8 +71,8 @@ import org.apache.ws.commons.schema.utils.TargetNamespaceValidator;
  * <code>schemaLocation</code> is dereferenced through the collection's
  * {@link URIResolver}. The default is {@link DefaultURIResolver}, which resolves
  * <code>http</code>, <code>https</code>, <code>file</code> and <code>jar</code> locations and
- * applies no host or address filtering. It is a convenience for trusted,
- * operator-controlled schema sets.
+ * applies no host or address filtering to the <code>http</code> and <code>https</code> targets it
+ * allows. It is a convenience for trusted, operator-controlled schema sets.
  * </p>
  * <p>
  * <strong>An application that reads schema or WSDL documents from an untrusted source must

@@ -84,8 +84,10 @@ For example, set a limit with:
   schema locations through a URIResolver. The bundled DefaultURIResolver
   is a convenience for trusted, operator-controlled schema sets. It
   resolves http, https, file and jar locations and applies no host or
-  address filtering, so a schema location naming an internal host, a
-  cloud metadata endpoint, or a local file is fetched on request.
+  address filtering to the http and https targets it allows, so a schema
+  location naming an internal host, a cloud metadata endpoint, or a local
+  file is fetched on request. It does refuse a file: location that names a
+  non-local authority, and a jar: archive fetched over the network.
 
   Applications that parse schema or WSDL documents from an untrusted
   source must install a restricting resolver before reading them:

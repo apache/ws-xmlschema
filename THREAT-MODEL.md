@@ -154,7 +154,7 @@ A finding is in-model only if it reaches a row marked **yes**.
 | --- | --- | --- | --- |
 | B1 | Caller → `XmlSchemaCollection.read(InputSource | Reader | Source | Document | Element)` | none — caller is trusted | none |
 | B2 | `XmlSchemaCollection.read(InputSource, ...)` → hardened JDK `DocumentBuilder` | none | external DTD/entity resolution disabled unconditionally; DOCTYPE accepted |
-| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` allowlists the effective scheme (`http`, `https`, `file`, `jar`, judged through any `jar:` wrapper) and refuses a location that changes the scheme of a remote base or resolves to a non-local `file:` / `jar:` authority; it does **no host filtering** on the `http(s)` targets it allows |
+| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` allowlists the effective scheme (`http`, `https`, `file`, `jar`, judged through any `jar:` wrapper), and unconditionally refuses a `file:` location naming a non-local authority or a `jar:` archive fetched over the network; it also refuses a location that changes the scheme of a remote base; it does **no host filtering** on the `http(s)` targets it allows |
 | B4 | Resolved `InputSource` → `XmlSchemaCollection.read(InputSource, ...)` (recursive) | none | none |
 | B5 | `XmlSchema.write(...)` → JDK `TransformerFactory` (with `FEATURE_SECURE_PROCESSING=true` and external DTD/stylesheet access disabled where supported) | none | none |
 | B6 | `XmlSchemaCollection` ctor → `System.getProperty("org.apache.ws.commons.schema.extension_registry")` → `Class.forName()` | none | trusts system properties to be operator-controlled |
@@ -450,9 +450,13 @@ matching disclaimer.
   `InputSource` pointing at it. The JDK then fetches it on parse.
   The resolver restricts the *scheme* it will hand back — `http`,
   `https`, `file` and `jar`, judged through any `jar:` wrapper — and
-  refuses a location that changes the scheme of a remote base or
-  resolves to a non-local `file:` / `jar:` authority. Within those
-  schemes it applies **no host or address filtering of any kind**: any
+  refuses a location that changes the scheme of a remote base. It also
+  refuses, for every location and whatever the base, a `file:` URL that
+  names a non-local authority (a UNC path on Windows, so an SMB
+  connection to a host the schema author chose) and a `jar:` URL whose
+  archive would be fetched over the network. Within the `http` and
+  `https` targets it does allow, it applies **no host or address
+  filtering of any kind**: any
   `http(s)` host is fetched on request, including loopback, link-local
   (`169.254.169.254`) and RFC1918 addresses, and the JDK follows HTTP
   redirects without consulting the resolver again — so a host allowlist
@@ -689,6 +693,16 @@ Revise this document when any of the following lands:
   held. §14 Q12 is ruled (b) in the same pass, which resolves the
   conditional dispositions in §5a and §11a to
   `BY-DESIGN: property-disclaimed`.
+- **2026-09-16** — a third resolver change, again a revision trigger
+  under the first bullet above: the `file:` and `jar:` authority rules,
+  previously reachable only for *relative* locations composed against a
+  base, now apply to every resolved location, and a `jar:` URL whose
+  archive is fetched over `http`, `https` or `ftp` is refused outright.
+  An absolute `schemaLocation` had been skipping both checks, so
+  `file://host/share/x.xsd` and `jar:http://host/a.jar!/x.xsd` resolved
+  from a local or absent base. §4 B3 and §9 are updated. This does not
+  change the Q12(b) posture: absolute `http(s)` and local `file:`
+  locations are still followed.
 - **2026-09-16** — "Fix up DTD handling" (#147) changed the default
   parser DTD posture, a revision trigger under the second bullet above:
   external DTD and external entity resolution are now disabled
