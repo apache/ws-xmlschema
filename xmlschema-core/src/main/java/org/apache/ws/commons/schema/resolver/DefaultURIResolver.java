@@ -23,7 +23,11 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import org.apache.ws.commons.schema.XmlSchemaException;
 import org.xml.sax.InputSource;
@@ -33,6 +37,14 @@ import org.xml.sax.InputSource;
  * system will call this default resolver if there is no other resolver present in the system.
  */
 public class DefaultURIResolver implements CollectionURIResolver {
+
+    /**
+     * The URI schemes this resolver is willing to hand back to the parser. Schemes outside this
+     * set are never used by schema documents, so refusing them costs nothing and keeps the JDK
+     * URL handlers for them out of reach of an untrusted <code>schemaLocation</code>.
+     */
+    private static final Set<String> ALLOWED_SCHEMES = Collections.unmodifiableSet(
+        new HashSet<String>(Arrays.asList("http", "https", "file", "jar")));
 
     private String collectionBaseURI;
 
@@ -81,7 +93,11 @@ public class DefaultURIResolver implements CollectionURIResolver {
             }
 
         }
-        if (isAbsoluteUri(schemaLocation) || isPlainRelativePath(schemaLocation)) {
+        if (isAbsoluteUri(schemaLocation)) {
+            verifyAllowedScheme(schemaLocation, schemaLocation);
+            return new InputSource(schemaLocation);
+        }
+        if (isPlainRelativePath(schemaLocation)) {
             return new InputSource(schemaLocation);
         }
         return null;
@@ -90,6 +106,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
 
     private static void verifyComposedUrl(boolean remoteBase, String originalBaseUri, URL base,
                                           URL composed, String schemaLocation) {
+        verifyAllowedScheme(composed.toString(), schemaLocation);
         final String composedScheme = composed.getProtocol().toLowerCase(Locale.ENGLISH);
         if (isAbsoluteUri(schemaLocation)) {
             if (remoteBase && !isNetworkScheme(composedScheme)) {
@@ -125,6 +142,38 @@ public class DefaultURIResolver implements CollectionURIResolver {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
                                          + "\" resolves to a jar URL with a non-local file authority.");
         }
+    }
+
+    /**
+     * Refuse a resolved location whose effective scheme is not one a schema document may use.
+     *
+     * @param uri the resolved location that would be handed to the parser.
+     * @param schemaLocation the original schema location, for the error message.
+     */
+    private static void verifyAllowedScheme(String uri, String schemaLocation) {
+        final String scheme = effectiveScheme(uri);
+        if (scheme == null || !ALLOWED_SCHEMES.contains(scheme)) {
+            throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                         + "\" resolves to the scheme \"" + scheme
+                                         + "\", which is not permitted by DefaultURIResolver.");
+        }
+    }
+
+    /**
+     * The scheme that is actually dereferenced when the location is fetched. A "jar:" URL
+     * delegates to the URL it wraps, so "jar:http://host/a.jar!/x.xsd" performs an HTTP fetch
+     * even though its protocol reads as "jar".
+     */
+    private static String effectiveScheme(String uri) {
+        final String trimmed = uri.trim();
+        final String scheme = extractScheme(trimmed);
+        if ("jar".equals(scheme)) {
+            final String nested = extractScheme(trimmed.substring(4));
+            if (nested != null) {
+                return nested;
+            }
+        }
+        return scheme;
     }
 
     private static boolean isAbsoluteUri(String uri) {
