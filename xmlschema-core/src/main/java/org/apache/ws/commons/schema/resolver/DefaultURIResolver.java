@@ -108,7 +108,10 @@ public class DefaultURIResolver implements CollectionURIResolver {
             }
 
         }
-        if (isAbsoluteUri(schemaLocation)) {
+        // A location carrying a scheme is checked even when java.net.URI will not parse it.
+        // URI is stricter than the java.net.URL the parser goes on to build, so a location URI
+        // rejects is not thereby harmless.
+        if (isAbsoluteUri(schemaLocation) || extractScheme(schemaLocation) != null) {
             verifyPermittedLocation(schemaLocation, schemaLocation);
             return new InputSource(schemaLocation);
         }
@@ -165,6 +168,11 @@ public class DefaultURIResolver implements CollectionURIResolver {
         }
         final String trimmed = uri.trim();
         final boolean wrapped = "jar".equals(extractScheme(trimmed));
+        if (wrapped && extractScheme(trimmed.substring(4)) == null) {
+            throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                         + "\" is a jar: URL whose archive names no scheme this"
+                                         + " resolver recognises.");
+        }
         // A jar: URL delegates to the URL of the archive; the entry after "!/" is inside it.
         final String archive = wrapped ? stripJarEntry(trimmed.substring(4)) : trimmed;
         if (wrapped && isNetworkScheme(scheme)) {

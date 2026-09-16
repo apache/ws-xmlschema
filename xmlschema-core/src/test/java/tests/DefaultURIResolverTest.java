@@ -247,4 +247,51 @@ public class DefaultURIResolverTest extends Assert {
         // The same shape reached by composing a relative location against a local base.
         assertSchemeRefused("////attacker.example/share/x.xsd", localBase(), "non-local authority");
     }
+
+    @Test
+    public void testSchemeCheckSurvivesALocationUriCannotParse() {
+        // java.net.URI rejects a space, so isAbsoluteUri() said "not absolute" and the location
+        // fell through to the relative-path branch, which returned it unchecked. java.net.URL is
+        // laxer, so the parser still fetched it: a space was enough to defeat the scheme allowlist.
+        assertSchemeRefused("ftp://attacker.example/a b.xsd", null);
+        assertSchemeRefused("mailto:someone@example.com?x= y", null);
+        assertSchemeRefused("jrt:/java.base/a b", null);
+    }
+
+    @Test
+    public void testUnparseableFileLocationIsRefused() {
+        DefaultURIResolver resolver = new DefaultURIResolver();
+        try {
+            resolver.resolveEntity("urn:x", "file:///\\\\attacker.example\\share\\x.xsd", null);
+            fail("A file: location that will not parse as a URI must be refused.");
+        } catch (XmlSchemaException expected) {
+            // expected
+        }
+    }
+
+    @Test
+    public void testJarWrappingAnUnrecognisedSchemeIsRefused() {
+        assertSchemeRefused("jar:fi%6Ce://attacker.example/a.jar!/x.xsd", null, "names no scheme");
+        // Against a base the URL parser rejects the unknown nested protocol before this check,
+        // so only require that it is refused.
+        DefaultURIResolver resolver = new DefaultURIResolver();
+        try {
+            resolver.resolveEntity("urn:x", "jar:fi%6Ce://attacker.example/a.jar!/x.xsd",
+                                   localBase());
+            fail("A jar: URL wrapping an unrecognised scheme must be refused.");
+        } catch (XmlSchemaException expected) {
+            // expected
+        }
+    }
+
+    @Test
+    public void testRelativeLocationsAreStillNotSchemeChecked() {
+        DefaultURIResolver resolver = new DefaultURIResolver();
+
+        // No scheme: extractScheme() returns null for a colon that follows a path separator, so
+        // these stay plain relative paths.
+        assertEquals("sub/x.xsd", resolver.resolveEntity("urn:x", "sub/x.xsd", null).getSystemId());
+        assertEquals("dir/a:b.xsd",
+                     resolver.resolveEntity("urn:x", "dir/a:b.xsd", null).getSystemId());
+    }
 }
