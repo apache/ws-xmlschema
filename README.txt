@@ -68,6 +68,14 @@ adjust the per-document limits:
   as an entity in one - and FEATURE_SECURE_PROCESSING bounds entity
   expansion by both count and accumulated size.
 
+  The collections returned by the "read-only" accessors on the schema model
+  are, by default, the live internal collections rather than unmodifiable
+  views. To wrap them so that modification throws instead, set:
+
+    org.apache.ws.commons.schema.protectReadOnlyCollections
+      Set to true to return unmodifiable views from the read-only
+      accessors. The default is false.
+
 For example, set a limit with:
 
   -Dorg.apache.ws.commons.schema.walker.maxDecisionPoints=20000
@@ -75,6 +83,8 @@ For example, set a limit with:
     -Dorg.apache.ws.commons.schema.maxImportDepth=128
 
     -Dorg.apache.ws.commons.schema.maxNestingDepth=256
+
+    -Dorg.apache.ws.commons.schema.protectReadOnlyCollections=true
 
 ===================
      Security

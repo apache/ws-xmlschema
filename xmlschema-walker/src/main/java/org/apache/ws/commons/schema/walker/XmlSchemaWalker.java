@@ -328,8 +328,9 @@ public final class XmlSchemaWalker {
             }
 
         } else if (!element.isAbstract()) {
-            throw new IllegalStateException("Element " + element.getQName()
-            + " is not abstract and has no type.");
+            throw new XmlSchemaException("Element " + element.getQName()
+                                         + " is not abstract and has no type; its type reference does"
+                                         + " not resolve to a type in this collection.");
         }
 
         // 8. Now handle substitute elements, if any.
@@ -368,6 +369,10 @@ public final class XmlSchemaWalker {
                     if (g != null) {
                         group = g.getParticle();
                     }
+                }
+                if (group == null) {
+                    throw new XmlSchemaException("The group reference " + groupName
+                                                 + " does not resolve to a group in this collection.");
                 }
                 walk(group, groupRef.getMinOccurs(), groupRef.getMaxOccurs());
             } finally {
@@ -565,6 +570,11 @@ public final class XmlSchemaWalker {
             globalElem = element.getRef().getTarget();
         } else {
             globalElem = schemasByNamespace.getElementByName(elemQName);
+        }
+
+        if (globalElem == null) {
+            throw new XmlSchemaException("The element reference " + elemQName
+                                         + " does not resolve to an element in this collection.");
         }
 
         /*

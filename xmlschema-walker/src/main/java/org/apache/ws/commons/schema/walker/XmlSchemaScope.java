@@ -516,6 +516,10 @@ final class XmlSchemaScope {
         }
 
         final QName groupName = groupRef.getTargetQName();
+        if (attrGroup == null) {
+            throw new XmlSchemaException("The attribute group reference " + groupName
+                                         + " does not resolve to an attribute group in this collection.");
+        }
         if ((groupName != null) && !attributeGroupsInProgress.add(groupName)) {
             throw new XmlSchemaException("Cyclic attribute group reference detected involving "
                                          + groupName + '.');
@@ -584,6 +588,11 @@ final class XmlSchemaScope {
             } else {
                 globalAttr = schemasByNamespace.getAttributeByName(attrQName);
             }
+        }
+
+        if (globalAttr == null) {
+            throw new XmlSchemaException("The attribute reference " + attrQName
+                                         + " does not resolve to an attribute in this collection.");
         }
 
         XmlSchemaSimpleType schemaType = globalAttr.getSchemaType();

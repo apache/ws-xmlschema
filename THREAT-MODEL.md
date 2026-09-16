@@ -243,10 +243,11 @@ A finding is in-model only if it reaches a row marked **yes**.
 - Opens **no** listening sockets *(inferred — §14 Q10)*.
 - Spawns **no** child processes *(inferred — §14 Q10)*.
 - Installs **no** signal handlers *(inferred — §14 Q10)*.
-- Reads only the documented system property
-  `org.apache.ws.commons.schema.extension_registry` for
-  security-relevant decisions; does **not** consume `LD_*`-style
-  envvars *(inferred — §14 Q10)*.
+- Reads only documented system properties for security-relevant
+  decisions — `org.apache.ws.commons.schema.extension_registry`, the
+  resource limits of §5a, and
+  `org.apache.ws.commons.schema.protectReadOnlyCollections`; does
+  **not** consume `LD_*`-style envvars *(inferred — §14 Q10)*.
 - Writes **nothing** to the filesystem of its own initiative; the
   `XmlSchemaSerializer` writes to the `OutputStream` the caller hands
   in *(inferred — §14 Q10)*.
@@ -269,6 +270,7 @@ points*:
 | `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
+| `org.apache.ws.commons.schema.protectReadOnlyCollections` system property | `false` *(documented: `README.txt`, `CollectionFactory.java` lines 37-48)* | in-process convenience, not a trust boundary | when false, the "read-only" model accessors return the **live internal collections**, not unmodifiable views; §7 places the in-process caller outside the attacker model, so this is a correctness guard rather than a security control |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / stream-shaped `read(Source)` paths |
 
 ### The insecure-default case
@@ -802,8 +804,11 @@ untrusted-actor-set value is `OUT-OF-MODEL: trusted-input` (proposed).
 **Q10.** Negative-side inventory in §5: XMLSchema opens **no**
 sockets *other than what the JDK URL handler does when following an
 import*; spawns **no** processes; installs **no** signal handlers;
-reads **only** the documented system property; writes **nothing** of
-its own initiative. Confirm? *(maps to §5)*
+reads **only** the documented system properties (the §5a table, which
+includes `protectReadOnlyCollections` — note that its `false` default
+means the "read-only" accessors hand out the live internal
+collections); writes **nothing** of its own initiative. Confirm?
+*(maps to §5)*
 
 **Q11.** Build-time variants: confirm there are no compile-time feature
 toggles; the security envelope is shaped only by runtime extension
@@ -915,6 +920,7 @@ the JavaDoc / source comments. The project website is
 | `XmlSchemaCollection.java` | internal parser sets `FEATURE_SECURE_PROCESSING` and disables external DTD/entity resolution unconditionally; DOCTYPE declarations are accepted | §5a, §8 P2 |
 | `XmlSchemaCollection.java` line 745 | `AccessController.doPrivileged` wrapper for the SAX parse | §5 |
 | `XmlSchema.java` | serializer `TransformerFactory` sets `FEATURE_SECURE_PROCESSING` and disables external DTD/stylesheet access where supported | §5a, §8 P2 |
+| `XmlSchemaSerializer.java` lines 1566-1567 | `DocumentBuilderFactory` sets `FEATURE_SECURE_PROCESSING`; used only via `newDocument()`, so it never parses input and carries no XXE surface | §5a, §8 P2 |
 | `xmlschema-core/src/main/java/.../resolver/DefaultURIResolver.java` | URL composed from `baseUri` + `schemaLocation`; scheme allowlist plus base-scheme / authority checks, but no host filtering | §3 item 7, §9 SSRF disclaim, §10 item 1, §11 first bullet, §14 Q12 |
 | `xmlschema-core/src/main/java/.../resolver/URIResolver.java` | Resolver interface — caller-pluggable | §2 caller-roles, §10 item 1 |
 | `xmlschema-walker/src/main/java/.../docpath/DomBuilderFromSax.java` line 81 | `factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, TRUE)` | §5a, §8 P2 |
