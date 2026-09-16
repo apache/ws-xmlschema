@@ -836,13 +836,22 @@ public final class XmlSchemaCollection {
     }
 
     /**
-     * DTD-bearing schema documents are legal XML, but DTD processing is not
-     * required to build schema components and is unsafe for untrusted input.
+     * Blocks the external-resolution half of DTD processing, which is what makes
+     * DTDs dangerous: external general entities, external parameter entities and
+     * the external DTD subset are never fetched, so a schema document cannot read
+     * local files or reach the network through its DOCTYPE.
+     * <p>
+     * The DOCTYPE declaration itself is accepted. An internal DTD subset is a
+     * legitimate and widely used part of real schema documents - the W3C's own
+     * normative schemas (XML Signature, XML Encryption, XKMS) declare the
+     * entities they use for their target namespace in one - and refusing it
+     * closes no attack path that is still open here: it holds no external
+     * reference, and {@code FEATURE_SECURE_PROCESSING} bounds entity expansion
+     * by both count and accumulated size, so neither nested nor flat expansion
+     * runs away.
+     * </p>
      */
     private static void hardenAgainstDtdProcessing(DocumentBuilderFactory docFac) {
-        if (!isDtdAllowed()) {
-            trySetFeature(docFac, "http://apache.org/xml/features/disallow-doctype-decl", true);
-        }
         trySetFeature(docFac, "http://xml.org/sax/features/external-general-entities", false);
         trySetFeature(docFac, "http://xml.org/sax/features/external-parameter-entities", false);
         trySetFeature(docFac, "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
@@ -851,7 +860,6 @@ public final class XmlSchemaCollection {
         } catch (IllegalArgumentException e) {
             // The provider does not recognize the JAXP 1.5 attribute.
         }
-        docFac.setExpandEntityReferences(false);
     }
 
     private static void trySetFeature(DocumentBuilderFactory docFac, String feature, boolean value) {
@@ -863,17 +871,6 @@ public final class XmlSchemaCollection {
         }
     }
 
-    private static boolean isDtdAllowed() {
-        try {
-            return Boolean.parseBoolean(AccessController.doPrivileged(new PrivilegedAction<String>() {
-                public String run() {
-                    return System.getProperty("org.apache.ws.commons.schema.allowDTD");
-                }
-            }));
-        } catch (RuntimeException e) {
-            return false;
-        }
-    }
     
     /**
      * Find a global attribute by QName in this collection of schemas.

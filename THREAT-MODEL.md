@@ -90,7 +90,7 @@ filesystem IO** when it follows `<xs:include>` / `<xs:import>` /
 | **`ExtensionRegistry` implementation** | trusted | Pluggable via system property `org.apache.ws.commons.schema.extension_registry` *(documented: `xmlschema-core/src/main/java/org/apache/ws/commons/schema/XmlSchemaCollection.java` line 361)*. |
 | **Producer of the schema bytes** (`Reader`, `InputStream`, `InputSource`, `Source`, `Document`, `Element`) | **variable** — see §6 trust table | The *only* attacker-controllable input position; in many embeddings the schema bytes come from a WSDL fetched off the wire. |
 | **Producer of imported / included schemas** (resolved by the `URIResolver`) | **variable** — typically as untrusted as the parent schema, but can be a *different* origin if the parent's `<xs:import schemaLocation="http://attacker/evil.xsd">` points elsewhere | Following an `xs:import` is a **second, possibly cross-origin, fetch**. This is the principal SSRF surface. |
-| **JDK XML platform** (`DocumentBuilderFactory`, `TransformerFactory`, `SchemaFactory`) | trusted upstream | XMLSchema sets `FEATURE_SECURE_PROCESSING=true` on the factories it constructs. Its internal schema parser also rejects DOCTYPE declarations by default and disables external DTD and external entity resolution; `org.apache.ws.commons.schema.allowDTD=true` accepts DOCTYPE-bearing schema documents while keeping external resolution disabled. |
+| **JDK XML platform** (`DocumentBuilderFactory`, `TransformerFactory`, `SchemaFactory`) | trusted upstream | XMLSchema sets `FEATURE_SECURE_PROCESSING=true` on the factories it constructs. Its internal schema parser also disables external DTD and external entity resolution. DOCTYPE declarations are accepted (an internal DTD subset is legitimate in real schema documents, and FSP bounds entity expansion by count and accumulated size). |
 
 ### Component-family table
 
@@ -150,7 +150,7 @@ A finding is in-model only if it reaches a row marked **yes**.
 | # | Transition | Authentication | Authorization |
 | --- | --- | --- | --- |
 | B1 | Caller → `XmlSchemaCollection.read(InputSource | Reader | Source | Document | Element)` | none — caller is trusted | none |
-| B2 | `XmlSchemaCollection.read(InputSource, ...)` → hardened JDK `DocumentBuilder` | none | DOCTYPE rejected by default; external DTD/entity resolution disabled |
+| B2 | `XmlSchemaCollection.read(InputSource, ...)` → hardened JDK `DocumentBuilder` | none | external DTD/entity resolution disabled unconditionally; DOCTYPE accepted |
 | B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` does **no host filtering**: it constructs `new URL(new URL(baseUri), schemaLocation)` and hands back an `InputSource` pointing at it |
 | B4 | Resolved `InputSource` → `XmlSchemaCollection.read(InputSource, ...)` (recursive) | none | none |
 | B5 | `XmlSchema.write(...)` → JDK `TransformerFactory` (with `FEATURE_SECURE_PROCESSING=true` and external DTD/stylesheet access disabled where supported) | none | none |
@@ -162,13 +162,13 @@ A finding is in-model only if it reaches a row marked **yes**.
   `.read(Reader)`, `.read(Source)` for non-`DOMSource` sources): in-model
   when the bytes are
   attacker-controllable. XMLSchema sets `FEATURE_SECURE_PROCESSING=true`
-  on its internal `DocumentBuilderFactory`, rejects DOCTYPE declarations
-  by default, disables external general entities, external parameter
-  entities, and external DTD loading, and installs a no-op SAX
-  `EntityResolver`. Setting
-  `org.apache.ws.commons.schema.allowDTD=true` accepts DOCTYPE-bearing
-  schema documents but keeps external DTD and external entity resolution
-  disabled.
+  on its internal `DocumentBuilderFactory`, disables external general
+  entities, external parameter entities, and external DTD loading, and
+  installs a no-op SAX `EntityResolver`. A DOCTYPE declaration is
+  accepted: an internal DTD subset carries no external reference, and
+  entity expansion stays bounded by `FEATURE_SECURE_PROCESSING` on both
+  count and accumulated size. There is no property to relax the
+  external-resolution controls, and none to tighten the DOCTYPE posture.
 - **`xmlschema-core` URI resolver** (`DefaultURIResolver`): in-model
   for SSRF / cross-origin fetch when the input schema is attacker-
   controlled and contains an `xs:import schemaLocation="…"`. The
@@ -265,7 +265,6 @@ points*:
 | `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
-| `org.apache.ws.commons.schema.allowDTD` system property | `false` *(documented: `README.txt`)* | compatibility toggle for operator-controlled deployments | allows DOCTYPE declarations in schema documents; external DTD and external entity resolution remain disabled |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / stream-shaped `read(Source)` paths |
 
 ### The insecure-default case
@@ -278,14 +277,16 @@ should be protected by the default) or an `OUT-OF-MODEL:
 non-default-build` report (production deployments are *documented* as
 required to install a restricting resolver per §10).
 
-XMLSchema's internal schema parser rejects DOCTYPE declarations by
-default and disables external DTD and external entity resolution. This
-applies both to top-level `read(InputSource | Reader | Source)` non-DOMSource
-paths
-parses and to recursive import/include/redefine reparses. Operators may
-set `org.apache.ws.commons.schema.allowDTD=true` to accept
-DOCTYPE-bearing schemas for compatibility; external DTD and external
-entity resolution remain disabled in that mode.
+XMLSchema's internal schema parser disables external DTD and external
+entity resolution. This applies both to top-level
+`read(InputSource | Reader | Source)` non-DOMSource parses and to
+recursive import/include/redefine reparses. A DOCTYPE declaration is
+**accepted** by default, because an internal DTD subset is a normal part
+of real schema documents (the W3C XML Signature, XML Encryption and XKMS
+schemas all use one) and carries no external reference. No property
+relaxes or tightens this: the external-resolution controls are
+unconditional, and refusing DOCTYPE was measured to close nothing they
+leave open.
 
 ## §6 Assumptions about inputs
 
@@ -293,7 +294,7 @@ entity resolution remain disabled in that mode.
 
 | Entry point | Parameter | Attacker-controllable? | Caller must enforce |
 | --- | --- | --- | --- |
-| `XmlSchemaCollection.read(InputSource is)` | `is` bytes | **yes** | XMLSchema rejects DOCTYPE by default and disables external DTD/entity resolution; caller may need to install a restricting `URIResolver` if the source contains untrusted `xs:include`/`xs:import` |
+| `XmlSchemaCollection.read(InputSource is)` | `is` bytes | **yes** | XMLSchema disables external DTD/entity resolution (DOCTYPE itself is accepted); caller may need to install a restricting `URIResolver` if the source contains untrusted `xs:include`/`xs:import` |
 | `XmlSchemaCollection.read(Reader r)` | `r` characters | **yes** | same as above |
 | `XmlSchemaCollection.read(Source src)` | `src` | **yes** | `SAXSource`/`StreamSource`/other route through the internal hardened factory (same as `read(InputSource)`); a `DOMSource` routes to the pre-parsed `read(Document)`/`read(Element)` path, so the upstream parser's XXE/DTD posture applies |
 | `XmlSchemaCollection.read(Document doc)` | `doc` | **yes if doc was parsed from untrusted bytes** | caller's `DocumentBuilderFactory` is responsible for XXE / DTD posture; XMLSchema does not re-parse |
@@ -371,16 +372,15 @@ entity resolution remain disabled in that mode.
 
 - **Condition**: XMLSchema's `read(InputSource | Reader | Source)`
   non-DOMSource paths take the internal `DocumentBuilderFactory`.
-- **Property**: DOCTYPE declarations are rejected by default. External
-  general entities, external parameter entities, external DTD loading,
-  and JAXP external-DTD access are disabled; a no-op `EntityResolver` is
-  installed as a fallback. If
-  `org.apache.ws.commons.schema.allowDTD=true` is set, DOCTYPE
-  declarations may be accepted but external DTD/entity resolution remains
-  disabled.
+- **Property**: external general entities, external parameter entities,
+  external DTD loading, and JAXP external-DTD access are disabled; a
+  no-op `EntityResolver` is installed as a fallback. DOCTYPE declarations
+  are accepted, with internal entity expansion bounded by
+  `FEATURE_SECURE_PROCESSING` on both expansion count
+  (`JAXP00010001`) and accumulated entity size (`JAXP00010004`).
 - **Violation symptom**: attacker-controlled schema bytes cause the
-  internal parser to fetch or expand external DTD/entity content, or a
-  DOCTYPE is accepted while `allowDTD` is unset.
+  internal parser to fetch external DTD/entity content, or to expand
+  entities past those limits.
 - **Severity**: **high** for external file disclosure / SSRF through XXE;
   **medium** for parser-resource exhaustion when the embedding application
   accepts untrusted schemas.
@@ -443,10 +443,10 @@ matching disclaimer.
   host filtering of any kind. The caller is responsible for installing
   a restricting `URIResolver` if the input schema is attacker-controlled
   *(documented: `DefaultURIResolver.java`)*.
-- **No guarantee that DTD-bearing schemas are accepted by default.**
-  XMLSchema rejects DOCTYPE declarations on its internal parser unless
-  `org.apache.ws.commons.schema.allowDTD=true` is set. The compatibility
-  mode still disables external DTD and external entity resolution.
+- **No guarantee that external DTD or external entity content is ever
+  resolved.** XMLSchema accepts a DOCTYPE declaration, but never fetches
+  an external DTD subset or an external entity; a schema that depends on
+  declarations made outside its internal subset will not see them.
 - **No defense when the caller passes in a pre-parsed `Document` or
   `Element`.** The hardening on the internal `DocumentBuilderFactory`
   is moot — the caller's parser produced the DOM *(documented:
@@ -473,10 +473,10 @@ matching disclaimer.
 
 ### False-friend properties (call out separately)
 
-- **`org.apache.ws.commons.schema.allowDTD=true` looks like it restores
-  legacy XML parser behavior, but it does not restore external DTD or
-  external entity fetching.** The toggle accepts DOCTYPE declarations for
-  compatibility only; external fetches remain disabled.
+- **An accepted DOCTYPE declaration looks like legacy XML parser
+  behavior, but it is not.** The internal subset is processed; external
+  DTD subsets and external entities are never fetched, whatever the
+  DOCTYPE references.
 - **`DefaultURIResolver` looks like a sandbox, but it isn't.** It is
   the *bundled* resolver; its job is to resolve `xs:include`/`xs:import`,
   not to filter destinations.
@@ -493,8 +493,8 @@ matching disclaimer.
 
 - **XXE / external-entity disclosure** when the caller pre-parses a DOM
   with an unsafe XML parser before calling `read(Document)` /
-  `read(Element)`. XMLSchema's internal parser path rejects DOCTYPE by
-  default and disables external DTD/entity resolution.
+  `read(Element)`. XMLSchema's internal parser path disables external
+  DTD/entity resolution.
 - **SSRF via `xs:import schemaLocation`** — see §9 first bullet.
 - **Billion-laughs / quadratic blowup** — partially mitigated by
   `FEATURE_SECURE_PROCESSING=true`, but not universally.
@@ -519,10 +519,10 @@ The embedding Java application **must**:
    `XmlSchemaCollection.read(...)`, use a `DocumentBuilderFactory`
    hardened against XXE — specifically with `disallow-doctype-decl=true`
    and external-entity processing disabled.
-3. Do not enable `org.apache.ws.commons.schema.allowDTD=true` for
-  attacker-controlled schema bytes unless compatibility requires it and
-  the deployment accepts internal DTD subset processing. External DTD and
-  external entity resolution remain disabled by XMLSchema in that mode.
+3. Do not pre-filter schema bytes for DOCTYPE declarations on
+  XMLSchema's behalf. External DTD and external entity resolution are
+  disabled unconditionally, and rejecting DOCTYPE outright breaks the
+  W3C's own normative schemas.
 4. Bound maximum schema size, imported bytes, and fetch rate at the
   *caller* level. XMLSchema provides configurable import/include depth
   per-read resolution, and structural nesting limits, but these do not
@@ -541,9 +541,6 @@ defense-in-depth controls:
 1. Enforce URL scheme and destination restrictions in the resolver:
   allow only `https://` to approved hosts; deny `file://`, `jar:`,
   loopback, link-local, and RFC1918/private address ranges.
-2. Keep `org.apache.ws.commons.schema.allowDTD` unset unless a deployment
-  has known DTD-bearing schema inputs and has tested the compatibility
-  mode on its JDK XML provider.
 3. Supplement XMLSchema's import/include depth, per-read resolution, and
   structural nesting limits with caller-boundary budgets for total imported
   bytes and fetch rate per top-level parse.
@@ -596,9 +593,10 @@ model, the section that licenses the call.
   rules at Q12 that the default is dev/test)*, or `VALID-HARDENING`
   *(if the maintainer rules the default is supported)*.
 - **"`DocumentBuilderFactory.newInstance()` allows XXE in
-  `XmlSchemaCollection`."** Current XMLSchema internal parsing rejects
-  DOCTYPE by default and disables external DTD/entity resolution. A report
-  must show a bypass of those controls to be `VALID`.
+  `XmlSchemaCollection`."** Current XMLSchema internal parsing disables
+  external DTD/entity resolution. A report must show a bypass of those
+  controls to be `VALID`; a DOCTYPE declaration with no external
+  reference is not itself a bypass.
 - **"`Class.forName(System.getProperty(...))` is dynamic-class-loading."**
   Documented extension point; the system property is the trust gate
   *(documented: `XmlSchemaCollection.java` line 361)*. → `OUT-OF-MODEL:
@@ -638,8 +636,8 @@ Revise this document when any of the following lands:
 
 - A change in the default `URIResolver` behavior — e.g. adding host
   filtering, refusing non-HTTPS, or adding read/connect timeouts.
-- A change in the default parser DTD/XXE posture, including the
-  `org.apache.ws.commons.schema.allowDTD` compatibility contract.
+- A change in the parser DTD/XXE posture: the external-resolution
+  controls, or whether DOCTYPE declarations are accepted.
 - A new public entry point on `XmlSchemaCollection` that accepts new
   input shapes.
 - A new built-in resource limit, or a change to an existing resource
@@ -703,13 +701,20 @@ internal XMLSchema parser path; the *fetch* itself is the
 attacker-influenced action and §9 disclaims SSRF defense" (`§9`).
 Confirm? *(maps to §3 item 6, §9)*
 
-**Q6.** **DTD compatibility posture.** XMLSchema now rejects DOCTYPE
-declarations by default on the internal schema parser, disables external
-DTD/entity resolution, and offers
-`org.apache.ws.commons.schema.allowDTD=true` to accept DTD-bearing schema
-documents while keeping external resolution disabled. Confirm that this is
-the supported posture for untrusted schema bytes. *(maps to §5a, §8 P2,
-§9, §10, §11a)*
+**Q6.** **DTD compatibility posture.** XMLSchema disables external
+DTD/entity resolution on the internal schema parser, unconditionally, but
+accepts DOCTYPE declarations. Blocking DOCTYPE was tried and reverted: it
+rejects the W3C's own normative schemas (XML Signature, XML Encryption,
+XKMS), which declare their target namespace as an entity in an internal
+subset, and it closed no attack path that disabling external resolution
+had not already closed — measured on JDK 21, an attacker DOCTYPE opens
+zero network connections and leaks no file content on either the
+top-level or the import-reparse path, and both nested and flat entity
+expansion are refused by FSP. A toggle to re-enable the block was
+considered and dropped for the same reason: it would buy no measurable
+security and would invite operators to re-break the W3C schemas. Confirm
+that this is the supported posture for untrusted schema bytes. *(maps to
+§5a, §8 P2, §9, §10, §11a)*
 
 ### Wave 3 — URI resolver / SSRF
 
@@ -826,7 +831,7 @@ the JavaDoc / source comments. The project website is
 | `RELEASE-NOTE.txt` (2.3.0) | Java 17 minimum, Java 7 dropped | §5 environment |
 | `xmlschema-core/src/main/java/org/apache/ws/commons/schema/XmlSchemaCollection.java` line 361 | `org.apache.ws.commons.schema.extension_registry` system property loaded via `Class.forName` | §5a, §6, §11 |
 | `xmlschema-core/src/main/java/org/apache/ws/commons/schema/SchemaBuilder.java` | `org.apache.ws.commons.schema.maxNestingDepth` structural descent limit | §5, §5a, §6, §8 P6 |
-| `XmlSchemaCollection.java` | internal parser sets `FEATURE_SECURE_PROCESSING`, rejects DOCTYPE by default, disables external DTD/entity resolution, and honors `org.apache.ws.commons.schema.allowDTD` for compatibility | §5a, §8 P2 |
+| `XmlSchemaCollection.java` | internal parser sets `FEATURE_SECURE_PROCESSING` and disables external DTD/entity resolution unconditionally; DOCTYPE declarations are accepted | §5a, §8 P2 |
 | `XmlSchemaCollection.java` line 745 | `AccessController.doPrivileged` wrapper for the SAX parse | §5 |
 | `XmlSchema.java` | serializer `TransformerFactory` sets `FEATURE_SECURE_PROCESSING` and disables external DTD/stylesheet access where supported | §5a, §8 P2 |
 | `xmlschema-core/src/main/java/.../resolver/DefaultURIResolver.java` | URL composed from `baseUri` + `schemaLocation`; no filtering | §3 item 7, §9 SSRF disclaim, §10 item 1, §11 first bullet |
