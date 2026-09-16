@@ -57,14 +57,16 @@ adjust the per-document limits:
 
   The internal parser used by XmlSchemaCollection.read(InputSource),
   read(Reader), stream-backed read(Source), and recursive
-  xs:import/xs:include/xs:redefine reparses rejects DOCTYPE declarations
-  by default and disables external DTD and external entity resolution.
-  To accept schema documents that contain a DOCTYPE declaration, set:
+  xs:import/xs:include/xs:redefine reparses never resolves external DTD
+  subsets, external general entities or external parameter entities, so a
+  schema document cannot read local files or reach the network through its
+  DOCTYPE. There is no property to relax this.
 
-    org.apache.ws.commons.schema.allowDTD
-      Set to true to allow DOCTYPE declarations. The default is false.
-      External DTD and external entity resolution remain disabled when this
-      property is true.
+  The DOCTYPE declaration itself is accepted: an internal DTD subset is a
+  legitimate part of many real schema documents - the W3C's own XML
+  Signature, XML Encryption and XKMS schemas declare their target namespace
+  as an entity in one - and FEATURE_SECURE_PROCESSING bounds entity
+  expansion by both count and accumulated size.
 
 For example, set a limit with:
 
@@ -73,8 +75,6 @@ For example, set a limit with:
     -Dorg.apache.ws.commons.schema.maxImportDepth=128
 
     -Dorg.apache.ws.commons.schema.maxNestingDepth=256
-
-    -Dorg.apache.ws.commons.schema.allowDTD=true
 
 ===================
       Support
