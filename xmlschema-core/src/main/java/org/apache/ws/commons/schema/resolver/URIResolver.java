@@ -20,13 +20,26 @@ package org.apache.ws.commons.schema.resolver;
 
 import org.xml.sax.InputSource;
 
+/**
+ * Resolves the <code>schemaLocation</code> of an <code>xs:import</code>,
+ * <code>xs:include</code> or <code>xs:redefine</code> to the document it names.
+ * <p>
+ * An implementation of this interface decides what a schema document is allowed to pull in, so it
+ * is the control point for applications that parse untrusted schema documents: install one that
+ * refuses locations outside an approved set, via
+ * {@link org.apache.ws.commons.schema.XmlSchemaCollection#setSchemaResolver(URIResolver)}.
+ * </p>
+ */
 public interface URIResolver {
     /**
-     * Resolves an interface
+     * Resolve a schema location to the document it names.
      * 
-     * @param targetNamespace
-     * @param schemaLocation
-     * @param baseUri
+     * @param targetNamespace the target namespace of the referenced schema, as declared by the
+     *                        referring document.
+     * @param schemaLocation the schema location to resolve.
+     * @param baseUri the base URI of the referring document, or <code>null</code> if it has none.
+     * @return an input source for the referenced document, or <code>null</code> to decline the
+     *         location.
      */
     InputSource resolveEntity(String targetNamespace, String schemaLocation, String baseUri);
 

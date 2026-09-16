@@ -29,10 +29,11 @@
   at clone time. A report against project release *N* should be triaged
   against the model as it stood at *N*, not at HEAD. Latest release
   documented in `RELEASE-NOTE.txt`: 2.3.0.
-- **Date**: 2026-08-26.
+- **Date**: 2026-09-16.
 - **Authors**: ASF Security team, awaiting XMLSchema / Webservices
   PMC review.
-- **Status**: under maintainer review.
+- **Status**: under maintainer review; §14 Q12 ruled (see §12
+  revision log).
 - **Reporting**: vulnerabilities that fall under §8 (claimed
   properties) should be reported per `SECURITY.md` and the Apache
   Security Team disclosure channel (<https://www.apache.org/security/>);
@@ -46,7 +47,9 @@
   *(inferred)* = synthesized by the producer from code structure or
   domain knowledge, awaiting PMC ratification (every *(inferred)* tag has
   a matching §14 question).
-- **Model confidence**: 22 documented / 0 maintainer / 24 inferred.
+- **Model confidence**: 22 documented / 4 maintainer / 20 inferred.
+  The four maintainer entries are the §14 Q12 ruling and the three
+  statements that depended on it.
 
 XMLSchema is a Java library that parses, models, walks, and serializes
 W3C XML Schema documents (`.xsd` files). It is *not* a document
@@ -151,7 +154,7 @@ A finding is in-model only if it reaches a row marked **yes**.
 | --- | --- | --- | --- |
 | B1 | Caller → `XmlSchemaCollection.read(InputSource | Reader | Source | Document | Element)` | none — caller is trusted | none |
 | B2 | `XmlSchemaCollection.read(InputSource, ...)` → hardened JDK `DocumentBuilder` | none | external DTD/entity resolution disabled unconditionally; DOCTYPE accepted |
-| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` does **no host filtering**: it constructs `new URL(new URL(baseUri), schemaLocation)` and hands back an `InputSource` pointing at it |
+| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` allowlists the effective scheme (`http`, `https`, `file`, `jar`, judged through any `jar:` wrapper) and refuses a location that changes the scheme of a remote base or resolves to a non-local `file:` / `jar:` authority; it does **no host filtering** on the `http(s)` targets it allows |
 | B4 | Resolved `InputSource` → `XmlSchemaCollection.read(InputSource, ...)` (recursive) | none | none |
 | B5 | `XmlSchema.write(...)` → JDK `TransformerFactory` (with `FEATURE_SECURE_PROCESSING=true` and external DTD/stylesheet access disabled where supported) | none | none |
 | B6 | `XmlSchemaCollection` ctor → `System.getProperty("org.apache.ws.commons.schema.extension_registry")` → `Class.forName()` | none | trusts system properties to be operator-controlled |
@@ -172,8 +175,9 @@ A finding is in-model only if it reaches a row marked **yes**.
 - **`xmlschema-core` URI resolver** (`DefaultURIResolver`): in-model
   for SSRF / cross-origin fetch when the input schema is attacker-
   controlled and contains an `xs:import schemaLocation="…"`. The
-  bundled resolver constructs `new URL(...)` and returns an `InputSource`;
-  the JDK then fetches it on `parse()`.
+  bundled resolver checks the effective scheme against an allowlist and
+  then returns an `InputSource`; the JDK fetches it on `parse()`, and
+  follows any HTTP redirects itself without consulting the resolver.
 - **`xmlschema-core` parser fed a pre-parsed DOM** (`read(Document)`,
   `read(Element)`): out of model for XXE; the caller's
   `DocumentBuilderFactory` decided that. In-model for whatever the
@@ -258,7 +262,7 @@ points*:
 | Knob | Default | Maintainer stance | Effect |
 | --- | --- | --- | --- |
 | `org.apache.ws.commons.schema.extension_registry` system property | unset *(documented: `XmlSchemaCollection.java` line 361)* | dev-time customization; if set by an untrusted actor the named class is loaded into the JVM | extension-registry class is `Class.forName`-loaded at `XmlSchemaCollection` ctor time |
-| `XmlSchemaCollection.setSchemaResolver(URIResolver)` | `DefaultURIResolver` *(documented: `DefaultURIResolver.java`)* | **maintainer ruling required** — is the documented expectation that production deployments install a *restricted* resolver that refuses untrusted hosts (proposed: **yes, §10**), or is the default resolver supported as production-safe? *(inferred — §14 Q12)* | controls whether `xs:include`/`xs:import` may reach the network |
+| `XmlSchemaCollection.setSchemaResolver(URIResolver)` | `DefaultURIResolver` *(documented: `DefaultURIResolver.java`)* | **ruled (b) — §14 Q12**: the bundled default is a convenience for trusted, operator-controlled schema sets; deployments parsing untrusted bytes are *required* to install a restricting resolver per §10 item 1 *(maintainer)* | controls whether `xs:include`/`xs:import` may reach the network |
 | `XmlSchemaCollection.setBaseUri(String)` | unset *(documented)* | caller-supplied | base URI against which relative `schemaLocation` values resolve |
 | `org.apache.ws.commons.schema.walker.maxDecisionPoints` system property | `10000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum decision points created while matching one document |
 | `org.apache.ws.commons.schema.walker.maxReplayedEvents` system property | `1000000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum previously traversed events replayed while backtracking through one document |
@@ -269,13 +273,18 @@ points*:
 
 ### The insecure-default case
 
-The bundled `DefaultURIResolver` **does follow remote URLs by default**.
-The maintainer ruling captured in §14 Q12 will determine whether
-"a schema with `<xs:import schemaLocation='http://attacker/'/>` fetched
-the URL during parse" is a `VALID` report (production deployments
-should be protected by the default) or an `OUT-OF-MODEL:
-non-default-build` report (production deployments are *documented* as
-required to install a restricting resolver per §10).
+The bundled `DefaultURIResolver` **does follow remote URLs by default**,
+subject only to the scheme checks described in §9. Per the §14 Q12(b)
+ruling this is a documented convenience default for trusted,
+operator-controlled schema sets — not a supported posture for untrusted
+input. A report that "a schema with
+`<xs:import schemaLocation='http://attacker/'/>` fetched the URL during
+parse" is therefore `BY-DESIGN: property-disclaimed` *(maintainer)*.
+
+Changing that default is a compatibility break, not a patch-release
+fix: ordinary schemas import `http://www.w3.org/2001/xml.xsd` and
+similar by absolute URL, so a default-deny has to land in a major
+release.
 
 XMLSchema's internal schema parser disables external DTD and external
 entity resolution. This applies both to top-level
@@ -299,7 +308,7 @@ leave open.
 | `XmlSchemaCollection.read(Source src)` | `src` | **yes** | `SAXSource`/`StreamSource`/other route through the internal hardened factory (same as `read(InputSource)`); a `DOMSource` routes to the pre-parsed `read(Document)`/`read(Element)` path, so the upstream parser's XXE/DTD posture applies |
 | `XmlSchemaCollection.read(Document doc)` | `doc` | **yes if doc was parsed from untrusted bytes** | caller's `DocumentBuilderFactory` is responsible for XXE / DTD posture; XMLSchema does not re-parse |
 | `XmlSchemaCollection.read(Element el)` | `el` | same as `read(Document)` | same as above |
-| `XmlSchemaCollection.setSchemaResolver(URIResolver)` | resolver | caller-supplied | replacing the default is the documented path for production hardening *(inferred — §14 Q12)* |
+| `XmlSchemaCollection.setSchemaResolver(URIResolver)` | resolver | caller-supplied | replacing the default is the documented path for production hardening, and is required for untrusted schema bytes *(maintainer — §14 Q12)* |
 | `XmlSchemaCollection.setBaseUri(String)` | `baseUri` | **caller-supplied trusted string** | not validated; if attacker can set this they can pivot the import-resolver origin |
 | `XmlSchemaCollection.setExtReg(ExtensionRegistry)` | registry | caller-supplied | caller's choice |
 | `XmlSchema.write(OutputStream)` / `XmlSchema.write(Writer)` | output sink | caller-supplied | caller's choice; `FEATURE_SECURE_PROCESSING=true` is set on the internal `TransformerFactory`, with external DTD/stylesheet access disabled where supported |
@@ -324,8 +333,8 @@ leave open.
   groups, model groups, and attribute groups. This prevents recursive
   stack exhaustion for malformed but parseable schemas; it is not a general
   limit on the size or cost of an acyclic schema.
-- No rate limit on URL fetches when following `xs:import`
-  *(inferred — §14 Q12)*.
+- No rate limit on URL fetches when following `xs:import`; bounding
+  fetch rate is a §10 caller responsibility *(maintainer — §14 Q12)*.
 - `XmlSchemaPathFinder` bounds decision points and replayed events per
   document by default; these limits are configurable through the
   `org.apache.ws.commons.schema.walker.maxDecisionPoints` and
@@ -439,10 +448,18 @@ matching disclaimer.
   The bundled `DefaultURIResolver` constructs a `URL` from the parent
   schema's base URI plus the schema-location value and returns an
   `InputSource` pointing at it. The JDK then fetches it on parse.
-  XMLSchema applies *no* allowlist, *no* protocol restriction, and *no*
-  host filtering of any kind. The caller is responsible for installing
-  a restricting `URIResolver` if the input schema is attacker-controlled
-  *(documented: `DefaultURIResolver.java`)*.
+  The resolver restricts the *scheme* it will hand back — `http`,
+  `https`, `file` and `jar`, judged through any `jar:` wrapper — and
+  refuses a location that changes the scheme of a remote base or
+  resolves to a non-local `file:` / `jar:` authority. Within those
+  schemes it applies **no host or address filtering of any kind**: any
+  `http(s)` host is fetched on request, including loopback, link-local
+  (`169.254.169.254`) and RFC1918 addresses, and the JDK follows HTTP
+  redirects without consulting the resolver again — so a host allowlist
+  is not enforceable at the `resolveEntity` boundary. The caller is
+  responsible for installing a restricting `URIResolver` if the input
+  schema is attacker-controlled *(documented: `DefaultURIResolver.java`;
+  ratified — §14 Q12)*.
 - **No guarantee that external DTD or external entity content is ever
   resolved.** XMLSchema accepts a DOCTYPE declaration, but never fetches
   an external DTD subset or an external entity; a schema that depends on
@@ -512,9 +529,14 @@ The embedding Java application **must**:
 1. Decide whether the schema bytes being parsed are
    attacker-controllable. If yes, install a restricting
    `URIResolver` via `XmlSchemaCollection.setSchemaResolver(...)` that
-   refuses arbitrary `http://` / `https://` / `file://` / `jar:` /
-   `ftp:` URLs. The bundled `DefaultURIResolver` does not filter
-   *(documented: `DefaultURIResolver.java`)*.
+   refuses arbitrary `http://` / `https://` / `file://` / `jar:` URLs.
+   The bundled `DefaultURIResolver` does not filter by host
+   *(documented: `DefaultURIResolver.java`)*. This is a **requirement**,
+   not a recommendation: per the §14 Q12(b) ruling the bundled default
+   is not a supported production posture for untrusted schema bytes. A
+   resolver that returns `null` declines the location (the collection
+   falls back to any schema already registered for that namespace); one
+   that throws rejects the read outright.
 2. When passing a pre-parsed `Document` / `Element` into
    `XmlSchemaCollection.read(...)`, use a `DocumentBuilderFactory`
    hardened against XXE — specifically with `disallow-doctype-decl=true`
@@ -587,11 +609,13 @@ security scans. Each entry: tool symptom, why it is safe under the
 model, the section that licenses the call.
 
 - **"`new URL(baseUri, schemaLocation).openConnection()` — SSRF risk in
-  `DefaultURIResolver`."** Bundled behavior, explicitly documented as
-  defaulted unrestricted; operator must install a restricting resolver
-  per §10 item 1. → `OUT-OF-MODEL: trusted-input` *(if the maintainer
-  rules at Q12 that the default is dev/test)*, or `VALID-HARDENING`
-  *(if the maintainer rules the default is supported)*.
+  `DefaultURIResolver`."** Bundled behavior, disclaimed in §9 and
+  ratified at §14 Q12(b): the default resolver is not a production
+  posture for untrusted schema bytes, and the operator must install a
+  restricting resolver per §10 item 1. →
+  `BY-DESIGN: property-disclaimed`. Such a report is only `VALID` if it
+  defeats a restricting resolver, or bypasses the scheme and base-scheme
+  checks the bundled resolver *does* make (§9 first bullet).
 - **"`DocumentBuilderFactory.newInstance()` allows XXE in
   `XmlSchemaCollection`."** Current XMLSchema internal parsing disables
   external DTD/entity resolution. A report must show a bypass of those
@@ -613,10 +637,11 @@ model, the section that licenses the call.
   reachable from input *(documented: `XmlSchema.java`)*. →
   `KNOWN-NON-FINDING`.
 - **"`URLConnection.getInputStream()` without timeout."** True;
-  XMLSchema does no read-timeout on fetched imports
-  *(inferred — §14 Q12)*. → `VALID-HARDENING` if Q12 rules the
-  default-resolver is production-safe; otherwise documented as a §10
-  responsibility.
+  XMLSchema does no read-timeout on fetched imports *(maintainer —
+  §14 Q12)*. The resolver returns a system ID and the JDK opens the
+  connection, so a timeout cannot be imposed without changing the
+  resolver's contract. → `BY-DESIGN: property-disclaimed`;
+  connect/read timeouts are a §10 item 4 caller responsibility.
 - **"Path traversal via `XmlSchemaCollection.setBaseUri()`."** Caller-
   supplied trusted string per §6. → `OUT-OF-MODEL: trusted-input`.
 - **"Schemas in `w3c-testcases/` contain wide-open DTDs."** W3C
@@ -649,6 +674,28 @@ Revise this document when any of the following lands:
 - A change in the system-property contract for `ExtensionRegistry`.
 - A vulnerability report that cannot be cleanly routed to one of the
   §13 dispositions — evidence the model has a gap.
+
+### Revision log
+
+- **2026-09-16** — the default `URIResolver` changed twice after this
+  model was first written, and both changes are revision triggers under
+  the first bullet above. "Harden default resolver" (#135) added
+  base-scheme and `file:` / `jar:` authority checks; "Restrict default
+  protocols allowed by the DefaultURIResolver" (#148) restricted the
+  resolver to the `http`, `https`, `file` and `jar` schemes, judged
+  through any `jar:` wrapper, on both the based and no-base resolution
+  paths. §4 B3, §4 reachability, §9 and the appendix are updated to
+  match; §9's earlier claim of "*no* protocol restriction" no longer
+  held. §14 Q12 is ruled (b) in the same pass, which resolves the
+  conditional dispositions in §5a and §11a to
+  `BY-DESIGN: property-disclaimed`.
+- **2026-09-16** — "Fix up DTD handling" (#147) changed the default
+  parser DTD posture, a revision trigger under the second bullet above:
+  external DTD and external entity resolution are now disabled
+  unconditionally, the DOCTYPE declaration itself is accepted, and the
+  `org.apache.ws.commons.schema.allowDTD` property is gone. §4 B2,
+  §4 reachability, §5a, §9 and §10 item 3 were updated with that
+  change.
 
 ## §13 Triage dispositions
 
@@ -746,19 +793,35 @@ points (proposed). *(maps to §5a)*
 
 **Q12.** **The big URI-resolver question.** The bundled
 `DefaultURIResolver` follows `http://` / `https://` / `file://` /
-`jar:` URLs without filtering. Is this:
+`jar:` URLs without host filtering. Is this:
 
 - (a) "Supported production posture" — a report that an attacker
   schema's `<xs:import schemaLocation='http://attacker/'/>` triggered
   a fetch is `VALID`?
 - (b) "Dev/test default; operators are documented as required to
-  install a restricting resolver per §10" — same report is
-  `OUT-OF-MODEL: non-default-build`?
+  install a restricting resolver per §10" — same report is not a
+  vulnerability in XMLSchema?
 
-Proposed: **(b)** with a clarification in `README.txt` and/or
-`SECURITY.md` that production deployments handling untrusted schema
-bytes must install a restricting `URIResolver`. *(maps to §5a, §9,
-§10 item 1, §11a, §13)*
+**Ruled 2026-09-16: (b)** *(maintainer)*. The bundled resolver is a
+convenience default for trusted, operator-controlled schema sets. An
+application that parses schema or WSDL bytes from an untrusted source
+must install a restricting `URIResolver` via
+`XmlSchemaCollection.setSchemaResolver(...)` per §10 item 1; the
+bundled default is not supported as a production posture for untrusted
+input. A report that an untrusted `schemaLocation` was dereferenced is
+`BY-DESIGN: property-disclaimed`.
+
+Two riders on that ruling:
+
+1. It does **not** license the bundled resolver to be careless within
+   its posture. The scheme allowlist and base-scheme / authority checks
+   of §9 are load-bearing, and a bypass of *those* is `VALID`.
+2. The disposition is `BY-DESIGN: property-disclaimed`, not
+   `OUT-OF-MODEL: non-default-build`. The permissive default *is* the
+   default build, so the §13 "non-default-build" row never fitted; the
+   §9 SSRF disclaimer is the licensing text.
+
+*(maps to §5a, §9, §10 item 1, §11a, §13)*
 
 ### Wave 4 — adversary model, edge cases
 
@@ -834,7 +897,7 @@ the JavaDoc / source comments. The project website is
 | `XmlSchemaCollection.java` | internal parser sets `FEATURE_SECURE_PROCESSING` and disables external DTD/entity resolution unconditionally; DOCTYPE declarations are accepted | §5a, §8 P2 |
 | `XmlSchemaCollection.java` line 745 | `AccessController.doPrivileged` wrapper for the SAX parse | §5 |
 | `XmlSchema.java` | serializer `TransformerFactory` sets `FEATURE_SECURE_PROCESSING` and disables external DTD/stylesheet access where supported | §5a, §8 P2 |
-| `xmlschema-core/src/main/java/.../resolver/DefaultURIResolver.java` | URL composed from `baseUri` + `schemaLocation`; no filtering | §3 item 7, §9 SSRF disclaim, §10 item 1, §11 first bullet |
+| `xmlschema-core/src/main/java/.../resolver/DefaultURIResolver.java` | URL composed from `baseUri` + `schemaLocation`; scheme allowlist plus base-scheme / authority checks, but no host filtering | §3 item 7, §9 SSRF disclaim, §10 item 1, §11 first bullet, §14 Q12 |
 | `xmlschema-core/src/main/java/.../resolver/URIResolver.java` | Resolver interface — caller-pluggable | §2 caller-roles, §10 item 1 |
 | `xmlschema-walker/src/main/java/.../docpath/DomBuilderFromSax.java` line 81 | `factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, TRUE)` | §5a, §8 P2 |
 | `xmlschema-walker/src/main/java/.../docpath/XmlSchemaPathFinder.java` | Configurable per-document limits on decision points and replayed events | §4, §5a, §6, §12 |

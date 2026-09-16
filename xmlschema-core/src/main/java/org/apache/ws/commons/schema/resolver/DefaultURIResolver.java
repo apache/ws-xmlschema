@@ -35,6 +35,16 @@ import org.xml.sax.InputSource;
 /**
  * This resolver provides the means of resolving the imports and includes of a given schema document. The
  * system will call this default resolver if there is no other resolver present in the system.
+ * <p>
+ * This resolver is a convenience for trusted, operator-controlled schema sets. It restricts the URI
+ * schemes it will resolve to <code>http</code>, <code>https</code>, <code>file</code> and
+ * <code>jar</code>, and refuses a schema location that changes the scheme of a remote base URI or
+ * resolves to a non-local <code>file:</code> / <code>jar:</code> authority. Within those schemes it
+ * applies no host or address filtering, so any reachable host or readable file a schema location
+ * names is fetched. An application that parses untrusted schema documents must install a restricting
+ * resolver instead; see
+ * {@link org.apache.ws.commons.schema.XmlSchemaCollection#setSchemaResolver(URIResolver)}.
+ * </p>
  */
 public class DefaultURIResolver implements CollectionURIResolver {
 
@@ -54,6 +64,10 @@ public class DefaultURIResolver implements CollectionURIResolver {
      * @param namespace target namespace.
      * @param schemaLocation system ID.
      * @param baseUri base URI for the schema.
+     * @return an input source for the resolved location, or <code>null</code> if the location
+     *         cannot be resolved against the given base.
+     * @throws XmlSchemaException if the location resolves to a URI scheme this resolver does not
+     *         permit, or escapes the scheme or authority of its base URI.
      */
     public InputSource resolveEntity(String namespace, String schemaLocation, String baseUri) {
 
