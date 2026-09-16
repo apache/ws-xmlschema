@@ -129,12 +129,18 @@ public class DefaultURIResolverTest extends Assert {
     }
 
     private static void assertSchemeRefused(String schemaLocation, String baseUri) {
+        assertSchemeRefused(schemaLocation, baseUri, "not permitted");
+    }
+
+    private static void assertSchemeRefused(String schemaLocation, String baseUri,
+                                            String expectedMessageFragment) {
         DefaultURIResolver resolver = new DefaultURIResolver();
         try {
             resolver.resolveEntity("urn:x", schemaLocation, baseUri);
-            fail("The scheme of \"" + schemaLocation + "\" must be refused.");
+            fail("The location \"" + schemaLocation + "\" must be refused.");
         } catch (XmlSchemaException expected) {
-            assertTrue(expected.getMessage(), expected.getMessage().contains("not permitted"));
+            assertTrue(expected.getMessage(),
+                       expected.getMessage().contains(expectedMessageFragment));
         }
     }
 
@@ -181,5 +187,51 @@ public class DefaultURIResolverTest extends Assert {
         DefaultURIResolver resolver = new DefaultURIResolver();
 
         assertEquals("sub/x.xsd", resolver.resolveEntity("urn:x", "sub/x.xsd", null).getSystemId());
+    }
+
+    @Test
+    public void testFileUrlWithNonLocalAuthorityIsRefused() {
+        // On Windows this is a UNC path, so the JVM would make an SMB connection to a host the
+        // schema author chose. No base URI makes it reachable: an absolute location used to skip
+        // every check but the scheme allowlist.
+        assertSchemeRefused("file://attacker.example/share/x.xsd", localBase(), "non-local authority");
+        assertSchemeRefused("file://attacker.example/share/x.xsd", null, "non-local authority");
+        assertSchemeRefused("jar:file://attacker.example/share/a.jar!/x.xsd", localBase(),
+                            "non-local authority");
+        assertSchemeRefused("jar:file://attacker.example/share/a.jar!/x.xsd", null,
+                            "non-local authority");
+    }
+
+    @Test
+    public void testLocalFileAuthoritiesAreStillAccepted() {
+        DefaultURIResolver resolver = new DefaultURIResolver();
+
+        assertEquals("file:///local/x.xsd",
+                     resolver.resolveEntity("urn:x", "file:///local/x.xsd", null).getSystemId());
+        assertEquals("file://localhost/local/x.xsd",
+                     resolver.resolveEntity("urn:x", "file://localhost/local/x.xsd", null)
+                         .getSystemId());
+    }
+
+    @Test
+    public void testJarOverTheNetworkIsRefused() {
+        // JarURLConnection would fetch and cache the whole remote archive, and the URL reads as
+        // protocol "jar" rather than "http".
+        for (String location : new String[] {"jar:http://attacker.example/a.jar!/x.xsd",
+                                             "jar:https://attacker.example/a.jar!/x.xsd"}) {
+            assertSchemeRefused(location, localBase(), "over the network");
+            assertSchemeRefused(location, null, "over the network");
+        }
+    }
+
+    @Test
+    public void testJarEntryNeedNotParseAsAUri() {
+        // The archive is local; the entry after "!/" is not part of the URI that names it.
+        DefaultURIResolver resolver = new DefaultURIResolver();
+
+        InputSource result = resolver.resolveEntity("urn:x", "jar:file:///tmp/a.jar!/has space.xsd",
+                                                    null);
+
+        assertEquals("jar:file:///tmp/a.jar!/has space.xsd", result.getSystemId());
     }
 }

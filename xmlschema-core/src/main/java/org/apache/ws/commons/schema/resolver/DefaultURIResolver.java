@@ -38,8 +38,9 @@ import org.xml.sax.InputSource;
  * <p>
  * This resolver is a convenience for trusted, operator-controlled schema sets. It restricts the URI
  * schemes it will resolve to <code>http</code>, <code>https</code>, <code>file</code> and
- * <code>jar</code>, and refuses a schema location that changes the scheme of a remote base URI or
- * resolves to a non-local <code>file:</code> / <code>jar:</code> authority. Within those schemes it
+ * <code>jar</code>, and refuses a schema location that changes the scheme of a remote base URI,
+ * names a non-local authority with the <code>file:</code> scheme, or reads a <code>jar:</code>
+ * archive fetched over the network. Within the schemes it does allow it
  * applies no host or address filtering, so any reachable host or readable file a schema location
  * names is fetched. An application that parses untrusted schema documents must install a restricting
  * resolver instead; see
@@ -108,7 +109,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
 
         }
         if (isAbsoluteUri(schemaLocation)) {
-            verifyAllowedScheme(schemaLocation, schemaLocation);
+            verifyPermittedLocation(schemaLocation, schemaLocation);
             return new InputSource(schemaLocation);
         }
         if (isPlainRelativePath(schemaLocation)) {
@@ -120,7 +121,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
 
     private static void verifyComposedUrl(boolean remoteBase, String originalBaseUri, URL base,
                                           URL composed, String schemaLocation) {
-        verifyAllowedScheme(composed.toString(), schemaLocation);
+        verifyPermittedLocation(composed.toString(), schemaLocation);
         final String composedScheme = composed.getProtocol().toLowerCase(Locale.ENGLISH);
         if (isAbsoluteUri(schemaLocation)) {
             if (remoteBase && !isNetworkScheme(composedScheme)) {
@@ -144,33 +145,47 @@ public class DefaultURIResolver implements CollectionURIResolver {
                                          + "\" changes the scheme of its base URI from \""
                                          + base.getProtocol() + "\" to \"" + composed.getProtocol() + "\".");
         }
-        if ("file".equals(composedScheme)) {
-            final String host = composed.getHost();
-            if (host != null && host.length() > 0 && !"localhost".equalsIgnoreCase(host)) {
-                throw new XmlSchemaException("The schema location \"" + schemaLocation
-                                             + "\" resolves to a file URL with a non-local authority.");
-            }
-        } else if (remoteBase && "jar".equals(composedScheme)
-                   && composed.toString().regionMatches(true, 0, "jar:file:", 0, 9)
-                   && !isLocalFileUri(composed.toString().substring(4))) {
-            throw new XmlSchemaException("The schema location \"" + schemaLocation
-                                         + "\" resolves to a jar URL with a non-local file authority.");
-        }
     }
 
     /**
-     * Refuse a resolved location whose effective scheme is not one a schema document may use.
+     * Refuse a resolved location this resolver will not dereference. Three rules apply, to every
+     * location and whatever the base URI was: the effective scheme must be one a schema document
+     * may use, a <code>jar:</code> URL may not pull its archive over the network, and a
+     * <code>file:</code> URL may not name a remote authority.
      *
      * @param uri the resolved location that would be handed to the parser.
      * @param schemaLocation the original schema location, for the error message.
      */
-    private static void verifyAllowedScheme(String uri, String schemaLocation) {
+    private static void verifyPermittedLocation(String uri, String schemaLocation) {
         final String scheme = effectiveScheme(uri);
         if (scheme == null || !ALLOWED_SCHEMES.contains(scheme)) {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
                                          + "\" resolves to the scheme \"" + scheme
                                          + "\", which is not permitted by DefaultURIResolver.");
         }
+        final String trimmed = uri.trim();
+        final boolean wrapped = "jar".equals(extractScheme(trimmed));
+        // A jar: URL delegates to the URL of the archive; the entry after "!/" is inside it.
+        final String archive = wrapped ? stripJarEntry(trimmed.substring(4)) : trimmed;
+        if (wrapped && isNetworkScheme(scheme)) {
+            throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                         + "\" reads an archive fetched over the network, \""
+                                         + archive + "\", which is not permitted by"
+                                         + " DefaultURIResolver.");
+        }
+        if ("file".equals(scheme) && !isLocalFileUri(archive)) {
+            throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                         + "\" resolves to a file URL with a non-local authority.");
+        }
+    }
+
+    /**
+     * Drop the entry part of a jar: URL, leaving the URL of the archive itself. The entry is an
+     * arbitrary path inside the archive and need not parse as part of a URI.
+     */
+    private static String stripJarEntry(String uri) {
+        final int separator = uri.indexOf("!/");
+        return separator < 0 ? uri : uri.substring(0, separator);
     }
 
     /**
