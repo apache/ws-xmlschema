@@ -77,6 +77,37 @@ For example, set a limit with:
     -Dorg.apache.ws.commons.schema.maxNestingDepth=256
 
 ===================
+     Security
+===================
+
+  XmlSchemaCollection resolves xs:import, xs:include and xs:redefine
+  schema locations through a URIResolver. The bundled DefaultURIResolver
+  is a convenience for trusted, operator-controlled schema sets. It
+  resolves http, https, file and jar locations and applies no host or
+  address filtering, so a schema location naming an internal host, a
+  cloud metadata endpoint, or a local file is fetched on request.
+
+  Applications that parse schema or WSDL documents from an untrusted
+  source must install a restricting resolver before reading them:
+
+    XmlSchemaCollection collection = new XmlSchemaCollection();
+    collection.setSchemaResolver(myRestrictingResolver);
+    collection.read(source);
+
+  A resolver that returns null declines the location, and the collection
+  falls back to any schema already registered for that namespace; a
+  resolver that throws rejects the read outright.
+
+  Note that a host allowlist cannot be enforced from inside a URIResolver:
+  it returns a system ID and the JDK opens the connection, following HTTP
+  redirects without consulting the resolver again. A resolver that must
+  restrict destinations has to fetch the bytes itself and return an
+  InputSource wrapping the stream.
+
+  See THREAT-MODEL.md section 10 for the full list of downstream
+  responsibilities.
+
+===================
       Support
 ===================
  

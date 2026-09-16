@@ -65,6 +65,23 @@ import org.apache.ws.commons.schema.utils.TargetNamespaceValidator;
 
 /**
  * Contains a cache of XML Schema definition language (XSD).
+ * <p>
+ * When a schema read into this collection contains an <code>xs:import</code>,
+ * <code>xs:include</code> or <code>xs:redefine</code>, the referenced
+ * <code>schemaLocation</code> is dereferenced through the collection's
+ * {@link URIResolver}. The default is {@link DefaultURIResolver}, which resolves
+ * <code>http</code>, <code>https</code>, <code>file</code> and <code>jar</code> locations and
+ * applies no host or address filtering. It is a convenience for trusted,
+ * operator-controlled schema sets.
+ * </p>
+ * <p>
+ * <strong>An application that reads schema or WSDL documents from an untrusted source must
+ * install a restricting resolver with {@link #setSchemaResolver(URIResolver)} before calling
+ * any <code>read</code> method.</strong> Otherwise a schema location chosen by the document's
+ * author is fetched by this JVM, which may reach internal hosts or read local files. See
+ * <code>THREAT-MODEL.md</code> section 10 in the project sources for the full set of caller
+ * responsibilities.
+ * </p>
  */
 public final class XmlSchemaCollection {
 
@@ -249,7 +266,8 @@ public final class XmlSchemaCollection {
     /**
      * Retrieve the custom URI resolver, if any.
      * 
-     * @return the current resolver.
+     * @return the current resolver; a {@link DefaultURIResolver} unless
+     *         {@link #setSchemaResolver(URIResolver)} has replaced it.
      */
     public URIResolver getSchemaResolver() {
         return schemaResolver;
@@ -619,6 +637,13 @@ public final class XmlSchemaCollection {
      * in the concatenation of system ID and targetNamespace. In this API, the systemID is taken from the
      * source.
      * 
+     * <p>
+     * Any <code>xs:import</code> / <code>xs:include</code> / <code>xs:redefine</code> in the
+     * document has its <code>schemaLocation</code> dereferenced during this call, through the
+     * resolver returned by {@link #getSchemaResolver()}. Install a restricting resolver with
+     * {@link #setSchemaResolver(URIResolver)} first when the document is untrusted.
+     * </p>
+     * 
      * @param inputSource the XSD document.
      * @return the XML schema object.
      */
@@ -722,7 +747,22 @@ public final class XmlSchemaCollection {
     }
 
     /**
-     * Register a custom URI resolver
+     * Register a custom URI resolver, replacing the {@link DefaultURIResolver} that is installed
+     * by default.
+     * <p>
+     * This is the control point for <code>xs:import</code> / <code>xs:include</code> /
+     * <code>xs:redefine</code> resolution. Installing a restricting resolver here is
+     * <strong>required</strong> before reading schema documents that come from an untrusted
+     * source. A resolver that returns <code>null</code> declines the location, in which case the
+     * collection falls back to any schema already registered for that namespace; a resolver that
+     * throws rejects the read outright.
+     * </p>
+     * <p>
+     * Note that a resolver cannot enforce a host allowlist by inspecting the location alone: it
+     * returns a system ID and the JDK opens the connection, following HTTP redirects without
+     * consulting the resolver again. A resolver that has to restrict destinations must fetch the
+     * bytes itself and return an <code>InputSource</code> wrapping the stream.
+     * </p>
      * 
      * @param schemaResolver resolver
      */
