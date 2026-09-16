@@ -234,4 +234,17 @@ public class DefaultURIResolverTest extends Assert {
 
         assertEquals("jar:file:///tmp/a.jar!/has space.xsd", result.getSystemId());
     }
+
+    @Test
+    public void testFileUrlCarryingItsHostInThePathIsRefused() {
+        // "file:////host/share/x.xsd" parses with a null authority and the host in the path, so an
+        // authority-only check lets it through. On Windows that path is a UNC path.
+        assertSchemeRefused("file:////attacker.example/share/x.xsd", null, "non-local authority");
+        assertSchemeRefused("file:////attacker.example/share/x.xsd", localBase(), "non-local authority");
+        assertSchemeRefused("file://///attacker.example/share/x.xsd", null, "non-local authority");
+        assertSchemeRefused("jar:file:////attacker.example/share/a.jar!/x.xsd", null,
+                            "non-local authority");
+        // The same shape reached by composing a relative location against a local base.
+        assertSchemeRefused("////attacker.example/share/x.xsd", localBase(), "non-local authority");
+    }
 }

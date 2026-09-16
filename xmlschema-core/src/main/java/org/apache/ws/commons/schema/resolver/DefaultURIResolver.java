@@ -241,9 +241,19 @@ public class DefaultURIResolver implements CollectionURIResolver {
     private static boolean isLocalFileUri(String uri) {
         try {
             URI parsed = new URI(uri);
+            if (!"file".equalsIgnoreCase(parsed.getScheme())) {
+                return false;
+            }
             final String authority = parsed.getAuthority();
-            return "file".equalsIgnoreCase(parsed.getScheme())
-                && (authority == null || authority.length() == 0 || "localhost".equalsIgnoreCase(authority));
+            if (authority != null && authority.length() > 0
+                && !"localhost".equalsIgnoreCase(authority)) {
+                return false;
+            }
+            // A host can also arrive in the path rather than the authority: "file:////host/share"
+            // parses with no authority at all, and a path beginning "//" is a UNC path on Windows.
+            // No schema names a local file that way, so refuse the shape outright.
+            final String path = parsed.getPath();
+            return path == null || !path.startsWith("//");
         } catch (URISyntaxException e) {
             return false;
         }

@@ -452,9 +452,10 @@ matching disclaimer.
   `https`, `file` and `jar`, judged through any `jar:` wrapper — and
   refuses a location that changes the scheme of a remote base. It also
   refuses, for every location and whatever the base, a `file:` URL that
-  names a non-local authority (a UNC path on Windows, so an SMB
-  connection to a host the schema author chose) and a `jar:` URL whose
-  archive would be fetched over the network. Within the `http` and
+  names a non-local host — in its authority, or as a path beginning
+  `//`, which is a UNC path on Windows and so an SMB connection to a
+  host the schema author chose — and a `jar:` URL whose archive would be
+  fetched over the network. Within the `http` and
   `https` targets it does allow, it applies **no host or address
   filtering of any kind**: any
   `http(s)` host is fetched on request, including loopback, link-local
@@ -702,7 +703,10 @@ Revise this document when any of the following lands:
   `file://host/share/x.xsd` and `jar:http://host/a.jar!/x.xsd` resolved
   from a local or absent base. §4 B3 and §9 are updated. This does not
   change the Q12(b) posture: absolute `http(s)` and local `file:`
-  locations are still followed.
+  locations are still followed. A follow-up closed a gap in the `file:`
+  rule as first written: it tested only the URI authority, so
+  `file:////host/share/x.xsd`, which parses with no authority and
+  carries the host in its path instead, was not caught.
 - **2026-09-16** — "Fix up DTD handling" (#147) changed the default
   parser DTD posture, a revision trigger under the second bullet above:
   external DTD and external entity resolution are now disabled
