@@ -123,4 +123,63 @@ public class DefaultURIResolverTest extends Assert {
         assertTrue(result.getSystemId().startsWith("file:"));
         assertTrue(result.getSystemId().endsWith("imported.xsd"));
     }
+
+    private static String localBase() {
+        return new File(existingDirectory(), "base.xsd").toURI().toString();
+    }
+
+    private static void assertSchemeRefused(String schemaLocation, String baseUri) {
+        DefaultURIResolver resolver = new DefaultURIResolver();
+        try {
+            resolver.resolveEntity("urn:x", schemaLocation, baseUri);
+            fail("The scheme of \"" + schemaLocation + "\" must be refused.");
+        } catch (XmlSchemaException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains("not permitted"));
+        }
+    }
+
+    @Test
+    public void testDisallowedSchemesAreRefusedFromALocalBase() {
+        assertSchemeRefused("mailto:someone@example.com", localBase());
+        assertSchemeRefused("jrt:/java.base/java/lang/Object.class", localBase());
+        assertSchemeRefused("ftp://attacker.example/x.xsd", localBase());
+    }
+
+    @Test
+    public void testDisallowedSchemesAreRefusedWithoutABase() {
+        assertSchemeRefused("mailto:someone@example.com", null);
+        assertSchemeRefused("jrt:/java.base/java/lang/Object.class", null);
+        assertSchemeRefused("ftp://attacker.example/x.xsd", null);
+    }
+
+    @Test
+    public void testJarWrappingANetworkUrlIsRefusedAsThatNetworkScheme() {
+        // "jar:ftp://..." reads as protocol "jar" but performs an FTP fetch, so the scheme
+        // check has to look through the jar: wrapper.
+        assertSchemeRefused("jar:ftp://attacker.example/a.jar!/x.xsd", localBase());
+        assertSchemeRefused("jar:ftp://attacker.example/a.jar!/x.xsd", null);
+    }
+
+    @Test
+    public void testAllowedSchemesStillResolve() {
+        DefaultURIResolver resolver = new DefaultURIResolver();
+
+        assertEquals("http://example.com/x.xsd",
+                     resolver.resolveEntity("urn:x", "http://example.com/x.xsd", localBase())
+                         .getSystemId());
+        assertEquals("https://example.com/x.xsd",
+                     resolver.resolveEntity("urn:x", "https://example.com/x.xsd", null)
+                         .getSystemId());
+        assertTrue(resolver.resolveEntity("urn:x", "sibling.xsd", localBase())
+                       .getSystemId().startsWith("file:"));
+        assertTrue(resolver.resolveEntity("urn:x", "jar:file:///tmp/a.jar!/x.xsd", localBase())
+                       .getSystemId().startsWith("jar:file:"));
+    }
+
+    @Test
+    public void testPlainRelativeLocationWithoutBaseIsNotSchemeChecked() {
+        DefaultURIResolver resolver = new DefaultURIResolver();
+
+        assertEquals("sub/x.xsd", resolver.resolveEntity("urn:x", "sub/x.xsd", null).getSystemId());
+    }
 }
