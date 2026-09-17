@@ -67,10 +67,17 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
      * cross-product of choices. Both bounds are configurable via system
      * properties.
      */
-    private static final int MAX_DECISION_POINTS =
-        getIntProperty("org.apache.ws.commons.schema.walker.maxDecisionPoints", 10000);
-    private static final long MAX_REPLAYED_EVENTS =
-        getIntProperty("org.apache.ws.commons.schema.walker.maxReplayedEvents", 1000000);
+    private static final String MAX_DECISION_POINTS_PROPERTY =
+        "org.apache.ws.commons.schema.walker.maxDecisionPoints";
+    private static final String MAX_REPLAYED_EVENTS_PROPERTY =
+        "org.apache.ws.commons.schema.walker.maxReplayedEvents";
+
+    // Read per instance: a static final is read once per class load, so setting either
+    // property had no effect on a JVM that had already touched this class.
+    private final int maxDecisionPoints =
+        getIntProperty(MAX_DECISION_POINTS_PROPERTY, 10000);
+    private final long maxReplayedEvents =
+        getIntProperty(MAX_REPLAYED_EVENTS_PROPERTY, 1000000);
 
     private final XmlSchemaNamespaceContext nsContext;
 
@@ -447,25 +454,41 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         decisionPoints = null; // Hopefully there won't be any!
     }
 
+    /**
+     * Keeps the outcomes a caller can act on - an invalid document, an unusable facet, an
+     * exhausted budget - distinguishable from an internal error, which stays a
+     * {@link RuntimeException}. {@link ValidationException} is checked, so it is carried as a
+     * cause rather than rethrown.
+     */
+    private static RuntimeException reportable(String context, Exception e) {
+        if (e instanceof XmlSchemaException) {
+            return (XmlSchemaException)e;
+        }
+        if (e instanceof ValidationException) {
+            return new XmlSchemaException(context, e);
+        }
+        return new RuntimeException(context, e);
+    }
+
     private void recordDecisionPoint() {
         ++decisionPointCount;
-        if (decisionPointCount > MAX_DECISION_POINTS) {
-            throw new XmlSchemaException("More than " + MAX_DECISION_POINTS
+        if (decisionPointCount > maxDecisionPoints) {
+            throw new XmlSchemaException("More than " + maxDecisionPoints
                 + " decision points were created while matching this document; the schema"
                 + " likely contains ambiguous (Unique Particle Attribution violating)"
                 + " content models. The limit may be changed with the"
-                + " org.apache.ws.commons.schema.walker.maxDecisionPoints system property.");
+                + " " + MAX_DECISION_POINTS_PROPERTY + " system property.");
         }
     }
 
     private void recordReplayedEvent() {
         ++replayedEventCount;
-        if (replayedEventCount > MAX_REPLAYED_EVENTS) {
-            throw new XmlSchemaException("More than " + MAX_REPLAYED_EVENTS
+        if (replayedEventCount > maxReplayedEvents) {
+            throw new XmlSchemaException("More than " + maxReplayedEvents
                 + " traversed elements were replayed while backtracking through this"
                 + " document; the schema likely contains ambiguous (Unique Particle"
                 + " Attribution violating) content models. The limit may be changed with the"
-                + " org.apache.ws.commons.schema.walker.maxReplayedEvents system property.");
+                + " " + MAX_REPLAYED_EVENTS_PROPERTY + " system property.");
         }
     }
 
@@ -801,8 +824,8 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
              * internal exception is thrown instead. Likewise, any useful info
              * about the error reported in the wrapper SAXException is lost.
              */
-            throw new RuntimeException("Error occurred while starting element " + elemQName
-                                       + "; traversed path is " + getElementsTraversedAsString(), e);
+            throw reportable("Error occurred while starting element " + elemQName
+                             + "; traversed path is " + getElementsTraversedAsString(), e);
         }
     }
 
@@ -874,8 +897,8 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                 .add(new TraversedElement(element.getQName(), TraversedElement.Traversal.CONTENT));
 
         } catch (Exception e) {
-            throw new RuntimeException("Error occurred while processing characters; traversed path was "
-                                       + getElementsTraversedAsString(), e);
+            throw reportable("Error occurred while processing characters; traversed path was "
+                             + getElementsTraversedAsString(), e);
         }
     }
 
@@ -944,8 +967,8 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Error occurred while ending element " + elemQName
-                                       + "; traversed path was " + getElementsTraversedAsString(), e);
+            throw reportable("Error occurred while ending element " + elemQName
+                             + "; traversed path was " + getElementsTraversedAsString(), e);
         }
     }
 
