@@ -737,7 +737,7 @@ public class SchemaBuilder {
         }
 
         // add the extensibility components
-        processExtensibilityComponents(currentSchema, schemaEl, false);
+        processExtensibilityComponents(currentSchema, schemaEl, false, false);
 
         return currentSchema;
     }
@@ -1982,6 +1982,21 @@ public class SchemaBuilder {
     private void processExtensibilityComponents(XmlSchemaObject schemaObject,
                                                 Element parentElement,
                                                 boolean namespaces) {
+        processExtensibilityComponents(schemaObject, parentElement, namespaces, true);
+    }
+
+    /**
+     * @param childElements whether foreign-namespace child elements are captured as well as
+     *        foreign attributes. False for the document element: xs:schema permits foreign
+     *        attributes but no foreign children, and a document reached through a
+     *        schemaLocation is whatever was at that URL. Capturing its children put the
+     *        contents of any XML file into the model, which the serializer then wrote back
+     *        out - so an embedding that republishes resolved schemas handed them back.
+     */
+    private void processExtensibilityComponents(XmlSchemaObject schemaObject,
+                                                Element parentElement,
+                                                boolean namespaces,
+                                                boolean childElements) {
 
         if (extReg != null) {
             // process attributes
@@ -2003,7 +2018,7 @@ public class SchemaBuilder {
             }
 
             // process elements
-            Node child = parentElement.getFirstChild();
+            Node child = childElements ? parentElement.getFirstChild() : null;
             while (child != null) {
                 if (child.getNodeType() == Node.ELEMENT_NODE) {
                     Element extElement = (Element)child;
