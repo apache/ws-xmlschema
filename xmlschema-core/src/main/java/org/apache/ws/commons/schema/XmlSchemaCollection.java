@@ -82,6 +82,12 @@ import org.apache.ws.commons.schema.utils.TargetNamespaceValidator;
  * <code>THREAT-MODEL.md</code> section 10 in the project sources for the full set of caller
  * responsibilities.
  * </p>
+ * <p>
+ * <strong>A collection is not safe for concurrent use.</strong> The in-progress import stack,
+ * the schema and unresolved-type maps and the per-read limit counters are all plain mutable
+ * state, so two threads calling a <code>read</code> method on one collection corrupt each
+ * other. Give each thread its own collection.
+ * </p>
  */
 public final class XmlSchemaCollection {
 

@@ -217,6 +217,17 @@ A finding is in-model only if it reaches a row marked **yes**.
 - **Filesystem**: caller-supplied paths; XMLSchema does no path
   sanitization of `schemaLocation` values that begin with `file://`
   *(inferred — §14 Q7)*.
+- **Threading**: a single `XmlSchemaCollection` is assumed to be used by
+  one thread at a time. The in-progress import stack, the schema and
+  unresolved-type maps and the per-read limit counters are plain mutable
+  instance state with no synchronization, so concurrent `read` calls on
+  one collection corrupt each other — measured on 8 threads sharing a
+  collection: `NoSuchElementException` from an emptied import stack,
+  `ConcurrentModificationException` from the schema map, and per-read
+  budgets charged across unrelated reads. This is long-standing: the same
+  two corruption signatures reproduce on the pre-hardening baseline. A
+  collection per thread is the supported pattern *(documented:
+  `XmlSchemaCollection.java` class javadoc)*.
 - **Memory**: schemas are held in memory; XMLSchema has no built-in
   ceiling on schema-document size, imported bytes, or fetch rate. Import
   and include resolution is bounded per read by a default maximum depth of
@@ -557,12 +568,14 @@ The embedding Java application **must**:
   *caller* level. XMLSchema provides configurable import/include depth
   per-read resolution, and structural nesting limits, but these do not
   replace deployment-specific resource budgets *(inferred — §14 Q8)*.
-5. Set `org.apache.ws.commons.schema.extension_registry` only at JVM
+5. Give each thread its own `XmlSchemaCollection`; a collection is not
+  safe for concurrent `read` calls.
+6. Set `org.apache.ws.commons.schema.extension_registry` only at JVM
    startup from a trusted source; do not allow untrusted actors to set
    it.
-6. Set `XmlSchemaCollection.setBaseUri(...)` from an operator-trusted
+7. Set `XmlSchemaCollection.setBaseUri(...)` from an operator-trusted
    string, not from anywhere an attacker can influence.
-7. Run on a release-supported branch (currently 2.3.0 line)
+8. Run on a release-supported branch (currently 2.3.0 line)
    *(documented: `RELEASE-NOTE.txt`)*.
 
 The embedding Java application **should** additionally implement these
@@ -571,16 +584,16 @@ defense-in-depth controls:
 1. Enforce URL scheme and destination restrictions in the resolver:
   allow only `https://` to approved hosts; deny `file://`, `jar:`,
   loopback, link-local, and RFC1918/private address ranges.
-3. Supplement XMLSchema's import/include depth, per-read resolution, and
+2. Supplement XMLSchema's import/include depth, per-read resolution, and
   structural nesting limits with caller-boundary budgets for total imported
   bytes and fetch rate per top-level parse.
-4. Tune, or tighten beyond, the default per-fetch bounds of §5a, and
+3. Tune, or tighten beyond, the default per-fetch bounds of §5a, and
   fail closed on timeout or policy-check errors. The defaults bound a
   remote fetch; an aggregate budget across the whole import graph is
   still a caller responsibility.
-5. Log import-resolution decisions (requested URI, normalized target,
+4. Log import-resolution decisions (requested URI, normalized target,
   allow/deny result, reason) for incident response and triage.
-6. Prefer integrity-controlled schema sources (pinned internal mirror
+5. Prefer integrity-controlled schema sources (pinned internal mirror
   or checksum-verified artifacts) instead of live internet fetches.
 
 ## §11 Known misuse patterns
