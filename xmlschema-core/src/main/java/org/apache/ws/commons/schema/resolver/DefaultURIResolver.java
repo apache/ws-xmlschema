@@ -46,8 +46,9 @@ import org.xml.sax.InputSource;
  * <code>jar</code>, and refuses a schema location that changes the scheme of a remote base URI,
  * names a non-local authority with the <code>file:</code> scheme, or reads a <code>jar:</code>
  * archive fetched over the network. A deployment with no remote schema sets can turn network
- * resolution off altogether with the {@link #ALLOW_NETWORK_PROPERTY} system property, without
- * supplying its own resolver. Within the schemes it does allow it
+ * resolution off altogether with the {@link #ALLOW_NETWORK_PROPERTY} system property, and
+ * filesystem resolution with {@link #ALLOW_FILE_SYSTEM_PROPERTY}, without supplying its own
+ * resolver. Within the schemes it does allow it
  * applies no host or address filtering, so any reachable host or readable file a schema location
  * names is fetched. An application that parses untrusted schema documents must install a restricting
  * resolver instead; see
@@ -92,6 +93,20 @@ public class DefaultURIResolver implements CollectionURIResolver {
     public static final String ALLOW_NETWORK_PROPERTY =
         "org.apache.ws.commons.schema.remote.allowNetwork";
 
+    /**
+     * Whether a schema location may be read from the filesystem at all. Set it to
+     * <code>false</code> in a deployment whose schema documents are expected to stand alone: an
+     * <code>xs:import</code> naming a <code>file:</code> location, a <code>jar:file:</code> one,
+     * or a relative path with no base URI to resolve it against, is then refused instead of read.
+     * It defaults to <code>true</code>. Setting it alongside
+     * {@link #ALLOW_NETWORK_PROPERTY} leaves this resolver with nothing it will fetch, which is
+     * the closest the bundled resolver comes to refusing every external reference; an
+     * application that needs to allow some references and refuse others still wants its own
+     * {@link URIResolver}. Only "true" and "false" are recognised.
+     */
+    public static final String ALLOW_FILE_SYSTEM_PROPERTY =
+        "org.apache.ws.commons.schema.local.allowFileSystem";
+
     private static final long DEFAULT_CONNECT_TIMEOUT_MILLIS = 5L * 1000L;
     private static final long DEFAULT_READ_TIMEOUT_MILLIS = 10L * 1000L;
     private static final long DEFAULT_MAX_FETCH_MILLIS = 30L * 1000L;
@@ -105,6 +120,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
         getLongProperty(MAX_FETCH_MILLIS_PROPERTY, DEFAULT_MAX_FETCH_MILLIS);
     private final long maxBytes = getLongProperty(MAX_BYTES_PROPERTY, DEFAULT_MAX_BYTES);
     private final boolean allowNetwork = getBooleanProperty(ALLOW_NETWORK_PROPERTY, true);
+    private final boolean allowFileSystem = getBooleanProperty(ALLOW_FILE_SYSTEM_PROPERTY, true);
 
     private String collectionBaseURI;
 
@@ -169,6 +185,12 @@ public class DefaultURIResolver implements CollectionURIResolver {
             }
         }
         if (isPlainRelativePath(schemaLocation)) {
+            if (!allowFileSystem) {
+                throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                             + "\" is relative and would be resolved against the"
+                                             + " working directory, which "
+                                             + ALLOW_FILE_SYSTEM_PROPERTY + " has turned off.");
+            }
             return new InputSource(schemaLocation);
         }
         return null;
@@ -396,6 +418,11 @@ public class DefaultURIResolver implements CollectionURIResolver {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
                                          + "\" would be fetched over the network, which "
                                          + ALLOW_NETWORK_PROPERTY + " has turned off.");
+        }
+        if (!allowFileSystem && "file".equals(scheme)) {
+            throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                         + "\" would be read from the filesystem, which "
+                                         + ALLOW_FILE_SYSTEM_PROPERTY + " has turned off.");
         }
         if ("file".equals(scheme) && !isLocalFileUri(archive)) {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
