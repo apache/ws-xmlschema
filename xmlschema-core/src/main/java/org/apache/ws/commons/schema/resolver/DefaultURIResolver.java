@@ -19,10 +19,16 @@
 package org.apache.ws.commons.schema.resolver;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -56,6 +62,35 @@ public class DefaultURIResolver implements CollectionURIResolver {
      */
     private static final Set<String> ALLOWED_SCHEMES = Collections.unmodifiableSet(
         new HashSet<String>(Arrays.asList("http", "https", "file", "jar")));
+
+    /**
+     * Bounds on a single network fetch. Left to the JDK, a schema location naming a slow or
+     * silent host holds the parsing thread for as long as that host keeps the socket open, and
+     * one that keeps sending holds as much heap as it cares to send. The import depth and
+     * resolution limits bound the shape of the import graph, not the cost of one fetch within
+     * it, so they never come into play: a single import is enough.
+     */
+    public static final String CONNECT_TIMEOUT_PROPERTY =
+        "org.apache.ws.commons.schema.remote.connectTimeoutMillis";
+    public static final String READ_TIMEOUT_PROPERTY =
+        "org.apache.ws.commons.schema.remote.readTimeoutMillis";
+    public static final String MAX_FETCH_MILLIS_PROPERTY =
+        "org.apache.ws.commons.schema.remote.maxFetchMillis";
+    public static final String MAX_BYTES_PROPERTY =
+        "org.apache.ws.commons.schema.remote.maxBytes";
+
+    private static final long DEFAULT_CONNECT_TIMEOUT_MILLIS = 5L * 1000L;
+    private static final long DEFAULT_READ_TIMEOUT_MILLIS = 10L * 1000L;
+    private static final long DEFAULT_MAX_FETCH_MILLIS = 30L * 1000L;
+    private static final long DEFAULT_MAX_BYTES = 64L * 1024L * 1024L;
+
+    private final long connectTimeoutMillis =
+        getLongProperty(CONNECT_TIMEOUT_PROPERTY, DEFAULT_CONNECT_TIMEOUT_MILLIS);
+    private final long readTimeoutMillis =
+        getLongProperty(READ_TIMEOUT_PROPERTY, DEFAULT_READ_TIMEOUT_MILLIS);
+    private final long maxFetchMillis =
+        getLongProperty(MAX_FETCH_MILLIS_PROPERTY, DEFAULT_MAX_FETCH_MILLIS);
+    private final long maxBytes = getLongProperty(MAX_BYTES_PROPERTY, DEFAULT_MAX_BYTES);
 
     private String collectionBaseURI;
 
@@ -101,7 +136,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
                 URL ref = new URL(base, schemaLocation);
                 verifyComposedUrl(remoteBase, originalBaseUri, base, ref, schemaLocation);
 
-                return new InputSource(ref.toString());
+                return toInputSource(ref, ref.toString());
             } catch (MalformedURLException e1) {
                 throw new XmlSchemaException("Unable to resolve the schema location \"" + schemaLocation
                                              + "\" against the base URI \"" + baseUri + "\"", e1);
@@ -113,13 +148,151 @@ public class DefaultURIResolver implements CollectionURIResolver {
         // rejects is not thereby harmless.
         if (isAbsoluteUri(schemaLocation) || extractScheme(schemaLocation) != null) {
             verifyPermittedLocation(schemaLocation, schemaLocation);
-            return new InputSource(schemaLocation);
+            try {
+                return toInputSource(new URL(schemaLocation), schemaLocation);
+            } catch (MalformedURLException e) {
+                return new InputSource(schemaLocation);
+            }
         }
         if (isPlainRelativePath(schemaLocation)) {
             return new InputSource(schemaLocation);
         }
         return null;
 
+    }
+
+    /**
+     * Hands the parser an InputSource for a resolved location. A <code>file:</code> or
+     * <code>jar:</code> location keeps the system-id-only form: those reads are local, and the
+     * parser opens them as it always has. A network location gets a byte stream that the parser
+     * opens the same way it would have, except that it is bounded - left to the JDK the fetch has
+     * no timeout and no size limit.
+     * <p>
+     * The system id is set either way, and the stream is opened lazily on first read, so this
+     * method performs no I/O: resolving a location stays a pure URL composition, as callers of
+     * {@link URIResolver#resolveEntity} expect. Schema documents also carry relative
+     * <code>schemaLocation</code>s resolved against the system id, so a document that arrives as
+     * bytes still needs its own URL recorded or its own imports cannot be resolved.
+     * </p>
+     */
+    private InputSource toInputSource(URL url, String systemId) {
+        InputSource source = new InputSource(systemId);
+        if (isNetworkScheme(url.getProtocol().toLowerCase(Locale.ENGLISH))) {
+            source.setByteStream(new BoundedUrlInputStream(url, systemId));
+        }
+        return source;
+    }
+
+    /**
+     * A stream over a remote schema document that opens on first read and enforces the per-fetch
+     * bounds as it goes. The connect and read timeouts bound each blocking operation separately,
+     * so they are not on their own enough: a host trickling bytes below the read-timeout interval
+     * resets that timer indefinitely. The total deadline checked on every read is what bounds
+     * that, and the running byte count bounds a host that simply keeps sending.
+     */
+    private final class BoundedUrlInputStream extends InputStream {
+
+        private final URL url;
+        private final String systemId;
+        private InputStream delegate;
+        private long deadlineNanos;
+        private long total;
+        private boolean closed;
+
+        BoundedUrlInputStream(URL url, String systemId) {
+            this.url = url;
+            this.systemId = systemId;
+        }
+
+        private void ensureOpen() throws IOException {
+            if (delegate != null) {
+                return;
+            }
+            if (closed) {
+                throw new IOException("The schema location \"" + systemId + "\" is closed.");
+            }
+            URLConnection connection = url.openConnection();
+            connection.setDoInput(true);
+            connection.setConnectTimeout(toIntMillis(connectTimeoutMillis));
+            connection.setReadTimeout(toIntMillis(readTimeoutMillis));
+            if (connection instanceof HttpURLConnection) {
+                ((HttpURLConnection)connection).setInstanceFollowRedirects(false);
+            }
+            deadlineNanos = System.nanoTime() + maxFetchMillis * 1000000L;
+            // A declared length is a courtesy: it is absent for a chunked response and is in any
+            // case whatever the host chose to claim. The running count below is the real limit.
+            if (connection.getContentLengthLong() > maxBytes) {
+                throw new IOException("The schema location \"" + systemId
+                                      + "\" declared a length above the maximum of "
+                                      + maxBytes + " bytes.");
+            }
+            delegate = connection.getInputStream();
+        }
+
+        private void checkDeadline() throws IOException {
+            if (System.nanoTime() - deadlineNanos >= 0) {
+                throw new IOException("Fetching the schema location \"" + systemId
+                                      + "\" took longer than the maximum of "
+                                      + maxFetchMillis + " ms.");
+            }
+        }
+
+        private int count(int read) throws IOException {
+            if (read > 0) {
+                total += read;
+                if (total > maxBytes) {
+                    throw new IOException("The schema location \"" + systemId
+                                          + "\" returned more than the maximum of "
+                                          + maxBytes + " bytes.");
+                }
+            }
+            return read;
+        }
+
+        public int read() throws IOException {
+            ensureOpen();
+            checkDeadline();
+            int value = delegate.read();
+            count(value == -1 ? -1 : 1);
+            return value;
+        }
+
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            ensureOpen();
+            checkDeadline();
+            return count(delegate.read(buffer, offset, length));
+        }
+
+        public void close() throws IOException {
+            closed = true;
+            if (delegate != null) {
+                delegate.close();
+                delegate = null;
+            }
+        }
+    }
+
+    private static int toIntMillis(long millis) {
+        return millis > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)millis;
+    }
+
+    private static long getLongProperty(final String name, long defaultValue) {
+        try {
+            String value = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty(name);
+                }
+            });
+            if (value != null && value.trim().length() > 0) {
+                long parsed = Long.parseLong(value.trim());
+                if (parsed > 0) {
+                    return parsed;
+                }
+            }
+        } catch (RuntimeException e) {
+            // fall through to the default
+        }
+        return defaultValue;
     }
 
     private static void verifyComposedUrl(boolean remoteBase, String originalBaseUri, URL base,
