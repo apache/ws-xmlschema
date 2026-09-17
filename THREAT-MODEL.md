@@ -285,6 +285,7 @@ points*:
 | `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
+| `org.apache.ws.commons.schema.remote.allowNetwork` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments with no remote schema sets | when `false`, `DefaultURIResolver` refuses a location whose effective scheme is `http` or `https`; local `file:` / `jar:` reads are unaffected, so it closes the remote-fetch half of §9's SSRF disclaimer but not the local-read half |
 | `org.apache.ws.commons.schema.remote.connectTimeoutMillis` / `.readTimeoutMillis` / `.maxFetchMillis` / `.maxBytes` system properties | `5000` / `10000` / `30000` / `67108864` *(documented: `README.txt`)* | operator-tunable per-fetch bounds | bound one remote `DefaultURIResolver` fetch in wall-clock time and bytes; without them the JDK opens a `schemaLocation` with no timeout and no size limit, and a single import can hold a thread or its heap indefinitely |
 | `org.apache.ws.commons.schema.protectReadOnlyCollections` system property | `false` *(documented: `README.txt`, `CollectionFactory.java` lines 37-48)* | in-process convenience, not a trust boundary | when false, the "read-only" model accessors return the **live internal collections**, not unmodifiable views; §7 places the in-process caller outside the attacker model, so this is a correctness guard rather than a security control |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / stream-shaped `read(Source)` paths |
@@ -482,7 +483,11 @@ matching disclaimer.
   is not enforceable at the `resolveEntity` boundary. The caller is
   responsible for installing a restricting `URIResolver` if the input
   schema is attacker-controlled *(documented: `DefaultURIResolver.java`;
-  ratified — §14 Q12)*.
+  ratified — §14 Q12)*. An operator with no remote schema sets can set
+  `org.apache.ws.commons.schema.remote.allowNetwork=false` to refuse
+  `http` and `https` locations outright (§5a); that removes the SSRF
+  reach but not the local `file:` read, so it narrows this disclaimer
+  rather than retiring it.
 - **No guarantee that external DTD or external entity content is ever
   resolved.** XMLSchema accepts a DOCTYPE declaration, but never fetches
   an external DTD subset or an external entity; a schema that depends on
@@ -559,7 +564,11 @@ The embedding Java application **must**:
    is not a supported production posture for untrusted schema bytes. A
    resolver that returns `null` declines the location (the collection
    falls back to any schema already registered for that namespace); one
-   that throws rejects the read outright.
+   that throws rejects the read outright. A deployment that simply never
+   needs a remote schema can instead set
+   `org.apache.ws.commons.schema.remote.allowNetwork=false` (§5a), which
+   needs no code but still leaves local `file:` reads open, so it is not
+   a substitute for a restricting resolver on untrusted input.
 2. When passing a pre-parsed `Document` / `Element` into
    `XmlSchemaCollection.read(...)`, use a `DocumentBuilderFactory`
    hardened against XXE — specifically with `disallow-doctype-decl=true`
@@ -731,6 +740,14 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-17** — a new `org.apache.ws.commons.schema.remote.allowNetwork`
+  system property lets an operator refuse `http` and `https` schema
+  locations outright, defaulting to `true` so nothing changes for an
+  existing deployment. It is a revision trigger under the first bullet
+  above and is recorded in §5a, §9 and §10 item 1. It does not disturb
+  the §14 Q12(b) ruling: the shipped default still resolves remote
+  locations, and the opt-out does not restrict local `file:` reads, so a
+  report against the default remains `BY-DESIGN: property-disclaimed`.
 - **2026-09-17** — "Place default limits on read timeouts + size on
   remote schemas" (#152) is a revision trigger under the first bullet
   above: a network location is now fetched through a stream the resolver

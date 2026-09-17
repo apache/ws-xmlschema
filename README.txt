@@ -91,6 +91,16 @@ adjust the per-document limits:
       Maximum bytes accepted from one remote schema fetch. The default is
       67108864 (64 MB).
 
+    org.apache.ws.commons.schema.remote.allowNetwork
+      Whether a schema location may be fetched over the network at all. The
+      default is true. Set it to false in a deployment whose schema sets are
+      entirely local: an xs:import naming an http or https location is then
+      refused rather than fetched, and no resolver has to be supplied to get
+      that. Only true and false are recognised, so a typo leaves resolution
+      working rather than quietly turning it off. Local file: and jar: reads
+      are unaffected either way, so this is not on its own a defence against
+      an untrusted schema document - see the Security section below.
+
   file: and jar: locations are read as before, without buffering.
 
   The collections returned by the "read-only" accessors on the schema model
@@ -125,6 +135,12 @@ For example, set a limit with:
   location naming an internal host, a cloud metadata endpoint, or a local
   file is fetched on request. It does refuse a file: location that names a
   non-local authority, and a jar: archive fetched over the network.
+
+  Where a deployment needs no remote schemas at all, setting
+  org.apache.ws.commons.schema.remote.allowNetwork to false refuses http and
+  https locations outright, which closes the remote-fetch half of this
+  without any code. It does not restrict local file: reads, so it does not
+  replace a restricting resolver for untrusted input.
 
   Applications that parse schema or WSDL documents from an untrusted
   source must install a restricting resolver before reading them:

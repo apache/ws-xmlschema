@@ -294,4 +294,63 @@ public class DefaultURIResolverTest extends Assert {
         assertEquals("dir/a:b.xsd",
                      resolver.resolveEntity("urn:x", "dir/a:b.xsd", null).getSystemId());
     }
+
+    /**
+     * A deployment whose schema sets are all local can turn remote fetching off without writing
+     * its own resolver. The property is read when the resolver is constructed, as the per-fetch
+     * bounds are, so each case builds its resolver after setting it.
+     */
+    @Test
+    public void testNetworkResolutionCanBeTurnedOff() {
+        System.setProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY, "false");
+        try {
+            DefaultURIResolver resolver = new DefaultURIResolver();
+            for (String location : new String[] {"http://example.com/x.xsd",
+                                                 "https://example.com/x.xsd"}) {
+                for (String base : new String[] {null, localBase()}) {
+                    try {
+                        resolver.resolveEntity("urn:x", location, base);
+                        fail("network resolution is off, so \"" + location
+                             + "\" must be refused.");
+                    } catch (XmlSchemaException expected) {
+                        assertTrue(expected.getMessage(),
+                                   expected.getMessage().contains("turned off"));
+                    }
+                }
+            }
+            // Local resolution is unaffected: that is the point of the switch.
+            assertEquals("file:///legit/local.xsd",
+                         resolver.resolveEntity("urn:x", "file:///legit/local.xsd", null)
+                             .getSystemId());
+            assertEquals("sub/x.xsd",
+                         resolver.resolveEntity("urn:x", "sub/x.xsd", null).getSystemId());
+            assertTrue(resolver.resolveEntity("urn:x", "jar:file:///a.jar!/x.xsd", null)
+                           .getSystemId().startsWith("jar:file:"));
+        } finally {
+            System.clearProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY);
+        }
+    }
+
+    @Test
+    public void testNetworkResolutionIsAllowedByDefault() {
+        assertNull(System.getProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY));
+
+        assertEquals("http://example.com/x.xsd",
+                     new DefaultURIResolver()
+                         .resolveEntity("urn:x", "http://example.com/x.xsd", null).getSystemId());
+    }
+
+    @Test
+    public void testUnparseableAllowNetworkValueLeavesResolutionOn() {
+        // Boolean.parseBoolean would read this as false and quietly break the deployment.
+        System.setProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY, "no");
+        try {
+            assertEquals("http://example.com/x.xsd",
+                         new DefaultURIResolver()
+                             .resolveEntity("urn:x", "http://example.com/x.xsd", null)
+                             .getSystemId());
+        } finally {
+            System.clearProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY);
+        }
+    }
 }
