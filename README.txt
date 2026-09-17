@@ -68,6 +68,31 @@ adjust the per-document limits:
   as an entity in one - and FEATURE_SECURE_PROCESSING bounds entity
   expansion by both count and accumulated size.
 
+  When the DefaultURIResolver fetches a schema over http or https, the fetch
+  is bounded: left to the JDK it has no timeout and no size limit, so one
+  schemaLocation naming a slow or endless host can hold a parsing thread or
+  its heap indefinitely. The import and resolution limits above bound the
+  shape of the import graph, not the cost of a single fetch within it. The
+  following JVM system properties adjust the bounds:
+
+    org.apache.ws.commons.schema.remote.connectTimeoutMillis
+      Connect timeout for a remote schema fetch. The default is 5000.
+
+    org.apache.ws.commons.schema.remote.readTimeoutMillis
+      Per-read timeout for a remote schema fetch. The default is 10000.
+
+    org.apache.ws.commons.schema.remote.maxFetchMillis
+      Maximum total wall-clock time for one remote schema fetch. The
+      per-read timeout above bounds each blocking read separately, so this
+      is what stops a host that trickles bytes below that interval. The
+      default is 30000.
+
+    org.apache.ws.commons.schema.remote.maxBytes
+      Maximum bytes accepted from one remote schema fetch. The default is
+      67108864 (64 MB).
+
+  file: and jar: locations are read as before, without buffering.
+
   The collections returned by the "read-only" accessors on the schema model
   are, by default, the live internal collections rather than unmodifiable
   views. To wrap them so that modification throws instead, set:
@@ -85,6 +110,8 @@ For example, set a limit with:
     -Dorg.apache.ws.commons.schema.maxNestingDepth=256
 
     -Dorg.apache.ws.commons.schema.protectReadOnlyCollections=true
+
+    -Dorg.apache.ws.commons.schema.remote.maxFetchMillis=10000
 
 ===================
      Security

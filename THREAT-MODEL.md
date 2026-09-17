@@ -270,6 +270,7 @@ points*:
 | `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
+| `org.apache.ws.commons.schema.remote.connectTimeoutMillis` / `.readTimeoutMillis` / `.maxFetchMillis` / `.maxBytes` system properties | `5000` / `10000` / `30000` / `67108864` *(documented: `README.txt`)* | operator-tunable per-fetch bounds | bound one remote `DefaultURIResolver` fetch in wall-clock time and bytes; without them the JDK opens a `schemaLocation` with no timeout and no size limit, and a single import can hold a thread or its heap indefinitely |
 | `org.apache.ws.commons.schema.protectReadOnlyCollections` system property | `false` *(documented: `README.txt`, `CollectionFactory.java` lines 37-48)* | in-process convenience, not a trust boundary | when false, the "read-only" model accessors return the **live internal collections**, not unmodifiable views; §7 places the in-process caller outside the attacker model, so this is a correctness guard rather than a security control |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / stream-shaped `read(Source)` paths |
 
@@ -573,8 +574,10 @@ defense-in-depth controls:
 3. Supplement XMLSchema's import/include depth, per-read resolution, and
   structural nesting limits with caller-boundary budgets for total imported
   bytes and fetch rate per top-level parse.
-4. Use connect/read timeouts for import fetches and fail closed on
-  timeout or policy-check errors.
+4. Tune, or tighten beyond, the default per-fetch bounds of §5a, and
+  fail closed on timeout or policy-check errors. The defaults bound a
+  remote fetch; an aggregate budget across the whole import graph is
+  still a caller responsibility.
 5. Log import-resolution decisions (requested URI, normalized target,
   allow/deny result, reason) for incident response and triage.
 6. Prefer integrity-controlled schema sources (pinned internal mirror
@@ -644,11 +647,13 @@ model, the section that licenses the call.
   reachable from input *(documented: `XmlSchema.java`)*. →
   `KNOWN-NON-FINDING`.
 - **"`URLConnection.getInputStream()` without timeout."** True;
-  XMLSchema does no read-timeout on fetched imports *(maintainer —
-  §14 Q12)*. The resolver returns a system ID and the JDK opens the
-  connection, so a timeout cannot be imposed without changing the
-  resolver's contract. → `BY-DESIGN: property-disclaimed`;
-  connect/read timeouts are a §10 item 4 caller responsibility.
+  `DefaultURIResolver` now opens `http`/`https` fetches itself and
+  bounds them by connect timeout, per-read timeout, total wall-clock
+  deadline and byte count (see §5a); `file:` and `jar:` locations are
+  still returned as a system ID for the parser to open. A report that
+  an unbounded remote fetch holds a thread or its heap is `VALID` if it
+  shows a bypass of those bounds. Callers wanting tighter budgets, or
+  bounds on local reads, still install their own resolver.
 - **"Path traversal via `XmlSchemaCollection.setBaseUri()`."** Caller-
   supplied trusted string per §6. → `OUT-OF-MODEL: trusted-input`.
 - **"Schemas in `w3c-testcases/` contain wide-open DTDs."** W3C
@@ -730,7 +735,7 @@ A report against XMLSchema receives exactly one of the following:
 | `OUT-OF-MODEL: unsupported-component` | Lands in `w3c-testcases/`, `*/src/test/`, `etc/`, `xmlschema-bundle-test/`. | §3 items 4, 8 |
 | `OUT-OF-MODEL: non-default-build` | Only manifests under a §5a configuration the maintainer rules dev/test (e.g. an unsafe custom `URIResolver`). | §5a |
 | `OUT-OF-MODEL: out-of-layer` | Concerns a *document* validation step delegated to `javax.xml.validation.Validator`, or a WSDL parser upstream. | §3 items 1–3 |
-| `BY-DESIGN: property-disclaimed` | Concerns a §9 property the project explicitly does not provide (no SSRF defense, no guarantee of default DTD acceptance, no schema-size, imported-byte, or fetch-rate ceiling). | §9 |
+| `BY-DESIGN: property-disclaimed` | Concerns a §9 property the project explicitly does not provide (no SSRF defense, no guarantee that external DTD or entity content is resolved, no aggregate schema-size, imported-byte, or fetch-rate ceiling across a whole import graph). | §9 |
 | `KNOWN-NON-FINDING` | Matches a §11a recurring false positive. | §11a |
 | `MODEL-GAP` | Cannot be cleanly routed to any of the above — triggers §12 model revision. | §12 |
 
