@@ -210,6 +210,14 @@ public final class XmlSchemaCollection {
     private int resolutionsSinceTopLevelRead;
 
     /**
+     * Depth of nested {@link #read} calls. A schema resolved through
+     * <code>xs:import</code>/<code>xs:include</code>/<code>xs:redefine</code> is built by a
+     * re-entrant read, so this distinguishes the outermost read - where the per-read resolution
+     * budget starts - from the nested ones that spend it.
+     */
+    private int activeReads;
+
+    /**
      * Creates new XmlSchemaCollection
      */
     public XmlSchemaCollection() {
@@ -539,10 +547,6 @@ public final class XmlSchemaCollection {
      * @param pKey the schema key.
      */
     public void push(SchemaKey pKey) {
-        if (stack.isEmpty()) {
-            // A new top-level read is starting.
-            resolutionsSinceTopLevelRead = 0;
-        }
         if (stack.size() >= MAX_IMPORT_DEPTH) {
             throw new XmlSchemaException("Maximum schema import/include depth of " + MAX_IMPORT_DEPTH
                                          + " exceeded while resolving " + pKey
@@ -584,10 +588,15 @@ public final class XmlSchemaCollection {
      * @return the schema object.
      */
     public XmlSchema read(Document doc, String systemId, TargetNamespaceValidator validator) {
-        SchemaBuilder builder = new SchemaBuilder(this, validator);
-        XmlSchema schema = builder.build(doc, systemId);
-        schema.setInputEncoding(doc.getInputEncoding());
-        return schema;
+        enterRead();
+        try {
+            SchemaBuilder builder = new SchemaBuilder(this, validator);
+            XmlSchema schema = builder.build(doc, systemId);
+            schema.setInputEncoding(doc.getInputEncoding());
+            return schema;
+        } finally {
+            exitRead();
+        }
     }
 
     /**
@@ -599,8 +608,13 @@ public final class XmlSchemaCollection {
      * @return the XML schema object.
      */
     public XmlSchema read(Document doc) {
-        SchemaBuilder builder = new SchemaBuilder(this, null);
-        return builder.build(doc, null);
+        enterRead();
+        try {
+            SchemaBuilder builder = new SchemaBuilder(this, null);
+            return builder.build(doc, null);
+        } finally {
+            exitRead();
+        }
     }
 
     /**
@@ -611,10 +625,15 @@ public final class XmlSchemaCollection {
      * @return the XmlSchema
      */
     public XmlSchema read(Element elem) {
-        SchemaBuilder builder = new SchemaBuilder(this, null);
-        XmlSchema xmlSchema = builder.handleXmlSchemaElement(elem, null);
-        xmlSchema.setInputEncoding(elem.getOwnerDocument().getXmlEncoding());
-        return xmlSchema;
+        enterRead();
+        try {
+            SchemaBuilder builder = new SchemaBuilder(this, null);
+            XmlSchema xmlSchema = builder.handleXmlSchemaElement(elem, null);
+            xmlSchema.setInputEncoding(elem.getOwnerDocument().getXmlEncoding());
+            return xmlSchema;
+        } finally {
+            exitRead();
+        }
     }
 
     /**
@@ -626,10 +645,15 @@ public final class XmlSchemaCollection {
      * @return the schema object.
      */
     public XmlSchema read(Element elem, String systemId) {
-        SchemaBuilder builder = new SchemaBuilder(this, null);
-        XmlSchema xmlSchema = builder.handleXmlSchemaElement(elem, systemId);
-        xmlSchema.setInputEncoding(elem.getOwnerDocument().getInputEncoding());
-        return xmlSchema;
+        enterRead();
+        try {
+            SchemaBuilder builder = new SchemaBuilder(this, null);
+            XmlSchema xmlSchema = builder.handleXmlSchemaElement(elem, systemId);
+            xmlSchema.setInputEncoding(elem.getOwnerDocument().getInputEncoding());
+            return xmlSchema;
+        } finally {
+            exitRead();
+        }
     }
 
     /**
@@ -816,6 +840,23 @@ public final class XmlSchemaCollection {
      */
     XmlSchema getSchema(SchemaKey pKey) {
         return schemas.get(pKey);
+    }
+
+    /**
+     * Marks the start of a read. The per-read resolution budget is reset only for the outermost
+     * one: the stack of in-progress resolutions returns to empty between two sibling imports of
+     * the same document, so resetting whenever it is empty charged each branch of the import
+     * graph separately and left the total unbounded.
+     */
+    private void enterRead() {
+        if (activeReads == 0) {
+            resolutionsSinceTopLevelRead = 0;
+        }
+        activeReads++;
+    }
+
+    private void exitRead() {
+        activeReads--;
     }
 
     XmlSchema read(InputSource inputSource, TargetNamespaceValidator namespaceValidator) {
