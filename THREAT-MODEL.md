@@ -176,8 +176,12 @@ A finding is in-model only if it reaches a row marked **yes**.
   for SSRF / cross-origin fetch when the input schema is attacker-
   controlled and contains an `xs:import schemaLocation="…"`. The
   bundled resolver checks the effective scheme against an allowlist and
-  then returns an `InputSource`; the JDK fetches it on `parse()`, and
-  follows any HTTP redirects itself without consulting the resolver.
+  then returns an `InputSource`. A local location keeps the
+  system-id-only form and the parser opens it; a network location gets a
+  byte stream the resolver opens on first read, under per-fetch timeout
+  and size bounds. Redirects are the JDK's: it will not follow one that
+  changes scheme, and follows a same-scheme one without consulting the
+  resolver again.
 - **`xmlschema-core` parser fed a pre-parsed DOM** (`read(Document)`,
   `read(Element)`): out of model for XXE; the caller's
   `DocumentBuilderFactory` decided that. In-model for whatever the
@@ -727,6 +731,19 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-17** — "Place default limits on read timeouts + size on
+  remote schemas" (#152) is a revision trigger under the first bullet
+  above: a network location is now fetched through a stream the resolver
+  opens, bounded by connect, read and total-fetch timeouts and by a byte
+  ceiling, all operator-tunable (§5a). §4 reachability is updated. That
+  commit also disabled redirect following, which was reverted on review:
+  the JDK never followed a scheme-changing redirect, so no `http` to
+  `https` upgrade was lost by it, but same-scheme redirects did work
+  before and schemas do move. With no host policy applied there is
+  nothing a redirect bypasses, so following them costs nothing and
+  refusing them broke moved schemas. A host allowlist would have to
+  re-check each hop, which is why §9 still records it as unenforceable
+  at this boundary.
 - **2026-09-16** — "Fix up DTD handling" (#147) changed the default
   parser DTD posture, a revision trigger under the second bullet above:
   external DTD and external entity resolution are now disabled

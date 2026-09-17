@@ -21,7 +21,6 @@ package org.apache.ws.commons.schema.resolver;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -215,9 +214,6 @@ public class DefaultURIResolver implements CollectionURIResolver {
             connection.setDoInput(true);
             connection.setConnectTimeout(toIntMillis(connectTimeoutMillis));
             connection.setReadTimeout(toIntMillis(readTimeoutMillis));
-            if (connection instanceof HttpURLConnection) {
-                ((HttpURLConnection)connection).setInstanceFollowRedirects(false);
-            }
             deadlineNanos = System.nanoTime() + maxFetchMillis * 1000000L;
             // A declared length is a courtesy: it is absent for a chunked response and is in any
             // case whatever the host chose to claim. The running count below is the real limit.

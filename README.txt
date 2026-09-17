@@ -137,11 +137,13 @@ For example, set a limit with:
   falls back to any schema already registered for that namespace; a
   resolver that throws rejects the read outright.
 
-  Note that a host allowlist cannot be enforced from inside a URIResolver:
-  it returns a system ID and the JDK opens the connection, following HTTP
-  redirects without consulting the resolver again. A resolver that must
-  restrict destinations has to fetch the bytes itself and return an
-  InputSource wrapping the stream.
+  Note that a host allowlist cannot be enforced simply by inspecting the
+  location: whoever opens the connection follows HTTP redirects, and a
+  redirect can move the fetch to another host. A resolver that must
+  restrict destinations has to open the connection itself, with redirect
+  following disabled, and re-check each hop. The bundled resolver does
+  open network connections itself, to bound them, but applies no host
+  policy and leaves redirects to the JDK.
 
   See THREAT-MODEL.md section 10 for the full list of downstream
   responsibilities.
