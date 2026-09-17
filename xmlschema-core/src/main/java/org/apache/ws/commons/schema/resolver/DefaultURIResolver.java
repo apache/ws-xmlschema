@@ -45,7 +45,9 @@ import org.xml.sax.InputSource;
  * schemes it will resolve to <code>http</code>, <code>https</code>, <code>file</code> and
  * <code>jar</code>, and refuses a schema location that changes the scheme of a remote base URI,
  * names a non-local authority with the <code>file:</code> scheme, or reads a <code>jar:</code>
- * archive fetched over the network. Within the schemes it does allow it
+ * archive fetched over the network. A deployment with no remote schema sets can turn network
+ * resolution off altogether with the {@link #ALLOW_NETWORK_PROPERTY} system property, without
+ * supplying its own resolver. Within the schemes it does allow it
  * applies no host or address filtering, so any reachable host or readable file a schema location
  * names is fetched. An application that parses untrusted schema documents must install a restricting
  * resolver instead; see
@@ -78,6 +80,18 @@ public class DefaultURIResolver implements CollectionURIResolver {
     public static final String MAX_BYTES_PROPERTY =
         "org.apache.ws.commons.schema.remote.maxBytes";
 
+    /**
+     * Whether a schema location may be fetched over the network at all. Set it to
+     * <code>false</code> in a deployment whose schema sets are entirely local: an
+     * <code>xs:import</code> naming an <code>http</code> or <code>https</code> location is then
+     * refused instead of fetched, without the deployment having to supply its own
+     * {@link URIResolver}. It defaults to <code>true</code>, which is the behaviour this resolver
+     * has always had. Only "true" and "false" are recognised, so a typo leaves resolution working
+     * rather than silently turning it off.
+     */
+    public static final String ALLOW_NETWORK_PROPERTY =
+        "org.apache.ws.commons.schema.remote.allowNetwork";
+
     private static final long DEFAULT_CONNECT_TIMEOUT_MILLIS = 5L * 1000L;
     private static final long DEFAULT_READ_TIMEOUT_MILLIS = 10L * 1000L;
     private static final long DEFAULT_MAX_FETCH_MILLIS = 30L * 1000L;
@@ -90,6 +104,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
     private final long maxFetchMillis =
         getLongProperty(MAX_FETCH_MILLIS_PROPERTY, DEFAULT_MAX_FETCH_MILLIS);
     private final long maxBytes = getLongProperty(MAX_BYTES_PROPERTY, DEFAULT_MAX_BYTES);
+    private final boolean allowNetwork = getBooleanProperty(ALLOW_NETWORK_PROPERTY, true);
 
     private String collectionBaseURI;
 
@@ -272,6 +287,33 @@ public class DefaultURIResolver implements CollectionURIResolver {
         return millis > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)millis;
     }
 
+    /**
+     * Reads a boolean system property. Only "true" and "false" count, so an unparseable value
+     * leaves the default in place rather than being read as <code>false</code> the way
+     * {@link Boolean#parseBoolean} would.
+     */
+    private static boolean getBooleanProperty(final String name, boolean defaultValue) {
+        try {
+            String value = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty(name);
+                }
+            });
+            if (value != null) {
+                String trimmed = value.trim();
+                if ("true".equalsIgnoreCase(trimmed)) {
+                    return true;
+                }
+                if ("false".equalsIgnoreCase(trimmed)) {
+                    return false;
+                }
+            }
+        } catch (RuntimeException e) {
+            // fall through to the default
+        }
+        return defaultValue;
+    }
+
     private static long getLongProperty(final String name, long defaultValue) {
         try {
             String value = AccessController.doPrivileged(new PrivilegedAction<String>() {
@@ -291,7 +333,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
         return defaultValue;
     }
 
-    private static void verifyComposedUrl(boolean remoteBase, String originalBaseUri, URL base,
+    private void verifyComposedUrl(boolean remoteBase, String originalBaseUri, URL base,
                                           URL composed, String schemaLocation) {
         verifyPermittedLocation(composed.toString(), schemaLocation);
         final String composedScheme = composed.getProtocol().toLowerCase(Locale.ENGLISH);
@@ -328,7 +370,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
      * @param uri the resolved location that would be handed to the parser.
      * @param schemaLocation the original schema location, for the error message.
      */
-    private static void verifyPermittedLocation(String uri, String schemaLocation) {
+    private void verifyPermittedLocation(String uri, String schemaLocation) {
         final String scheme = effectiveScheme(uri);
         if (scheme == null || !ALLOWED_SCHEMES.contains(scheme)) {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
@@ -349,6 +391,11 @@ public class DefaultURIResolver implements CollectionURIResolver {
                                          + "\" reads an archive fetched over the network, \""
                                          + archive + "\", which is not permitted by"
                                          + " DefaultURIResolver.");
+        }
+        if (!allowNetwork && isNetworkScheme(scheme)) {
+            throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                         + "\" would be fetched over the network, which "
+                                         + ALLOW_NETWORK_PROPERTY + " has turned off.");
         }
         if ("file".equals(scheme) && !isLocalFileUri(archive)) {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
