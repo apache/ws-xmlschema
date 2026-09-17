@@ -353,4 +353,87 @@ public class DefaultURIResolverTest extends Assert {
             System.clearProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY);
         }
     }
+
+    @Test
+    public void testFileSystemResolutionCanBeTurnedOff() {
+        System.setProperty(DefaultURIResolver.ALLOW_FILE_SYSTEM_PROPERTY, "false");
+        try {
+            DefaultURIResolver resolver = new DefaultURIResolver();
+            assertRefusedWith(resolver, "file:///legit/local.xsd", null, "turned off");
+            assertRefusedWith(resolver, "file:///legit/local.xsd", localBase(), "turned off");
+            // jar:file: is a filesystem read too; effectiveScheme sees through the wrapper.
+            assertRefusedWith(resolver, "jar:file:///a.jar!/x.xsd", null, "turned off");
+            // With no base a relative path is resolved against the working directory.
+            assertRefusedWith(resolver, "sub/x.xsd", null, "turned off");
+            // The network switch is independent: this one does not touch http.
+            assertEquals("http://example.com/x.xsd",
+                         resolver.resolveEntity("urn:x", "http://example.com/x.xsd", null)
+                             .getSystemId());
+        } finally {
+            System.clearProperty(DefaultURIResolver.ALLOW_FILE_SYSTEM_PROPERTY);
+        }
+    }
+
+    /** Both switches off is the closest the bundled resolver comes to refusing everything. */
+    @Test
+    public void testBothSwitchesOffLeaveNothingToFetch() {
+        System.setProperty(DefaultURIResolver.ALLOW_FILE_SYSTEM_PROPERTY, "false");
+        System.setProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY, "false");
+        try {
+            DefaultURIResolver resolver = new DefaultURIResolver();
+            for (String location : new String[] {"http://example.com/x.xsd",
+                                                 "https://example.com/x.xsd",
+                                                 "file:///legit/local.xsd",
+                                                 "jar:file:///a.jar!/x.xsd",
+                                                 "sub/x.xsd"}) {
+                for (String base : new String[] {null, localBase()}) {
+                    try {
+                        resolver.resolveEntity("urn:x", location, base);
+                        fail("both switches are off, so \"" + location + "\" must be refused.");
+                    } catch (XmlSchemaException expected) {
+                        assertTrue(expected.getMessage(),
+                                   expected.getMessage().contains("turned off"));
+                    }
+                }
+            }
+        } finally {
+            System.clearProperty(DefaultURIResolver.ALLOW_FILE_SYSTEM_PROPERTY);
+            System.clearProperty(DefaultURIResolver.ALLOW_NETWORK_PROPERTY);
+        }
+    }
+
+    @Test
+    public void testFileSystemResolutionIsAllowedByDefault() {
+        assertNull(System.getProperty(DefaultURIResolver.ALLOW_FILE_SYSTEM_PROPERTY));
+        DefaultURIResolver resolver = new DefaultURIResolver();
+
+        assertEquals("file:///legit/local.xsd",
+                     resolver.resolveEntity("urn:x", "file:///legit/local.xsd", null).getSystemId());
+        assertEquals("sub/x.xsd",
+                     resolver.resolveEntity("urn:x", "sub/x.xsd", null).getSystemId());
+    }
+
+    @Test
+    public void testUnparseableAllowFileSystemValueLeavesResolutionOn() {
+        System.setProperty(DefaultURIResolver.ALLOW_FILE_SYSTEM_PROPERTY, "off");
+        try {
+            assertEquals("file:///legit/local.xsd",
+                         new DefaultURIResolver()
+                             .resolveEntity("urn:x", "file:///legit/local.xsd", null)
+                             .getSystemId());
+        } finally {
+            System.clearProperty(DefaultURIResolver.ALLOW_FILE_SYSTEM_PROPERTY);
+        }
+    }
+
+    private static void assertRefusedWith(DefaultURIResolver resolver, String schemaLocation,
+                                          String baseUri, String expectedMessageFragment) {
+        try {
+            resolver.resolveEntity("urn:x", schemaLocation, baseUri);
+            fail("The location \"" + schemaLocation + "\" must be refused.");
+        } catch (XmlSchemaException expected) {
+            assertTrue(expected.getMessage(),
+                       expected.getMessage().contains(expectedMessageFragment));
+        }
+    }
 }

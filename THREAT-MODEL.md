@@ -286,6 +286,7 @@ points*:
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
 | `org.apache.ws.commons.schema.remote.allowNetwork` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments with no remote schema sets | when `false`, `DefaultURIResolver` refuses a location whose effective scheme is `http` or `https`; local `file:` / `jar:` reads are unaffected, so it closes the remote-fetch half of §9's SSRF disclaimer but not the local-read half |
+| `org.apache.ws.commons.schema.local.allowFileSystem` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments whose schema documents stand alone | when `false`, `DefaultURIResolver` refuses a `file:` location, a `jar:file:` one, and a relative location with no base URI; with `remote.allowNetwork=false` it leaves the resolver with nothing to fetch, which is the nearest the shipped resolver comes to the catalog-only default §14 Q12(b) declined to make the default |
 | `org.apache.ws.commons.schema.remote.connectTimeoutMillis` / `.readTimeoutMillis` / `.maxFetchMillis` / `.maxBytes` system properties | `5000` / `10000` / `30000` / `67108864` *(documented: `README.txt`)* | operator-tunable per-fetch bounds | bound one remote `DefaultURIResolver` fetch in wall-clock time and bytes; without them the JDK opens a `schemaLocation` with no timeout and no size limit, and a single import can hold a thread or its heap indefinitely |
 | `org.apache.ws.commons.schema.protectReadOnlyCollections` system property | `false` *(documented: `README.txt`, `CollectionFactory.java` lines 37-48)* | in-process convenience, not a trust boundary | when false, the "read-only" model accessors return the **live internal collections**, not unmodifiable views; §7 places the in-process caller outside the attacker model, so this is a correctness guard rather than a security control |
 | `DocumentBuilderFactory` provider | JDK default (typically Xerces fork) *(inferred — §14 Q6)* | depends on the JDK | shape of XML parsing for `read(InputSource)` / stream-shaped `read(Source)` paths |
@@ -486,8 +487,12 @@ matching disclaimer.
   ratified — §14 Q12)*. An operator with no remote schema sets can set
   `org.apache.ws.commons.schema.remote.allowNetwork=false` to refuse
   `http` and `https` locations outright (§5a); that removes the SSRF
-  reach but not the local `file:` read, so it narrows this disclaimer
-  rather than retiring it.
+  reach but not the local `file:` read. Setting
+  `org.apache.ws.commons.schema.local.allowFileSystem=false` removes that
+  too, and the pair leaves the bundled resolver with nothing it will
+  fetch. Both are operator opt-outs read when the resolver is
+  constructed, and neither is the shipped default, so this disclaimer
+  still describes what a consumer gets out of the box.
 - **No guarantee that external DTD or external entity content is ever
   resolved.** XMLSchema accepts a DOCTYPE declaration, but never fetches
   an external DTD subset or an external entity; a schema that depends on
@@ -567,8 +572,12 @@ The embedding Java application **must**:
    that throws rejects the read outright. A deployment that simply never
    needs a remote schema can instead set
    `org.apache.ws.commons.schema.remote.allowNetwork=false` (§5a), which
-   needs no code but still leaves local `file:` reads open, so it is not
-   a substitute for a restricting resolver on untrusted input.
+   needs no code but still leaves local `file:` reads open. A deployment
+   whose schema documents stand alone can add
+   `org.apache.ws.commons.schema.local.allowFileSystem=false` and be left
+   with a resolver that fetches nothing. Neither switch is a substitute
+   for a restricting resolver where some references must be allowed and
+   others refused: they are all-or-nothing per transport.
 2. When passing a pre-parsed `Document` / `Element` into
    `XmlSchemaCollection.read(...)`, use a `DocumentBuilderFactory`
    hardened against XXE — specifically with `disallow-doctype-decl=true`
@@ -740,6 +749,15 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-17** — a companion
+  `org.apache.ws.commons.schema.local.allowFileSystem` system property
+  refuses `file:` and `jar:file:` locations, and a relative location with
+  no base URI, again defaulting to `true`. Recorded in §5a, §9 and §10
+  item 1. Set with `remote.allowNetwork=false` it leaves the bundled
+  resolver with nothing to fetch, which is the nearest thing to the
+  catalog-only default §14 Q12(b) declined — but as an operator opt-out,
+  not a change of default, so the ruling and this model's disposition for
+  a report against the shipped default are unchanged.
 - **2026-09-17** — a new `org.apache.ws.commons.schema.remote.allowNetwork`
   system property lets an operator refuse `http` and `https` schema
   locations outright, defaulting to `true` so nothing changes for an

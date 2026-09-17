@@ -101,6 +101,18 @@ adjust the per-document limits:
       are unaffected either way, so this is not on its own a defence against
       an untrusted schema document - see the Security section below.
 
+    org.apache.ws.commons.schema.local.allowFileSystem
+      Whether a schema location may be read from the filesystem at all. The
+      default is true. Set it to false where schema documents are expected
+      to stand alone: a file: location, a jar:file: one, and a relative path
+      with no base URI to resolve it against are then refused rather than
+      read. Only true and false are recognised.
+
+      Set alongside remote.allowNetwork=false, this leaves the bundled
+      resolver with nothing it will fetch, which is the closest it comes to
+      refusing every external reference. An application that must allow some
+      references and refuse others still needs its own URIResolver.
+
   file: and jar: locations are read as before, without buffering.
 
   The collections returned by the "read-only" accessors on the schema model
@@ -139,8 +151,14 @@ For example, set a limit with:
   Where a deployment needs no remote schemas at all, setting
   org.apache.ws.commons.schema.remote.allowNetwork to false refuses http and
   https locations outright, which closes the remote-fetch half of this
-  without any code. It does not restrict local file: reads, so it does not
-  replace a restricting resolver for untrusted input.
+  without any code. Where schema documents are expected to stand alone,
+  org.apache.ws.commons.schema.local.allowFileSystem=false closes the local
+  half as well, and the two together leave the bundled resolver with nothing
+  it will fetch.
+
+  Neither switch replaces a restricting resolver for an application that has
+  to allow some references and refuse others: they are all-or-nothing per
+  transport, and they are read when the resolver is constructed.
 
   Applications that parse schema or WSDL documents from an untrusted
   source must install a restricting resolver before reading them:
