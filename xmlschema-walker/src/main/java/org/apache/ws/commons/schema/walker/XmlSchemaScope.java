@@ -160,6 +160,25 @@ final class XmlSchemaScope {
         return anyAttr;
     }
 
+    /**
+     * Resolves a named type reference that the schema requires to be a simple type. A reference
+     * that does not resolve, or resolves to a complex type, is a defect in the schema: the core
+     * parser does not check either, so both reach here.
+     */
+    private XmlSchemaSimpleType simpleTypeByName(QName typeName, String role, String owner) {
+        final XmlSchemaType type =
+            (typeName == null) ? null : schemasByNamespace.getTypeByName(typeName);
+        if (type == null) {
+            throw new XmlSchemaException("The " + role + " " + owner + " (" + typeName
+                                         + ") does not resolve to a type in this collection.");
+        }
+        if (!(type instanceof XmlSchemaSimpleType)) {
+            throw new XmlSchemaException("The " + role + " " + owner + " (" + typeName
+                                         + ") resolves to a complex type; a simple type is required.");
+        }
+        return (XmlSchemaSimpleType)type;
+    }
+
     private void walk(XmlSchemaType type) {
         if (type instanceof XmlSchemaSimpleType) {
             walk((XmlSchemaSimpleType)type);
@@ -185,11 +204,8 @@ final class XmlSchemaScope {
             XmlSchemaSimpleTypeList list = (XmlSchemaSimpleTypeList)content;
             XmlSchemaSimpleType listType = list.getItemType();
             if (listType == null) {
-                listType = (XmlSchemaSimpleType)schemasByNamespace.getTypeByName(list.getItemTypeName());
-            }
-            if (listType == null) {
-                throw new IllegalArgumentException("Unrecognized schema type for list "
-                                                   + getName(simpleType, "{Anonymous List Type}"));
+                listType = simpleTypeByName(list.getItemTypeName(), "item type of list",
+                                            getName(simpleType, "{Anonymous List Type}"));
             }
 
             XmlSchemaScope parentScope = getScope(listType);
@@ -199,8 +215,11 @@ final class XmlSchemaScope {
             case ATOMIC:
                 break;
             default:
-                throw new IllegalStateException("Attempted to create a list from a "
-                                                + parentScope.getTypeInfo().getType() + " type.");
+                throw new XmlSchemaException("The list "
+                                             + getName(simpleType, "{Anonymous List Type}")
+                                             + " has an item type of "
+                                             + parentScope.getTypeInfo().getType()
+                                             + "; a list item must be atomic or a union.");
             }
 
             typeInfo = new XmlSchemaTypeInfo(parentScope.getTypeInfo());
@@ -216,10 +235,8 @@ final class XmlSchemaScope {
                 }
 
                 for (QName namedBaseType : namedBaseTypes) {
-                    XmlSchemaSimpleType baseType = (XmlSchemaSimpleType)schemasByNamespace.getTypeByName(namedBaseType);
-                    if (baseType != null) {
-                        baseTypes.add(baseType);
-                    }
+                    baseTypes.add(simpleTypeByName(namedBaseType, "member type of union",
+                                                   getName(simpleType, "{Anonymous Union Type}")));
                 }
             }
 
@@ -228,8 +245,9 @@ final class XmlSchemaScope {
              * types.
              */
             if ((baseTypes == null) || baseTypes.isEmpty()) {
-                throw new IllegalArgumentException("Unrecognized base types for union "
-                                                   + getName(simpleType, "{Anonymous Union Type}"));
+                throw new XmlSchemaException("The union "
+                                             + getName(simpleType, "{Anonymous Union Type}")
+                                             + " has no member types.");
             }
 
             List<XmlSchemaTypeInfo> childTypes = new ArrayList<XmlSchemaTypeInfo>(baseTypes.size());
@@ -260,7 +278,8 @@ final class XmlSchemaScope {
             } else {
                 XmlSchemaSimpleType baseType = restr.getBaseType();
                 if (baseType == null) {
-                    baseType = (XmlSchemaSimpleType)schemasByNamespace.getTypeByName(restr.getBaseTypeName());
+                    baseType = simpleTypeByName(restr.getBaseTypeName(), "base type of restriction",
+                                                getName(simpleType, "{Anonymous Simple Type}"));
                 }
 
                 if (baseType != null) {
@@ -599,7 +618,8 @@ final class XmlSchemaScope {
         if (schemaType == null) {
             final QName typeQName = globalAttr.getSchemaTypeName();
             if (typeQName != null) {
-                schemaType = (XmlSchemaSimpleType) schemasByNamespace.getTypeByName(typeQName);
+                schemaType = simpleTypeByName(typeQName, "type of attribute",
+                                              String.valueOf(globalAttr.getQName()));
             }
         }
 
@@ -850,7 +870,7 @@ final class XmlSchemaScope {
             typeInfo = new XmlSchemaTypeInfo(parentTypeInfo.getBaseType(), facets);
             break;
         default:
-            throw new IllegalStateException("Cannot restrict on a " + parentTypeInfo.getType() + " type.");
+            throw new XmlSchemaException("Cannot restrict on a " + parentTypeInfo.getType() + " type.");
         }
 
         if (parentTypeInfo.getUserRecognizedType() != null) {
