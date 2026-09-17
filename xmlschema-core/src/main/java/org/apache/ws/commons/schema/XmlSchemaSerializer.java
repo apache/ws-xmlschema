@@ -510,6 +510,44 @@ public class XmlSchemaSerializer {
      * Return: Element of attribute group.
      * **********************************************************************
      */
+    /**
+     * Serializes an xs:notation declaration.
+     *
+     * @param doc the parent document.
+     * @param notationObj the notation to serialize.
+     * @param schema the owning schema.
+     * @return the notation element.
+     * @throws XmlSchemaSerializerException if the notation has no name.
+     */
+    Element serializeNotation(Document doc, XmlSchemaNotation notationObj, XmlSchema schema)
+        throws XmlSchemaSerializerException {
+
+        Element notation = createNewElement(doc, "notation", schema.getSchemaNamespacePrefix(),
+                                            XmlSchema.SCHEMA_NS);
+
+        if (notationObj.isAnonymous()) {
+            throw new XmlSchemaSerializerException("Notation must have name");
+        }
+        notation.setAttributeNS(null, "name", notationObj.getName());
+
+        if (notationObj.getId() != null) {
+            notation.setAttributeNS(null, "id", notationObj.getId());
+        }
+        if (notationObj.getPublic() != null) {
+            notation.setAttributeNS(null, "public", notationObj.getPublic());
+        }
+        if (notationObj.getSystem() != null) {
+            notation.setAttributeNS(null, "system", notationObj.getSystem());
+        }
+        if (notationObj.getAnnotation() != null) {
+            notation.appendChild(serializeAnnotation(doc, notationObj.getAnnotation(), schema));
+        }
+
+        processExtensibilityComponents(notationObj, notation);
+
+        return notation;
+    }
+
     Element serializeAttributeGroup(Document doc, XmlSchemaAttributeGroup attributeGroupObj, XmlSchema schema)
         throws XmlSchemaSerializerException {
 
@@ -2452,6 +2490,9 @@ public class XmlSchemaSerializer {
                 serializedSchema.appendChild(e);
             } else if (obj instanceof XmlSchemaRedefine) {
                 Element e = serializeRedefine(serializedSchemaDocs, (XmlSchemaRedefine)obj, schemaObj);
+                serializedSchema.appendChild(e);
+            } else if (obj instanceof XmlSchemaNotation) {
+                Element e = serializeNotation(serializedSchemaDocs, (XmlSchemaNotation)obj, schemaObj);
                 serializedSchema.appendChild(e);
             }
         }

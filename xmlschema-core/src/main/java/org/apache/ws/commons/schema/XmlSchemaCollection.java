@@ -294,6 +294,9 @@ public final class XmlSchemaCollection {
      * @return the type object, or null.
      */
     public XmlSchemaType getTypeByQName(QName schemaTypeName) {
+        if (schemaTypeName == null) {
+            return null;
+        }
         String uri = schemaTypeName.getNamespaceURI();
         for (Map.Entry<SchemaKey, XmlSchema> entry : schemas.entrySet()) {
             if (entry.getKey().getNamespace().equals(uri)) {
