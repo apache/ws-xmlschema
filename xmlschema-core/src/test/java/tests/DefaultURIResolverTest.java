@@ -464,6 +464,25 @@ public class DefaultURIResolverTest extends Assert {
         assertSchemeRefused(".", null, "not a regular file");
     }
 
+    /**
+     * The parser resolves a relative location as a URI, decoding escapes and dropping a query or
+     * fragment, so each of these names the directory "src" and must be checked as that.
+     */
+    @Test
+    public void testARelativeLocationIsCheckedAsTheParserReadsIt() {
+        assertTrue(new File("src").isDirectory());
+        assertSchemeRefused("sr%63", null, "not a regular file");
+        assertSchemeRefused("src#fragment", null, "not a regular file");
+        assertSchemeRefused("src?query", null, "not a regular file");
+    }
+
+    @Test
+    public void testARelativeRegularFileWithAFragmentStillResolves() {
+        assertEquals("pom.xml#fragment",
+                     new DefaultURIResolver().resolveEntity("urn:x", "pom.xml#fragment", null)
+                         .getSystemId());
+    }
+
     @Test
     public void testARelativeRegularOrMissingFileStillResolves() {
         assertTrue(new File("pom.xml").isFile());
