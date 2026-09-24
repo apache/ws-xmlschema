@@ -80,6 +80,13 @@ final class XmlSchemaScope {
     private int maxDepth;
     private final Set<QName> attributeGroupsInProgress = new HashSet<QName>();
 
+    /*
+     * The number of types in this scope's derivation chain, counting its own: one more than the
+     * deepest scope it derives from. A cached scope is not walked again, so the recursion bound
+     * in walkWithCycleCheck() never sees the chain below it; this carries that chain's length.
+     */
+    private int derivationDepth = 1;
+
     /**
      * Initialization of members to be filled in during the walk.
      */
@@ -128,11 +135,7 @@ final class XmlSchemaScope {
         // Each level of derivation recurses; an acyclic chain can still
         // exhaust the thread stack.
         if (typesInProgress.size() >= maxDepth) {
-            throw new XmlSchemaException("The type " + getName(type, "{Anonymous}")
-                                         + " is derived through more than " + maxDepth
-                                         + " levels of base types; refusing to walk it. The limit"
-                                         + " may be changed with the "
-                                         + XmlSchemaWalker.MAX_DEPTH_PROPERTY + " system property.");
+            throw derivedTooDeeply(type);
         }
         if (!typesInProgress.add(type)) {
             throw new XmlSchemaException("Cyclic type derivation detected involving type "
@@ -794,15 +797,28 @@ final class XmlSchemaScope {
     }
 
     private XmlSchemaScope getScope(XmlSchemaType type) {
-        if ((type.getQName() != null) && scopeCache.containsKey(type.getQName())) {
-            return scopeCache.get(type.getQName());
-        } else {
-            XmlSchemaScope scope = new XmlSchemaScope(this, type);
-            if (type.getQName() != null) {
-                scopeCache.put(type.getQName(), scope);
-            }
-            return scope;
+        final boolean cached = (type.getQName() != null) && scopeCache.containsKey(type.getQName());
+        final XmlSchemaScope scope = cached ? scopeCache.get(type.getQName()) : new XmlSchemaScope(this, type);
+
+        // The whole chain counts, including the part a cached scope already walked: the types in
+        // progress above this point, then the base scope's own chain.
+        if (typesInProgress.size() + scope.derivationDepth > maxDepth) {
+            throw derivedTooDeeply(type);
         }
+        derivationDepth = Math.max(derivationDepth, scope.derivationDepth + 1);
+
+        if (!cached && (type.getQName() != null)) {
+            scopeCache.put(type.getQName(), scope);
+        }
+        return scope;
+    }
+
+    private XmlSchemaException derivedTooDeeply(XmlSchemaType type) {
+        return new XmlSchemaException("The type " + getName(type, "{Anonymous}")
+                                      + " is derived through more than " + maxDepth
+                                      + " levels of base types; refusing to walk it. The limit"
+                                      + " may be changed with the "
+                                      + XmlSchemaWalker.MAX_DEPTH_PROPERTY + " system property.");
     }
 
     private QName getUserRecognizedType(QName simpleType, XmlSchemaTypeInfo parent) {
