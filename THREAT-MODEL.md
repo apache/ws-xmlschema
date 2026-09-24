@@ -291,6 +291,7 @@ points*:
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
 | `org.apache.ws.commons.schema.remote.allowNetwork` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments with no remote schema sets | when `false`, `DefaultURIResolver` refuses a location whose effective scheme is `http` or `https`; local `file:` / `jar:` reads are unaffected, so it closes the remote-fetch half of §9's SSRF disclaimer but not the local-read half |
+| `org.apache.ws.commons.schema.remote.maxRedirects` system property | `5` *(documented: `README.txt`)* | operator-tunable bound on one fetch's redirect chain | `DefaultURIResolver` follows redirects itself rather than leaving them to the JDK, so the chain is bounded, each hop is re-checked against the scheme and authority rules, and the chain shares one fetch deadline; `0` refuses a redirected location. A hop that changes scheme is refused |
 | `org.apache.ws.commons.schema.local.allowFileSystem` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments whose schema documents stand alone | when `false`, `DefaultURIResolver` refuses a `file:` location, a `jar:file:` one, and a relative location with no base URI; with `remote.allowNetwork=false` it leaves the resolver with nothing to fetch, which is the nearest the shipped resolver comes to the catalog-only default §14 Q12(b) declined to make the default |
 | `org.apache.ws.commons.schema.remote.connectTimeoutMillis` / `.readTimeoutMillis` / `.maxFetchMillis` / `.maxBytes` system properties | `5000` / `10000` / `30000` / `67108864` *(documented: `README.txt`)* | operator-tunable per-fetch bounds | bound one remote `DefaultURIResolver` fetch in wall-clock time and bytes; without them the JDK opens a `schemaLocation` with no timeout and no size limit, and a single import can hold a thread or its heap indefinitely |
 | `org.apache.ws.commons.schema.protectReadOnlyCollections` system property | `false` *(documented: `README.txt`, `CollectionFactory.java` lines 37-48)* | in-process convenience, not a trust boundary | when false, the "read-only" model accessors return the **live internal collections**, not unmodifiable views; §7 places the in-process caller outside the attacker model, so this is a correctness guard rather than a security control |
@@ -489,9 +490,10 @@ matching disclaimer.
   `https` targets it does allow, it applies **no host or address
   filtering of any kind**: any
   `http(s)` host is fetched on request, including loopback, link-local
-  (`169.254.169.254`) and RFC1918 addresses, and the JDK follows HTTP
-  redirects without consulting the resolver again — so a host allowlist
-  is not enforceable at the `resolveEntity` boundary. The caller is
+  (`169.254.169.254`) and RFC1918 addresses. Redirects are now followed by
+  the resolver rather than the JDK and each hop is re-checked, so a
+  destination rule *could* be enforced across a chain — but none is
+  applied, by host or by address, so the reach is unchanged. The caller is
   responsible for installing a restricting `URIResolver` if the input
   schema is attacker-controlled *(documented: `DefaultURIResolver.java`;
   ratified — §14 Q12)*. An operator with no remote schema sets can set
@@ -759,6 +761,18 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-17** — `DefaultURIResolver` now follows HTTP redirects itself
+  instead of leaving them to the JDK, bounded by a new
+  `org.apache.ws.commons.schema.remote.maxRedirects` property (default
+  `5`, `0` to refuse a redirected location). A revision trigger under the
+  first bullet above; recorded in §5a. Each hop is re-checked against the
+  scheme and authority rules and a scheme-changing hop is refused, so the
+  location that is fetched is one these checks have passed — which the
+  JDK's own following did not give. The whole chain shares one fetch
+  deadline, so a redirect chain cannot buy time. §9 is corrected: it said a
+  destination rule was unenforceable at this boundary because redirects
+  escaped it, which is no longer the reason — none is applied, but one now
+  could be.
 - **2026-09-17** — a companion
   `org.apache.ws.commons.schema.local.allowFileSystem` system property
   refuses `file:` and `jar:file:` locations, and a relative location with

@@ -54,6 +54,17 @@ public class RemoteFetchBoundsTest extends Assert {
     private static final int MODE_TRICKLE = 1;
     /** Sends a well-formed but endless body. */
     private static final int MODE_FLOOD = 2;
+    /** Redirects to a sibling path on the same server, once per connection. */
+    private static final int MODE_REDIRECT = 3;
+    /** Serves a small valid schema for namespace urn:b. */
+    private static final int MODE_SCHEMA = 4;
+    /** Redirects for ever, so the hop cap is what stops it. */
+    private static final int MODE_REDIRECT_LOOP = 5;
+    /** Redirects to a file: URL, changing scheme. */
+    private static final int MODE_REDIRECT_TO_FILE = 6;
+
+    private static final String SCHEMA_BODY =
+        "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:b\"/>";
 
     private void startServer(final int mode) throws IOException {
         server = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
@@ -79,6 +90,13 @@ public class RemoteFetchBoundsTest extends Assert {
             return;
         }
         OutputStream out = socket.getOutputStream();
+        if (mode == MODE_REDIRECT || mode == MODE_SCHEMA || mode == MODE_REDIRECT_LOOP
+            || mode == MODE_REDIRECT_TO_FILE) {
+            out.write(oneShotResponse(mode).getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            socket.close();
+            return;
+        }
         out.write("HTTP/1.1 200 OK\r\nContent-Type: text/xml\r\n\r\n".getBytes(StandardCharsets.UTF_8));
         out.flush();
         byte[] chunk = mode == MODE_TRICKLE
@@ -95,6 +113,41 @@ public class RemoteFetchBoundsTest extends Assert {
                 return;
             }
         }
+    }
+
+    private String oneShotResponse(int mode) {
+        if (mode == MODE_SCHEMA) {
+            return "HTTP/1.1 200 OK\r\nContent-Type: text/xml\r\nContent-Length: "
+                + SCHEMA_BODY.getBytes(StandardCharsets.UTF_8).length
+                + "\r\nConnection: close\r\n\r\n" + SCHEMA_BODY;
+        }
+        String location = mode == MODE_REDIRECT_TO_FILE
+            ? "file:///etc/passwd"
+            : "http://127.0.0.1:" + server.getLocalPort() + "/next.xsd";
+        return "HTTP/1.1 302 Found\r\nLocation: " + location
+            + "\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+    }
+
+    /** First connection answers with {@code first}, every later one with {@code rest}. */
+    private void startServer(final int first, final int rest) throws IOException {
+        server = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
+        running = true;
+        Thread thread = new Thread(new Runnable() {
+            public void run() {
+                boolean isFirst = true;
+                while (running) {
+                    try {
+                        Socket socket = server.accept();
+                        serve(socket, isFirst ? first : rest);
+                        isFirst = false;
+                    } catch (IOException e) {
+                        return;
+                    }
+                }
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private String importing() {
@@ -129,6 +182,14 @@ public class RemoteFetchBoundsTest extends Assert {
     }
 
     private void assertRefusedWithin(long millis) throws IOException {
+        assertRefusedWithin(millis, null);
+    }
+
+    /**
+     * @param messageFragment when given, the reason the fetch was refused must mention it, so a
+     *     test for one bound cannot pass because a different bound happened to fire first.
+     */
+    private void assertRefusedWithin(long millis, String messageFragment) throws IOException {
         long start = System.currentTimeMillis();
         try {
             new XmlSchemaCollection().read(new StringReader(importing()));
@@ -136,6 +197,10 @@ public class RemoteFetchBoundsTest extends Assert {
         } catch (XmlSchemaException expected) {
             long elapsed = System.currentTimeMillis() - start;
             assertTrue("refused, but only after " + elapsed + "ms", elapsed < millis);
+            if (messageFragment != null) {
+                assertTrue("refused for the wrong reason: " + expected.getMessage(),
+                           expected.getMessage().contains(messageFragment));
+            }
         }
     }
 
@@ -156,6 +221,49 @@ public class RemoteFetchBoundsTest extends Assert {
     public void testOversizedResponseIsRefused() throws IOException {
         startServer(MODE_FLOOD);
         assertRefusedWithin(30000);
+    }
+
+    /**
+     * A schema that has simply moved must still resolve. Bounding a fetch is not a reason to stop
+     * following a redirect, and schemas do get reorganised behind one.
+     */
+    @Test(timeout = 60000)
+    public void testMovedSchemaIsStillFollowed() throws Exception {
+        startServer(MODE_REDIRECT, MODE_SCHEMA);
+        XmlSchemaCollection collection = new XmlSchemaCollection();
+        collection.read(new StringReader(importing()));
+        assertNotNull("a schema behind a redirect must still resolve",
+                      collection.schemaForNamespace("urn:b"));
+    }
+
+    @Test(timeout = 60000)
+    public void testEndlessRedirectChainIsCutOffAtTheHopCap() throws Exception {
+        System.setProperty(DefaultURIResolver.MAX_REDIRECTS_PROPERTY, "3");
+        try {
+            startServer(MODE_REDIRECT_LOOP, MODE_REDIRECT_LOOP);
+            assertRefusedWithin(30000, "redirected more than 3 times");
+        } finally {
+            System.clearProperty(DefaultURIResolver.MAX_REDIRECTS_PROPERTY);
+        }
+    }
+
+    /** Zero hops is meaningful: it refuses a redirected location outright. */
+    @Test(timeout = 60000)
+    public void testZeroHopsRefusesARedirect() throws Exception {
+        System.setProperty(DefaultURIResolver.MAX_REDIRECTS_PROPERTY, "0");
+        try {
+            startServer(MODE_REDIRECT, MODE_SCHEMA);
+            assertRefusedWithin(30000, "redirected more than 0 times");
+        } finally {
+            System.clearProperty(DefaultURIResolver.MAX_REDIRECTS_PROPERTY);
+        }
+    }
+
+    /** A redirect may not turn a network fetch into a local read. */
+    @Test(timeout = 60000)
+    public void testRedirectChangingSchemeIsRefused() throws Exception {
+        startServer(MODE_REDIRECT_TO_FILE, MODE_SCHEMA);
+        assertRefusedWithin(30000, "redirected from the scheme");
     }
 
     /** Local schemas keep the system-id-only path: no buffering, no behaviour change. */
