@@ -22,14 +22,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
@@ -49,7 +55,8 @@ import org.xml.sax.InputSource;
  * archive fetched over the network. A deployment with no remote schema sets can turn network
  * resolution off altogether with the {@link #ALLOW_NETWORK_PROPERTY} system property, and
  * filesystem resolution with {@link #ALLOW_FILE_SYSTEM_PROPERTY}, without supplying its own
- * resolver. Within the schemes it does allow it
+ * resolver, and the address classes that only ever appear in an SSRF attempt are refused before
+ * a remote fetch (see {@link #CHECK_ADDRESSES_PROPERTY}). Within the schemes it does allow it
  * applies no host or address filtering, so any reachable host or readable file a schema location
  * names is fetched. An application that parses untrusted schema documents must install a restricting
  * resolver instead; see
@@ -90,6 +97,29 @@ public class DefaultURIResolver implements CollectionURIResolver {
      */
     public static final String MAX_REDIRECTS_PROPERTY =
         "org.apache.ws.commons.schema.remote.maxRedirects";
+
+    /**
+     * Whether the address a remote schema location resolves to is checked before it is fetched.
+     * Defaults to <code>true</code>, which refuses the address classes that can never legitimately
+     * serve a schema document: link-local (cloud metadata services live at
+     * <code>169.254.169.254</code>), multicast, the wildcard address, IPv6 unique-local (which
+     * includes IPv6 metadata endpoints such as <code>fd00:ec2::254</code>), and the IPv6 forms
+     * that embed one of those IPv4 addresses.
+     * <p>
+     * Loopback and private (RFC 1918) addresses are <em>permitted</em>: a schema served from
+     * localhost or an internal mirror is ordinary. This is a denylist of never-legitimate address
+     * classes, not a host allowlist, and it is no defence against a hostile host at a routable
+     * address — that still needs a resolver of the application's own.
+     * </p>
+     * <p>
+     * The check is skipped when the fetch would go through an HTTP proxy, because the proxy
+     * resolves the host itself and the addresses this JVM sees say nothing about where the fetch
+     * lands; in such a deployment the proxy is the egress control. Set this to
+     * <code>false</code> to skip it everywhere.
+     * </p>
+     */
+    public static final String CHECK_ADDRESSES_PROPERTY =
+        "org.apache.ws.commons.schema.remote.checkAddresses";
 
     /**
      * Whether a schema location may be fetched over the network at all. Set it to
@@ -135,6 +165,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
         getLongProperty(MAX_REDIRECTS_PROPERTY, DEFAULT_MAX_REDIRECTS, 0L);
     private final boolean allowNetwork = getBooleanProperty(ALLOW_NETWORK_PROPERTY, true);
     private final boolean allowFileSystem = getBooleanProperty(ALLOW_FILE_SYSTEM_PROPERTY, true);
+    private final boolean checkAddresses = getBooleanProperty(CHECK_ADDRESSES_PROPERTY, true);
 
     private String collectionBaseURI;
 
@@ -268,6 +299,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
             URLConnection connection = null;
             while (connection == null) {
                 checkDeadline();
+                verifyAddressPermitted(target, systemId);
                 URLConnection candidate = target.openConnection();
                 candidate.setDoInput(true);
                 candidate.setConnectTimeout(toIntMillis(connectTimeoutMillis));
@@ -518,6 +550,124 @@ public class DefaultURIResolver implements CollectionURIResolver {
         if ("file".equals(scheme) && !isLocalFileUri(archive)) {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
                                          + "\" resolves to a file URL with a non-local authority.");
+        }
+    }
+
+    /**
+     * Refuse a target whose address belongs to a class that can never legitimately serve a schema
+     * document. Called for the location the schema named and again for every redirect hop, so the
+     * document that is fetched is one this check has passed.
+     *
+     * @param target the URL about to be opened.
+     * @param systemId the location the schema named, for the error message.
+     * @throws IOException if the address is refused, or the host cannot be resolved.
+     */
+    private void verifyAddressPermitted(URL target, String systemId) throws IOException {
+        if (!checkAddresses || usesProxy(target)) {
+            return;
+        }
+        final String host = target.getHost();
+        if (host == null || host.length() == 0) {
+            return;
+        }
+        final InetAddress[] addresses;
+        try {
+            addresses = InetAddress.getAllByName(host);
+        } catch (UnknownHostException e) {
+            throw new IOException("The schema location \"" + systemId + "\" names the host \""
+                                  + host + "\", which could not be resolved.", e);
+        }
+        // Every address the name answers with, so a multi-record answer cannot slip one past.
+        for (InetAddress address : addresses) {
+            if (isForbiddenAddress(address)) {
+                throw new IOException("The schema location \"" + systemId + "\" resolves to "
+                                      + address.getHostAddress()
+                                      + ", an address class this resolver will not fetch"
+                                      + " (link-local, multicast, wildcard, IPv6 unique-local, or"
+                                      + " an IPv6 form embedding one). Set "
+                                      + CHECK_ADDRESSES_PROPERTY + "=false to skip this check.");
+            }
+        }
+    }
+
+    /**
+     * Whether a fetch of this URL would go through a proxy, in which case the proxy resolves the
+     * host and the addresses seen here do not describe where the fetch lands.
+     */
+    private static boolean usesProxy(URL target) {
+        final ProxySelector selector = ProxySelector.getDefault();
+        if (selector == null) {
+            return false;
+        }
+        try {
+            final List<Proxy> proxies = selector.select(target.toURI());
+            if (proxies != null) {
+                for (Proxy proxy : proxies) {
+                    if (proxy.type() != Proxy.Type.DIRECT) {
+                        return true;
+                    }
+                }
+            }
+        } catch (URISyntaxException e) {
+            return false;
+        } catch (RuntimeException e) {
+            return false;
+        }
+        return false;
+    }
+
+    /**
+     * Whether an address belongs to a class the resolver must never connect to. Package-private so
+     * a test can reach it without a network. Loopback and RFC 1918 are deliberately absent: those
+     * are where an internal schema mirror or a local test server lives.
+     */
+    static boolean isForbiddenAddress(InetAddress address) {
+        if (address.isLinkLocalAddress() || address.isMulticastAddress()
+            || address.isAnyLocalAddress()) {
+            return true;
+        }
+        if (address instanceof Inet6Address) {
+            final byte[] bytes = address.getAddress();
+            // IPv6 unique-local, fd00::/7 (RFC 4193). No JDK predicate matches it, yet it holds
+            // metadata endpoints such as the AWS IMDS IPv6 address fd00:ec2::254 - the same class
+            // the link-local rejection exists for.
+            if ((bytes[0] & 0xfe) == 0xfc) {
+                return true;
+            }
+            // An IPv6 address that embeds an IPv4 one - the NAT64 well-known prefix 64:ff9b::/96
+            // (RFC 6052) or an IPv4-mapped ::ffff:0:0/96 - is classified by the IPv4 address the
+            // gateway would deliver to.
+            final InetAddress embedded = embeddedIpv4(bytes);
+            if (embedded != null && isForbiddenAddress(embedded)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static InetAddress embeddedIpv4(byte[] bytes) {
+        if (bytes.length != 16) {
+            return null;
+        }
+        boolean nat64 = bytes[0] == 0x00 && bytes[1] == 0x64
+            && bytes[2] == (byte)0xff && bytes[3] == (byte)0x9b;
+        for (int i = 4; nat64 && i < 12; i++) {
+            nat64 = bytes[i] == 0x00;
+        }
+        boolean mapped = true;
+        for (int i = 0; mapped && i < 10; i++) {
+            mapped = bytes[i] == 0x00;
+        }
+        mapped = mapped && bytes[10] == (byte)0xff && bytes[11] == (byte)0xff;
+        if (!nat64 && !mapped) {
+            return null;
+        }
+        try {
+            return InetAddress.getByAddress(
+                new byte[] {bytes[12], bytes[13], bytes[14], bytes[15]});
+        } catch (UnknownHostException e) {
+            // Cannot happen for four bytes; if it ever does, treat the address as unclassifiable.
+            return null;
         }
     }
 
