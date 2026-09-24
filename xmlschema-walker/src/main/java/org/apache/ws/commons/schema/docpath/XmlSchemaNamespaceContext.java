@@ -137,18 +137,21 @@ public final class XmlSchemaNamespaceContext implements NamespacePrefixList {
     /**
      * Adds a new prefix mapping to the context. The prefix may be an empty
      * string to represent the default namespace, but it cannot be null. The
-     * namespace URI can never be empty or null.
+     * namespace URI cannot be null, and can only be empty for the default
+     * namespace, where it undeclares the default namespace for the scope of
+     * the mapping as <code>xmlns=""</code> does.
      *
      * @param prefix The prefix to represent the namespace URI.
      * @param namespaceUri the namespace URI represented by the prefix.
      * @throws IllegalArgumentException if the prefix is null, or if the
-     *             namespace URI is null or empty.
+     *             namespace URI is null, or empty for a non-empty prefix.
      */
     public void addNamespace(String prefix, String namespaceUri) {
-        if ((prefix == null) || (namespaceUri == null) || (namespaceUri.length() == 0)) {
+        if ((prefix == null) || (namespaceUri == null)
+            || ((namespaceUri.length() == 0) && (prefix.length() > 0))) {
 
-            throw new IllegalArgumentException("The prefix may not be null, and the namespace URI "
-                                               + "may neither be null nor empty.");
+            throw new IllegalArgumentException("The prefix may not be null, and the namespace URI may"
+                                               + " not be null, nor empty unless the prefix is.");
 
         } else if (isRecognizedPrefix(prefix)) {
             // These are already mapped.

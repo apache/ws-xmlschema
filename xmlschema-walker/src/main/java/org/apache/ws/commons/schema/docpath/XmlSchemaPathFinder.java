@@ -20,6 +20,7 @@
 package org.apache.ws.commons.schema.docpath;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +93,22 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
 
     private ArrayList<QName> elementStack;
     private ArrayList<QName> anyStack;
+
+    /*
+     * The document node of the element most recently ended, until the next
+     * element starts. The current position can stay on an element after it
+     * ends, and a recursive type puts an element of the same name above it,
+     * so the name alone cannot say whether the current element is the one
+     * being ended.
+     */
+    private XmlSchemaDocumentNode<U> endedElement;
+
+    /*
+     * Whether a state machine node's content can match no elements at all,
+     * cached as the question is asked repeatedly for the same nodes.
+     */
+    private final Map<XmlSchemaStateMachineNode, Boolean> emptyContentCache =
+        new IdentityHashMap<XmlSchemaStateMachineNode, Boolean>();
 
     private XmlSchemaPathManager<U, V> pathMgr;
 
@@ -513,6 +530,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
     @Override
     public void startDocument() throws SAXException {
         currentPath = null;
+        endedElement = null;
 
         traversedElements.clear();
         elementStack.clear();
@@ -1008,8 +1026,8 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         return rootPathNode;
     }
 
-    private static <U, V> Fulfillment isPositionFulfilled(XmlSchemaPathNode<U, V> currentPath,
-                                                          List<Integer> possiblePaths) {
+    private Fulfillment isPositionFulfilled(XmlSchemaPathNode<U, V> currentPath,
+                                            List<Integer> possiblePaths) {
         boolean completelyFulfilled = true;
         boolean partiallyFulfilled = true;
 
@@ -1018,7 +1036,9 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         if (currentPath.getDocumentNode() == null) {
             // This is the root node. It is not fulfilled.
             partiallyFulfilled = false;
-        } else if (currentPath.getDocIteration() >= state.getMinOccurs()) {
+        } else if ((currentPath.getDocIteration() >= state.getMinOccurs())
+                   || canMatchEmptyContent(state)) {
+            // The remaining occurrences, if any, can each match nothing.
             partiallyFulfilled = true;
         } else {
             partiallyFulfilled = false;
@@ -1066,7 +1086,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                 if ((children != null) && children.containsKey(stateIndex)) {
                     final XmlSchemaDocumentNode<U> child = children.get(stateIndex);
                     final int iteration = child.getIteration();
-                    if (iteration >= nextState.getMinOccurs()) {
+                    if ((iteration >= nextState.getMinOccurs()) || canMatchEmptyContent(nextState)) {
                         groupPartiallyFulfilled = true;
                         if (possiblePaths != null) {
                             possiblePaths.clear();
@@ -1081,7 +1101,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                         possiblePaths.add(stateIndex);
                     }
                 } else {
-                    if (nextState.getMinOccurs() == 0) {
+                    if ((nextState.getMinOccurs() == 0) || canMatchEmptyContent(nextState)) {
                         groupPartiallyFulfilled = true;
                     }
                     if (nextState.getMaxOccurs() == 0) {
@@ -1139,7 +1159,8 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
 
                 if ((children != null) && children.containsKey(stateIndex)) {
                     final XmlSchemaDocumentNode<U> child = children.get(stateIndex);
-                    if (child.getIteration() < nextState.getMinOccurs()) {
+                    if ((child.getIteration() < nextState.getMinOccurs())
+                        && !canMatchEmptyContent(nextState)) {
                         partiallyFulfilled = false;
                     }
                     if (child.getIteration() < nextState.getMaxOccurs()) {
@@ -1149,7 +1170,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                         }
                     }
                 } else {
-                    if (nextState.getMinOccurs() > 0) {
+                    if ((nextState.getMinOccurs() > 0) && !canMatchEmptyContent(nextState)) {
                         partiallyFulfilled = false;
                     }
                     if (nextState.getMaxOccurs() > 0) {
@@ -1375,14 +1396,10 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
             return null;
         }
 
-        // If this is a group, confirm it has children.
-        if (!state.getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
-            && !state.getNodeType().equals(XmlSchemaStateMachineNode.Type.ANY)
-            && ((state.getPossibleNextStates() == null) || state.getPossibleNextStates().isEmpty())) {
-
-            throw new IllegalStateException("Group " + state.getNodeType()
-                                            + " has no children.  Found when processing " + elemQName);
-        }
+        /*
+         * A group with no children, such as an empty xs:sequence, is legal:
+         * it matches no elements, which the loops below find for themselves.
+         */
 
         List<PathSegment<U, V>> choices = null;
 
@@ -1433,7 +1450,12 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                                                     + startNode.getDocSequencePosition());
                 }
 
-                final boolean reachedMinOccurs = (nextPath.getDocIteration() >= nextPath.getMinOccurs());
+                /*
+                 * Content that can match nothing, such as a group of optional
+                 * elements, satisfies its remaining occurrences without any.
+                 */
+                final boolean reachedMinOccurs = (nextPath.getDocIteration() >= nextPath.getMinOccurs())
+                                                 || canMatchEmptyContent(nextPath.getStateMachineNode());
 
                 final List<PathSegment<U, V>> seqPaths = find(nextPath, elemQName, currDepth + 1);
 
@@ -1521,10 +1543,9 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
              * If the XmlSchemaAny namespace and processing rules apply, this
              * element matches. False otherwise.
              */
-            if (traversedElements.size() < 2) {
+            if (traversedElements.isEmpty()) {
                 throw new IllegalStateException("Reached a wildcard element while searching for " + elemQName
-                                                + ", but we've only seen " + traversedElements.size()
-                                                + " element(s)!");
+                                                + ", but that is the root element!");
             }
 
             final XmlSchemaAny any = state.getAny();
@@ -1557,7 +1578,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                     if ("##targetNamespace".equals(namespace)) {
                         needTargetNamespace = true;
 
-                    } else if ("##local".equals(namespace) && (elemQName.getNamespaceURI() == null)) {
+                    } else if ("##local".equals(namespace) && (elemQName.getNamespaceURI().length() == 0)) {
 
                         matches = true;
 
@@ -1654,8 +1675,10 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         XmlSchemaDocumentNode<U> iter = currentPath.getDocumentNode();
 
         if (iter.getStateMachineNode().getNodeType().equals(XmlSchemaStateMachineNode.Type.ELEMENT)
-            && iter.getStateMachineNode().getElement().getQName().equals(element)) {
+            && iter.getStateMachineNode().getElement().getQName().equals(element)
+            && (iter != endedElement)) {
             // We are already at the element!
+            endedElement = iter;
             return;
         }
 
@@ -1678,6 +1701,7 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
                                             + currentPath.getStateMachineNode()
                                             + ", which does not represent element " + element);
         }
+        endedElement = currentPath.getDocumentNode();
     }
 
     private void followPath(PathSegment<U, V> path) {
@@ -1699,6 +1723,59 @@ public final class XmlSchemaPathFinder<U, V> extends DefaultHandler {
         pathMgr.followPath(startNode);
 
         currentPath = path.getEnd();
+
+        // An element has started, so none is the one just ended.
+        endedElement = null;
+    }
+
+    /*
+     * Whether a node's content can match no elements at all: an xs:sequence
+     * or xs:all whose particles can each occur zero times, or an xs:choice
+     * or substitution group with one such option. An element or wildcard
+     * always matches an element. Group nesting ends at elements, which this
+     * does not look inside, so the recursion is bounded by the walker's own
+     * limit on nested groups.
+     */
+    private boolean canMatchEmptyContent(XmlSchemaStateMachineNode state) {
+        final Boolean cached = emptyContentCache.get(state);
+        if (cached != null) {
+            return cached.booleanValue();
+        }
+
+        boolean result;
+        final List<XmlSchemaStateMachineNode> children = state.getPossibleNextStates();
+
+        switch (state.getNodeType()) {
+        case SEQUENCE:
+        case ALL:
+            result = true;
+            if (children != null) {
+                for (XmlSchemaStateMachineNode child : children) {
+                    if ((child.getMinOccurs() > 0) && !canMatchEmptyContent(child)) {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+            break;
+        case CHOICE:
+        case SUBSTITUTION_GROUP:
+            result = false;
+            if (children != null) {
+                for (XmlSchemaStateMachineNode child : children) {
+                    if ((child.getMinOccurs() == 0) || canMatchEmptyContent(child)) {
+                        result = true;
+                        break;
+                    }
+                }
+            }
+            break;
+        default:
+            result = false;
+        }
+
+        emptyContentCache.put(state, Boolean.valueOf(result));
+        return result;
     }
 
     /*
