@@ -32,12 +32,14 @@ import java.util.Set;
 import javax.xml.namespace.QName;
 
 import org.apache.ws.commons.schema.XmlSchema;
+import org.apache.ws.commons.schema.XmlSchemaAll;
 import org.apache.ws.commons.schema.XmlSchemaAnyAttribute;
 import org.apache.ws.commons.schema.XmlSchemaAttribute;
 import org.apache.ws.commons.schema.XmlSchemaAttributeGroup;
 import org.apache.ws.commons.schema.XmlSchemaAttributeGroupMember;
 import org.apache.ws.commons.schema.XmlSchemaAttributeGroupRef;
 import org.apache.ws.commons.schema.XmlSchemaAttributeOrGroupRef;
+import org.apache.ws.commons.schema.XmlSchemaChoice;
 import org.apache.ws.commons.schema.XmlSchemaComplexContent;
 import org.apache.ws.commons.schema.XmlSchemaComplexContentExtension;
 import org.apache.ws.commons.schema.XmlSchemaComplexContentRestriction;
@@ -407,10 +409,18 @@ final class XmlSchemaScope {
                        || !(ext.getParticle() instanceof XmlSchemaSequenceMember)) {
                 // Only an xs:all is not a sequence member, and XML Schema 1.0
                 // does not allow one to be combined with any other particle.
-                throw new XmlSchemaException("An extension of " + ext.getBaseTypeName()
-                                             + " adds content to it, but one of the two content"
-                                             + " models is an xs:all group, which cannot be"
-                                             + " combined with other particles.");
+                // An empty particle adds no content, though, so an xs:all
+                // alongside one is the whole content model.
+                if (isEmptyParticle(ext.getParticle())) {
+                    child = baseParticle;
+                } else if (isEmptyParticle(baseParticle)) {
+                    child = ext.getParticle();
+                } else {
+                    throw new XmlSchemaException("An extension of " + ext.getBaseTypeName()
+                                                 + " adds content to it, but one of the two content"
+                                                 + " models is an xs:all group, which cannot be"
+                                                 + " combined with other particles.");
+                }
             } else {
                 XmlSchemaSequence seq = new XmlSchemaSequence();
                 seq.getItems().add((XmlSchemaSequenceMember)baseParticle);
@@ -836,6 +846,28 @@ final class XmlSchemaScope {
         }
 
         return (parent == null) ? null : parent.getUserRecognizedType();
+    }
+
+    /**
+     * Whether a particle can match nothing at all: one that may not occur, an
+     * xs:all or xs:sequence with no particles, or an optional xs:choice with
+     * none. These are the particles XML Schema treats as empty content when it
+     * builds the content model of an extension.
+     */
+    private static boolean isEmptyParticle(XmlSchemaParticle particle) {
+        if (particle.getMaxOccurs() == 0) {
+            return true;
+        }
+        if (particle instanceof XmlSchemaAll) {
+            return ((XmlSchemaAll)particle).getItems().isEmpty();
+        }
+        if (particle instanceof XmlSchemaSequence) {
+            return ((XmlSchemaSequence)particle).getItems().isEmpty();
+        }
+        if (particle instanceof XmlSchemaChoice) {
+            return ((XmlSchemaChoice)particle).getItems().isEmpty() && particle.getMinOccurs() == 0;
+        }
+        return false;
     }
 
     private static boolean isAnyNamespace(String namespace) {
