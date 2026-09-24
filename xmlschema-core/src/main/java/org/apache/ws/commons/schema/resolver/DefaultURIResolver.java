@@ -21,6 +21,7 @@ package org.apache.ws.commons.schema.resolver;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -82,6 +83,15 @@ public class DefaultURIResolver implements CollectionURIResolver {
         "org.apache.ws.commons.schema.remote.maxBytes";
 
     /**
+     * How many HTTP redirects one fetch may follow. Redirects are followed by this resolver
+     * rather than by the JDK, so that the chain is bounded, every hop is checked the way the
+     * location the schema named was checked, and the whole chain counts against one fetch
+     * deadline. Set it to <code>0</code> to refuse a redirected schema location outright.
+     */
+    public static final String MAX_REDIRECTS_PROPERTY =
+        "org.apache.ws.commons.schema.remote.maxRedirects";
+
+    /**
      * Whether a schema location may be fetched over the network at all. Set it to
      * <code>false</code> in a deployment whose schema sets are entirely local: an
      * <code>xs:import</code> naming an <code>http</code> or <code>https</code> location is then
@@ -111,6 +121,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
     private static final long DEFAULT_READ_TIMEOUT_MILLIS = 10L * 1000L;
     private static final long DEFAULT_MAX_FETCH_MILLIS = 30L * 1000L;
     private static final long DEFAULT_MAX_BYTES = 64L * 1024L * 1024L;
+    private static final long DEFAULT_MAX_REDIRECTS = 5L;
 
     private final long connectTimeoutMillis =
         getLongProperty(CONNECT_TIMEOUT_PROPERTY, DEFAULT_CONNECT_TIMEOUT_MILLIS);
@@ -119,6 +130,9 @@ public class DefaultURIResolver implements CollectionURIResolver {
     private final long maxFetchMillis =
         getLongProperty(MAX_FETCH_MILLIS_PROPERTY, DEFAULT_MAX_FETCH_MILLIS);
     private final long maxBytes = getLongProperty(MAX_BYTES_PROPERTY, DEFAULT_MAX_BYTES);
+    // Zero is meaningful here -- it refuses a redirect outright -- so the minimum is 0, not 1.
+    private final long maxRedirects =
+        getLongProperty(MAX_REDIRECTS_PROPERTY, DEFAULT_MAX_REDIRECTS, 0L);
     private final boolean allowNetwork = getBooleanProperty(ALLOW_NETWORK_PROPERTY, true);
     private final boolean allowFileSystem = getBooleanProperty(ALLOW_FILE_SYSTEM_PROPERTY, true);
 
@@ -247,11 +261,42 @@ public class DefaultURIResolver implements CollectionURIResolver {
             if (closed) {
                 throw new IOException("The schema location \"" + systemId + "\" is closed.");
             }
-            URLConnection connection = url.openConnection();
-            connection.setDoInput(true);
-            connection.setConnectTimeout(toIntMillis(connectTimeoutMillis));
-            connection.setReadTimeout(toIntMillis(readTimeoutMillis));
+            // One deadline for the whole fetch, so a redirect chain cannot buy more time.
             deadlineNanos = System.nanoTime() + maxFetchMillis * 1000000L;
+            URL target = url;
+            long hops = 0;
+            URLConnection connection = null;
+            while (connection == null) {
+                checkDeadline();
+                URLConnection candidate = target.openConnection();
+                candidate.setDoInput(true);
+                candidate.setConnectTimeout(toIntMillis(connectTimeoutMillis));
+                candidate.setReadTimeout(toIntMillis(readTimeoutMillis));
+                String redirectedTo = null;
+                if (candidate instanceof HttpURLConnection) {
+                    HttpURLConnection http = (HttpURLConnection)candidate;
+                    // Followed here rather than by the JDK: that bounds the chain, puts every hop
+                    // through the same checks as the location the schema named, and keeps the
+                    // whole chain inside one deadline.
+                    http.setInstanceFollowRedirects(false);
+                    if (isRedirect(http.getResponseCode())) {
+                        redirectedTo = http.getHeaderField("Location");
+                        http.disconnect();
+                        if (hops >= maxRedirects) {
+                            throw new IOException("The schema location \"" + systemId
+                                                  + "\" redirected more than " + maxRedirects
+                                                  + " times, the maximum set by "
+                                                  + MAX_REDIRECTS_PROPERTY + ".");
+                        }
+                        hops++;
+                    }
+                }
+                if (redirectedTo == null) {
+                    connection = candidate;
+                } else {
+                    target = nextHop(target, redirectedTo);
+                }
+            }
             // A declared length is a courtesy: it is absent for a chunked response and is in any
             // case whatever the host chose to claim. The running count below is the real limit.
             if (connection.getContentLengthLong() > maxBytes) {
@@ -260,6 +305,48 @@ public class DefaultURIResolver implements CollectionURIResolver {
                                       + maxBytes + " bytes.");
             }
             delegate = connection.getInputStream();
+        }
+
+        private boolean isRedirect(int code) {
+            return code == HttpURLConnection.HTTP_MOVED_PERM
+                || code == HttpURLConnection.HTTP_MOVED_TEMP
+                || code == HttpURLConnection.HTTP_SEE_OTHER
+                || code == 307
+                || code == 308;
+        }
+
+        /**
+         * The next URL in a redirect chain, or an exception if it is one this resolver will not
+         * fetch. A redirect that changes scheme is refused, which is what the JDK does when it
+         * follows redirects itself, so an http location cannot become a file read or an https one
+         * be downgraded.
+         */
+        private URL nextHop(URL from, String location) throws IOException {
+            if (location == null || location.trim().length() == 0) {
+                throw new IOException("The schema location \"" + systemId
+                                      + "\" redirected without saying where to.");
+            }
+            URL next;
+            try {
+                next = new URL(from, location.trim());
+            } catch (MalformedURLException e) {
+                throw new IOException("The schema location \"" + systemId
+                                      + "\" redirected to \"" + location.trim()
+                                      + "\", which is not a usable URL.", e);
+            }
+            if (!next.getProtocol().equalsIgnoreCase(from.getProtocol())) {
+                throw new IOException("The schema location \"" + systemId
+                                      + "\" redirected from the scheme \"" + from.getProtocol()
+                                      + "\" to \"" + next.getProtocol() + "\".");
+            }
+            try {
+                verifyPermittedLocation(next.toString(), systemId);
+            } catch (XmlSchemaException e) {
+                // Surface it as an IOException: this runs inside a read(), where the parser
+                // expects I/O failures.
+                throw new IOException(e.getMessage(), e);
+            }
+            return next;
         }
 
         private void checkDeadline() throws IOException {
@@ -337,6 +424,10 @@ public class DefaultURIResolver implements CollectionURIResolver {
     }
 
     private static long getLongProperty(final String name, long defaultValue) {
+        return getLongProperty(name, defaultValue, 1L);
+    }
+
+    private static long getLongProperty(final String name, long defaultValue, long minimum) {
         try {
             String value = AccessController.doPrivileged(new PrivilegedAction<String>() {
                 public String run() {
@@ -345,7 +436,7 @@ public class DefaultURIResolver implements CollectionURIResolver {
             });
             if (value != null && value.trim().length() > 0) {
                 long parsed = Long.parseLong(value.trim());
-                if (parsed > 0) {
+                if (parsed >= minimum) {
                     return parsed;
                 }
             }

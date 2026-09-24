@@ -112,6 +112,15 @@ stack. The following JVM system property adjusts the limit:
       are unaffected either way, so this is not on its own a defence against
       an untrusted schema document - see the Security section below.
 
+    org.apache.ws.commons.schema.remote.maxRedirects
+      How many HTTP redirects one remote schema fetch may follow. The default
+      is 5. Redirects are followed by the resolver rather than by the JDK, so
+      the chain is bounded, every hop goes through the same checks as the
+      location the schema named, and the whole chain counts against the one
+      fetch deadline above. A redirect that changes scheme is refused either
+      way, so an http location cannot become a file read. Set it to 0 to
+      refuse a redirected schema location outright.
+
     org.apache.ws.commons.schema.local.allowFileSystem
       Whether a schema location may be read from the filesystem at all. The
       default is true. Set it to false where schema documents are expected
