@@ -62,6 +62,8 @@ public final class XmlSchemaWalker {
     private final SchemasByNamespace schemasByNamespace;
     private final Map<QName, XmlSchemaScope> scopeCache;
     private final IdentityHashMap<XmlSchemaType, XmlSchemaType> visitedTypes;
+    private final IdentityHashMap<XmlSchemaType, XmlSchemaScope> anonymousScopeCache;
+    private final Map<QName, XmlSchemaType> typesBySubstGroupHead;
     private Set<QName> substGroupsInProgress = new HashSet<QName>();
     private Set<QName> groupsInProgress = new HashSet<QName>();
 
@@ -98,6 +100,8 @@ public final class XmlSchemaWalker {
 
         scopeCache = new HashMap<QName, XmlSchemaScope>();
         visitedTypes = new IdentityHashMap<XmlSchemaType, XmlSchemaType>();
+        anonymousScopeCache = new IdentityHashMap<XmlSchemaType, XmlSchemaScope>();
+        typesBySubstGroupHead = new HashMap<QName, XmlSchemaType>();
         userRecognizedTypes = null;
     }
 
@@ -150,6 +154,8 @@ public final class XmlSchemaWalker {
     public void clear() {
         scopeCache.clear();
         visitedTypes.clear();
+        anonymousScopeCache.clear();
+        typesBySubstGroupHead.clear();
         substGroupsInProgress.clear();
         groupsInProgress.clear();
     }
@@ -215,22 +221,25 @@ public final class XmlSchemaWalker {
             element.setMaxOccurs(XmlSchemaParticle.DEFAULT_MAX_OCCURS);
         }
 
-        XmlSchemaType schemaType = element.getSchemaType();
-        if (schemaType == null) {
-            final QName typeQName = element.getSchemaTypeName();
-            if (typeQName != null) {
-                schemaType = schemasByNamespace.getTypeByName(typeQName);
-            }
-        }
+        XmlSchemaType schemaType = getSchemaTypeOfElement(element);
 
         if (schemaType != null) {
             XmlSchemaScope scope = null;
             if ((schemaType.getQName() != null) && scopeCache.containsKey(schemaType.getQName())) {
                 scope = scopeCache.get(schemaType.getQName());
+            } else if ((schemaType.getQName() == null) && anonymousScopeCache.containsKey(schemaType)) {
+                /*
+                 * An anonymous type is shared when a substitution group
+                 * member inherits it from its head. Reusing the scope keeps
+                 * the type info identical, as it is for named types.
+                 */
+                scope = anonymousScopeCache.get(schemaType);
             } else {
                 scope = new XmlSchemaScope(schemaType, schemasByNamespace, scopeCache, userRecognizedTypes);
                 if (schemaType.getQName() != null) {
                     scopeCache.put(schemaType.getQName(), scope);
+                } else {
+                    anonymousScopeCache.put(schemaType, scope);
                 }
             }
 
@@ -617,6 +626,54 @@ public final class XmlSchemaWalker {
         copy.setUnhandledAttributes(globalElem.getUnhandledAttributes());
 
         return copy;
+    }
+
+    /**
+     * Returns the type of the element. An element declared without a type
+     * takes the type of its substitution group head, if it has one.
+     */
+    private XmlSchemaType getSchemaTypeOfElement(XmlSchemaElement element) {
+        /*
+         * The heads followed are remembered, both to detect a cycle and to
+         * cache their resolved type: without the cache, walking every member
+         * of a long chain of untyped elements would take quadratic time.
+         */
+        final Set<QName> visited = new HashSet<QName>();
+        XmlSchemaElement current = element;
+        XmlSchemaType schemaType;
+        while (true) {
+            schemaType = current.getSchemaType();
+            if (schemaType != null) {
+                break;
+            }
+            final QName typeQName = current.getSchemaTypeName();
+            if (typeQName != null) {
+                schemaType = schemasByNamespace.getTypeByName(typeQName);
+                break;
+            }
+            final QName headQName = current.getSubstitutionGroup();
+            if (headQName == null) {
+                break;
+            }
+            if (typesBySubstGroupHead.containsKey(headQName)) {
+                schemaType = typesBySubstGroupHead.get(headQName);
+                break;
+            }
+            if (!visited.add(headQName)) {
+                throw new XmlSchemaException("Cyclic substitution group detected involving "
+                                             + headQName + '.');
+            }
+            current = schemasByNamespace.getElementByName(headQName);
+            if (current == null) {
+                throw new XmlSchemaException("The substitution group " + headQName + " of element "
+                                             + element.getQName()
+                                             + " does not resolve to an element in this collection.");
+            }
+        }
+        for (QName headQName : visited) {
+            typesBySubstGroupHead.put(headQName, schemaType);
+        }
+        return schemaType;
     }
 
     private static QName getElementQName(XmlSchemaElement element) {
