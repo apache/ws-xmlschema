@@ -75,6 +75,7 @@ final class XmlSchemaScope {
     private XmlSchemaAnyAttribute anyAttr;
     private Set<QName> userRecognizedTypes;
     private Set<XmlSchemaType> typesInProgress;
+    private int maxDepth;
     private final Set<QName> attributeGroupsInProgress = new HashSet<QName>();
 
     /**
@@ -93,6 +94,7 @@ final class XmlSchemaScope {
         this.scopeCache = child.scopeCache;
         this.userRecognizedTypes = child.userRecognizedTypes;
         this.typesInProgress = child.typesInProgress;
+        this.maxDepth = child.maxDepth;
 
         walkWithCycleCheck(type);
     }
@@ -101,9 +103,12 @@ final class XmlSchemaScope {
      * Initializes a new {@link XmlSchemaScope} with a base
      * {@link XmlSchemaElement}. The element type and attributes will be
      * traversed, and attribute lists and element children will be retrieved.
+     * Chains of type derivation and of attribute group references deeper
+     * than <code>maxDepth</code> are rejected.
      */
     XmlSchemaScope(XmlSchemaType type, SchemasByNamespace xmlSchemasByNamespace,
-                   Map<QName, XmlSchemaScope> scopeCache, Set<QName> userRecognizedTypes) {
+                   Map<QName, XmlSchemaScope> scopeCache, Set<QName> userRecognizedTypes,
+                   int maxDepth) {
 
         this();
 
@@ -112,11 +117,21 @@ final class XmlSchemaScope {
         this.userRecognizedTypes = userRecognizedTypes;
         this.typesInProgress =
             Collections.newSetFromMap(new IdentityHashMap<XmlSchemaType, Boolean>());
+        this.maxDepth = maxDepth;
 
         walkWithCycleCheck(type);
     }
 
     private void walkWithCycleCheck(XmlSchemaType type) {
+        // Each level of derivation recurses; an acyclic chain can still
+        // exhaust the thread stack.
+        if (typesInProgress.size() >= maxDepth) {
+            throw new XmlSchemaException("The type " + getName(type, "{Anonymous}")
+                                         + " is derived through more than " + maxDepth
+                                         + " levels of base types; refusing to walk it. The limit"
+                                         + " may be changed with the "
+                                         + XmlSchemaWalker.MAX_DEPTH_PROPERTY + " system property.");
+        }
         if (!typesInProgress.add(type)) {
             throw new XmlSchemaException("Cyclic type derivation detected involving type "
                                          + getName(type, "{Anonymous}") + '.');
@@ -538,6 +553,13 @@ final class XmlSchemaScope {
         if (attrGroup == null) {
             throw new XmlSchemaException("The attribute group reference " + groupName
                                          + " does not resolve to an attribute group in this collection.");
+        }
+        if (attributeGroupsInProgress.size() >= maxDepth) {
+            throw new XmlSchemaException("The attribute group reference " + groupName
+                                         + " is nested more than " + maxDepth
+                                         + " levels deep; refusing to walk it. The limit may be"
+                                         + " changed with the " + XmlSchemaWalker.MAX_DEPTH_PROPERTY
+                                         + " system property.");
         }
         if ((groupName != null) && !attributeGroupsInProgress.add(groupName)) {
             throw new XmlSchemaException("Cyclic attribute group reference detected involving "

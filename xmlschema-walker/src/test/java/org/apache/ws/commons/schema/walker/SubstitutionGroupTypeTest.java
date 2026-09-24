@@ -127,7 +127,8 @@ public class SubstitutionGroupTypeTest extends Assert {
     public void testLongUntypedChainResolvesEachHeadOnce() {
         StringBuilder body = new StringBuilder("<xs:element name=\"root\" type=\"xs:string\"/>");
         String previous = "root";
-        for (int i = 0; i < 2000; i++) {
+        // The longest chain the walker's default depth limit allows.
+        for (int i = 0; i < XmlSchemaWalker.DEFAULT_MAX_DEPTH - 1; i++) {
             body.append("<xs:element name=\"e").append(i).append("\" substitutionGroup=\"tns:")
                 .append(previous).append("\"/>");
             previous = "e" + i;

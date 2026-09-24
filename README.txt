@@ -39,6 +39,17 @@ adjust the per-document limits:
       Maximum previously traversed events replayed while backtracking. The
       default is 1000000.
 
+The XML Schema walker limits how deeply it recurses while walking a schema,
+so that a deeply nested schema is rejected instead of exhausting the thread
+stack. The following JVM system property adjusts the limit:
+
+  org.apache.ws.commons.schema.walker.maxDepth
+      Maximum depth of nested elements, model groups and substitution group
+      members while walking a schema; the same limit applies separately to
+      levels of type derivation and of attribute group references. The
+      default is 256, which fits a thread stack of 512 KB. Lower it if the
+      walker runs on threads with smaller stacks.
+
   The schema collection limits the work performed while resolving imported and
   included schemas. The following JVM system properties adjust the limits:
 
@@ -126,6 +137,8 @@ adjust the per-document limits:
 For example, set a limit with:
 
   -Dorg.apache.ws.commons.schema.walker.maxDecisionPoints=20000
+
+  -Dorg.apache.ws.commons.schema.walker.maxDepth=128
 
     -Dorg.apache.ws.commons.schema.maxImportDepth=128
 
