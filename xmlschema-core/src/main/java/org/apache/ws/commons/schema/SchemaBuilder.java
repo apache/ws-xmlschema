@@ -195,6 +195,17 @@ public class SchemaBuilder {
         }
     }
 
+    /**
+     * Reads an xs:boolean attribute value. XML Schema allows "1" as well as "true", and surrounding
+     * whitespace, so taking only "true" read abstract="1" or nillable=" true " as false and dropped
+     * the setting from the model. As before, "true" is accepted in any case, and a value that is
+     * not a boolean at all is read as false.
+     */
+    static boolean parseBoolean(String value) {
+        final String trimmed = value.trim();
+        return "true".equalsIgnoreCase(trimmed) || "1".equals(trimmed);
+    }
+
     private static int getIntProperty(String name, int defaultValue) {
         try {
             Integer value = Integer.getInteger(name);
@@ -437,20 +448,10 @@ public class SchemaBuilder {
             ct.setFinal(XmlSchemaDerivationMethod.schemaValueOf(finalstr));
         }
         if (complexEl.hasAttribute("abstract")) {
-            String abs = complexEl.getAttribute("abstract");
-            if (abs.equalsIgnoreCase("true")) {
-                ct.setAbstract(true);
-            } else {
-                ct.setAbstract(false);
-            }
+            ct.setAbstract(parseBoolean(complexEl.getAttribute("abstract")));
         }
         if (complexEl.hasAttribute("mixed")) {
-            String mixed = complexEl.getAttribute("mixed");
-            if (mixed.equalsIgnoreCase("true")) {
-                ct.setMixed(true);
-            } else {
-                ct.setMixed(false);
-            }
+            ct.setMixed(parseBoolean(complexEl.getAttribute("mixed")));
         }
 
         // process extra attributes and elements
@@ -562,7 +563,7 @@ public class SchemaBuilder {
         }
 
         if (el.hasAttribute("abstract")) {
-            element.setAbstractElement(Boolean.valueOf(el.getAttribute("abstract")).booleanValue());
+            element.setAbstractElement(parseBoolean(el.getAttribute("abstract")));
         }
 
         if (el.hasAttribute("block")) {
@@ -586,7 +587,7 @@ public class SchemaBuilder {
         }
 
         if (el.hasAttribute("nillable")) {
-            element.setNillable(Boolean.valueOf(el.getAttribute("nillable")).booleanValue());
+            element.setNillable(parseBoolean(el.getAttribute("nillable")));
         }
 
         if (el.hasAttribute("substitutionGroup")) {
@@ -1313,12 +1314,7 @@ public class SchemaBuilder {
         }
 
         if (complexEl.hasAttribute("mixed")) {
-            String mixed = complexEl.getAttribute("mixed");
-            if (mixed.equalsIgnoreCase("true")) {
-                complexContent.setMixed(true);
-            } else {
-                complexContent.setMixed(false);
-            }
+            complexContent.setMixed(parseBoolean(complexEl.getAttribute("mixed")));
         }
 
         return complexContent;
