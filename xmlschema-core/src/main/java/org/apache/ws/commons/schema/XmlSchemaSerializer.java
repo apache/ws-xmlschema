@@ -981,7 +981,7 @@ public class XmlSchemaSerializer {
 
         if (complexTypeObj.getBlock() != null
             && complexTypeObj.getBlock() != XmlSchemaDerivationMethod.NONE) {
-            serializedComplexType.setAttributeNS(null, "block", complexTypeObj.toString());
+            serializedComplexType.setAttributeNS(null, "block", complexTypeObj.getBlock().toString());
         }
 
         if (complexTypeObj.getFinalDerivation() != null
@@ -2199,8 +2199,8 @@ public class XmlSchemaSerializer {
             union.setAttributeNS(null, "id", unionObj.getId());
         }
 
-        if (unionObj.getMemberTypesSource() != null) {
-            QName[] memberTypesQNames = unionObj.getMemberTypesQNames();            
+        if (unionObj.getMemberTypesSource() != null && unionObj.getMemberTypesQNames() != null) {
+            QName[] memberTypesQNames = unionObj.getMemberTypesQNames();
             for (QName qn : memberTypesQNames) {
                 String namespace = qn.getNamespaceURI();
                 if (namespace.length() != 0 && qn.getPrefix().length() != 0) {

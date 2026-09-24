@@ -545,11 +545,9 @@ public class SchemaBuilder {
         keyrefEl = XDOMUtil.getFirstChildElementNS(el, XmlSchema.SCHEMA_NS, "keyref");
         if (keyrefEl != null) {
             while (keyrefEl != null) {
+                // handleConstraint resolves "refer" against the keyref's own namespace
+                // declarations, which may differ from those of the enclosing element.
                 XmlSchemaKeyref keyRef = (XmlSchemaKeyref)handleConstraint(keyrefEl, XmlSchemaKeyref.class);
-                if (keyrefEl.hasAttribute("refer")) {
-                    String name = keyrefEl.getAttribute("refer");
-                    keyRef.refer = getRefQName(name, el);
-                }
                 element.getConstraints().add(keyRef);
                 keyrefEl = XDOMUtil.getNextSiblingElementNS(keyrefEl, XmlSchema.SCHEMA_NS, "keyref");
             }
@@ -1974,11 +1972,10 @@ public class SchemaBuilder {
 
             XmlSchemaSimpleType unionSimpleType = handleSimpleType(schema, inlineUnionType, schemaEl, false);
 
+            // An inline member is one of the base types, not a memberTypes reference: a local
+            // simple type cannot be referred to by name, and naming it again in memberTypes
+            // made the serializer write it back twice.
             union.getBaseTypes().add(unionSimpleType);
-
-            if (!unionSimpleType.isAnonymous()) {
-                union.setMemberTypesSource(union.getMemberTypesSource() + " " + unionSimpleType.getName());
-            }
 
             inlineUnionType =
                 XDOMUtil.getNextSiblingElementNS(inlineUnionType, XmlSchema.SCHEMA_NS, "simpleType");
