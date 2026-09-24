@@ -131,6 +131,41 @@ public class WalkerDepthLimitTest extends Assert {
         return body.toString();
     }
 
+    /**
+     * S1 restricts S0, S2 restricts S1, and so on, and root has an optional child of type S_k for
+     * every k that is a multiple of step, in increasing order. Each child's type is walked with the
+     * types before it already walked and cached.
+     */
+    private static String steppedRestrictionChain(int length, int step) {
+        StringBuilder body = new StringBuilder("<xs:element name=\"root\"><xs:complexType><xs:sequence>");
+        for (int k = step; k < length; k += step) {
+            body.append("<xs:element name=\"c").append(k).append("\" type=\"tns:S").append(k)
+                .append("\" minOccurs=\"0\"/>");
+        }
+        body.append("</xs:sequence></xs:complexType></xs:element>")
+            .append("<xs:simpleType name=\"S0\"><xs:restriction base=\"xs:string\"/></xs:simpleType>");
+        for (int i = 1; i < length; i++) {
+            body.append("<xs:simpleType name=\"S").append(i).append("\"><xs:restriction base=\"tns:S")
+                .append(i - 1).append("\"/></xs:simpleType>");
+        }
+        return body.toString();
+    }
+
+    /**
+     * A chain walked a step at a time used to pass: each step recursed only as far as the cached
+     * type before it, so the limit never saw the whole chain, and the type information it built
+     * was as deep as the chain.
+     */
+    @Test
+    public void testDerivationChainWalkedInStepsIsRejected() {
+        assertRejected(steppedRestrictionChain(1000, 100));
+    }
+
+    @Test
+    public void testShallowDerivationChainWalkedInStepsIsAccepted() {
+        walkRoot(steppedRestrictionChain(200, 50));
+    }
+
     /** S1 restricts S0, S2 restricts S1, and so on. */
     private static String simpleRestrictionChain(int length) {
         StringBuilder body = new StringBuilder("<xs:element name=\"root\" type=\"tns:S")
