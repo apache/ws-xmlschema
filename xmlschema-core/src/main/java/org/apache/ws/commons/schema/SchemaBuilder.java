@@ -151,6 +151,50 @@ public class SchemaBuilder {
         collection.builderNestingDepth--;
     }
 
+    /**
+     * Refuse appinfo or documentation markup nested deeper than the structural
+     * bound allows. The markup is not schema structure, so the handlers never
+     * count it, but it is copied with a recursive cloneNode on this same thread
+     * stack, so it counts toward the same bound. Measured iteratively, as the
+     * point is to avoid recursing over it.
+     */
+    private void checkMarkupDepth(Element content) {
+        int depth = 0;
+        int maxDepth = 0;
+        Node node = content.getFirstChild();
+        if (node != null) {
+            depth = 1;
+        }
+        while (node != null) {
+            if (depth > maxDepth) {
+                maxDepth = depth;
+                if (collection.builderNestingDepth + maxDepth > MAX_NESTING_DEPTH) {
+                    throw new XmlSchemaException("The markup of an annotation is nested more than "
+                                                 + MAX_NESTING_DEPTH + " levels deep, counting the"
+                                                 + " schema structure around it; refusing to build it."
+                                                 + " The limit may be changed with the"
+                                                 + " org.apache.ws.commons.schema.maxNestingDepth"
+                                                 + " system property.");
+                }
+            }
+            if (node.getFirstChild() != null) {
+                node = node.getFirstChild();
+                depth++;
+                continue;
+            }
+            while (node != null && node.getNextSibling() == null) {
+                node = node.getParentNode();
+                depth--;
+                if (node == content) {
+                    node = null;
+                }
+            }
+            if (node != null) {
+                node = node.getNextSibling();
+            }
+        }
+    }
+
     private static int getIntProperty(String name, int defaultValue) {
         try {
             Integer value = Integer.getInteger(name);
@@ -306,6 +350,7 @@ public class SchemaBuilder {
      */
     XmlSchemaAppInfo handleAppInfo(Element content) {
         XmlSchemaAppInfo appInfo = new XmlSchemaAppInfo();
+        checkMarkupDepth(content);
         NodeList markup = new DocumentFragmentNodeList(content);
 
         if (!content.hasAttribute("source") && markup.getLength() == 0) {
@@ -418,6 +463,7 @@ public class SchemaBuilder {
     // to collection
     XmlSchemaDocumentation handleDocumentation(Element content) {
         XmlSchemaDocumentation documentation = new XmlSchemaDocumentation();
+        checkMarkupDepth(content);
         List<Node> markup = getChildren(content);
 
         if (!content.hasAttribute("source") && !content.hasAttribute("xml:lang") && markup == null) {

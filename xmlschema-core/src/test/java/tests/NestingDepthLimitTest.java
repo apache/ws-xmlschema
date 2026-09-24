@@ -129,6 +129,56 @@ public class NestingDepthLimitTest extends Assert {
         assertNotNull(schema);
     }
 
+    /**
+     * Annotation markup is copied with a recursive cloneNode, so deep markup
+     * inside xs:documentation or xs:appinfo must hit the same bound rather
+     * than overflow the stack.
+     */
+    @Test
+    public void testDeeplyNestedDocumentationMarkupIsRejected() throws Exception {
+        assertMarkupRejected("documentation");
+    }
+
+    @Test
+    public void testDeeplyNestedAppInfoMarkupIsRejected() throws Exception {
+        assertMarkupRejected("appinfo");
+    }
+
+    @Test
+    public void testReasonablyNestedMarkupStillParses() throws Exception {
+        XmlSchemaCollection collection = new XmlSchemaCollection();
+        XmlSchema schema = collection.read(new StringReader(buildAnnotatedSchema("documentation", 50)));
+        assertNotNull(schema);
+        schema = collection.read(new StringReader(buildAnnotatedSchema("appinfo", 50)));
+        assertNotNull(schema);
+    }
+
+    private void assertMarkupRejected(String kind) {
+        XmlSchemaCollection collection = new XmlSchemaCollection();
+        try {
+            collection.read(new StringReader(buildAnnotatedSchema(kind, 5000)));
+            fail("xs:" + kind + " markup nested 5000 levels deep should be rejected.");
+        } catch (XmlSchemaException expected) {
+            assertTrue(expected.getMessage().contains("nested"));
+        }
+    }
+
+    private String buildAnnotatedSchema(String kind, int depth) {
+        StringBuilder schema = new StringBuilder();
+        schema.append("<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"")
+            .append(" targetNamespace=\"urn:markup-").append(kind).append("\">");
+        schema.append("<xs:annotation><xs:").append(kind).append(">");
+        for (int i = 0; i < depth; i++) {
+            schema.append("<a>");
+        }
+        schema.append("text");
+        for (int i = 0; i < depth; i++) {
+            schema.append("</a>");
+        }
+        schema.append("</xs:").append(kind).append("></xs:annotation></xs:schema>");
+        return schema.toString();
+    }
+
     private String buildNestedSchema(int depth) {
         return buildNestedSchema(depth, "urn:nesting");
     }
