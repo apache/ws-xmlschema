@@ -24,6 +24,9 @@ import java.io.FileWriter;
 import java.io.StringReader;
 import java.io.Writer;
 
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaException;
@@ -33,6 +36,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
 /**
@@ -151,6 +156,41 @@ public class NestingDepthLimitTest extends Assert {
         assertNotNull(schema);
         schema = collection.read(new StringReader(buildAnnotatedSchema("appinfo", 50)));
         assertNotNull(schema);
+    }
+
+    /**
+     * read(Element) collects the namespace declarations of every ancestor of the
+     * schema element, which must not take a stack frame per ancestor when the
+     * schema is embedded deep in a larger document such as a WSDL. The prefix
+     * declared on the outermost wrapper must still be seen.
+     */
+    @Test
+    public void testSchemaEmbeddedDeepInADocumentStillParses() throws Exception {
+        int depth = 20000;
+        StringBuilder doc = new StringBuilder();
+        doc.append("<w xmlns:tns=\"urn:embedded\">");
+        for (int i = 1; i < depth; i++) {
+            doc.append("<w>");
+        }
+        doc.append("<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"")
+            .append(" targetNamespace=\"urn:embedded\">")
+            .append("<xs:complexType name=\"t\"/>")
+            .append("<xs:element name=\"e\" type=\"tns:t\"/>")
+            .append("</xs:schema>");
+        for (int i = 0; i < depth; i++) {
+            doc.append("</w>");
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        Document document = factory.newDocumentBuilder()
+            .parse(new InputSource(new StringReader(doc.toString())));
+        Element schemaElement = (Element)document
+            .getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema", "schema").item(0);
+
+        XmlSchema schema = new XmlSchemaCollection().read(schemaElement);
+        assertEquals(new QName("urn:embedded", "t"),
+                     schema.getElementByName("e").getSchemaTypeName());
     }
 
     private void assertMarkupRejected(String kind) {

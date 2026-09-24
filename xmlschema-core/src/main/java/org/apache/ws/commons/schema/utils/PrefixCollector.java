@@ -19,6 +19,9 @@
 
 package org.apache.ws.commons.schema.utils;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -59,12 +62,18 @@ public abstract class PrefixCollector {
      * Searches for namespace prefix declarations in the given node. For any prefix declaration, it invokes
      * {@link #declare(String, String)}. This method works recursively: The parent nodes prefix declarations
      * are collected before the current nodes.
+     * <p>
+     * The ancestors are walked with a loop rather than by recursion, as a schema element embedded
+     * deep in a larger document would otherwise take one stack frame per ancestor.
+     * </p>
      */
     public void searchAllPrefixDeclarations(Node pNode) {
-        Node parent = pNode.getParentNode();
-        if (parent != null) {
-            searchAllPrefixDeclarations(parent);
+        Deque<Node> ancestry = new ArrayDeque<Node>();
+        for (Node node = pNode; node != null; node = node.getParentNode()) {
+            ancestry.push(node);
         }
-        searchLocalPrefixDeclarations(pNode);
+        while (!ancestry.isEmpty()) {
+            searchLocalPrefixDeclarations(ancestry.pop());
+        }
     }
 }
