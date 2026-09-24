@@ -65,6 +65,18 @@ public final class XmlSchemaWalker {
     private final IdentityHashMap<XmlSchemaType, XmlSchemaScope> anonymousScopeCache;
     private final Map<QName, XmlSchemaType> typesBySubstGroupHead;
     private Set<QName> substGroupsInProgress = new HashSet<QName>();
+
+    /*
+     * The walk recurses once per nested element, model group and
+     * substitution group member. An acyclic schema can nest these deeply
+     * enough to exhaust the thread stack, so the depth is bounded. The bound
+     * is read per instance, so that setting the system property takes effect
+     * without a class reload.
+     */
+    static final String MAX_DEPTH_PROPERTY = "org.apache.ws.commons.schema.walker.maxDepth";
+    static final int DEFAULT_MAX_DEPTH = 256;
+    private final int maxDepth = getMaxDepth();
+    private int depth;
     private Set<QName> groupsInProgress = new HashSet<QName>();
 
     /**
@@ -199,6 +211,15 @@ public final class XmlSchemaWalker {
      * @param element The root element to start the walk from.
      */
     public void walk(XmlSchemaElement element) {
+        enterNested();
+        try {
+            walkElement(element);
+        } finally {
+            depth--;
+        }
+    }
+
+    private void walkElement(XmlSchemaElement element) {
         element = getElement(element, false);
 
         final XmlSchemaElement substGroupElem = element;
@@ -235,7 +256,8 @@ public final class XmlSchemaWalker {
                  */
                 scope = anonymousScopeCache.get(schemaType);
             } else {
-                scope = new XmlSchemaScope(schemaType, schemasByNamespace, scopeCache, userRecognizedTypes);
+                scope = new XmlSchemaScope(schemaType, schemasByNamespace, scopeCache, userRecognizedTypes,
+                                           maxDepth);
                 if (schemaType.getQName() != null) {
                     scopeCache.put(schemaType.getQName(), scope);
                 } else {
@@ -280,7 +302,7 @@ public final class XmlSchemaWalker {
                             } else {
                                 attrScope = new XmlSchemaScope(attrType,
                                                                schemasByNamespace, scopeCache,
-                                                               userRecognizedTypes);
+                                                               userRecognizedTypes, maxDepth);
 
                                 if (attrType.getName() != null) {
                                     scopeCache.put(attrType.getQName(), attrScope);
@@ -408,6 +430,15 @@ public final class XmlSchemaWalker {
     }
 
     private void walk(XmlSchemaGroupParticle group, long minOccurs, long maxOccurs) {
+        enterNested();
+        try {
+            walkGroup(group, minOccurs, maxOccurs);
+        } finally {
+            depth--;
+        }
+    }
+
+    private void walkGroup(XmlSchemaGroupParticle group, long minOccurs, long maxOccurs) {
 
         // Only make a copy of the particle if the minOccurs or maxOccurs was
         // set.
@@ -674,6 +705,29 @@ public final class XmlSchemaWalker {
             typesBySubstGroupHead.put(headQName, schemaType);
         }
         return schemaType;
+    }
+
+    private void enterNested() {
+        if (depth >= maxDepth) {
+            throw new XmlSchemaException("The schema is nested more than " + maxDepth
+                                         + " levels deep (nested elements, model groups and"
+                                         + " substitution group members each count one level);"
+                                         + " refusing to walk it. The limit may be changed with the "
+                                         + MAX_DEPTH_PROPERTY + " system property.");
+        }
+        depth++;
+    }
+
+    static int getMaxDepth() {
+        try {
+            Integer value = Integer.getInteger(MAX_DEPTH_PROPERTY);
+            if (value != null) {
+                return value.intValue();
+            }
+        } catch (SecurityException e) {
+            // fall through to the default
+        }
+        return DEFAULT_MAX_DEPTH;
     }
 
     private static QName getElementQName(XmlSchemaElement element) {

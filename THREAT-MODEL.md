@@ -192,7 +192,10 @@ A finding is in-model only if it reaches a row marked **yes**.
   derivation, substitution groups, model groups, or attribute groups and
   recurse until `StackOverflowError`. The walker now tracks these expansion
   paths and rejects cyclic re-entry with `XmlSchemaException`; recursion that
-  crosses an element declaration remains supported.
+  crosses an element declaration remains supported. Acyclic chains of the
+  same expansions could also be nested deeply enough to exhaust the stack;
+  the walker bounds their depth and rejects a deeper chain with
+  `XmlSchemaException`.
 - **`XmlSchemaPathFinder`**: in-model when caller-supplied SAX events
   are matched against an attacker-controlled schema. Its backtracking
   work is bounded per document by configurable decision-point and
@@ -239,7 +242,8 @@ A finding is in-model only if it reaches a row marked **yes**.
   construction is bounded by a default structural nesting depth of 512;
   these limits are configurable with JVM system properties. The walker has
   active-path cycle detection for the schema expansion graphs it traverses,
-  but large acyclic schemas may still consume substantial memory and CPU
+  and a configurable default maximum walk depth of 256, but large acyclic
+  schemas may still consume substantial memory and CPU
   *(documented: `README.txt`)*.
 - **System properties**: `org.apache.ws.commons.schema.extension_registry`
   is consulted at `XmlSchemaCollection` construction time, and the
@@ -282,6 +286,7 @@ points*:
 | `XmlSchemaCollection.setBaseUri(String)` | unset *(documented)* | caller-supplied | base URI against which relative `schemaLocation` values resolve |
 | `org.apache.ws.commons.schema.walker.maxDecisionPoints` system property | `10000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum decision points created while matching one document |
 | `org.apache.ws.commons.schema.walker.maxReplayedEvents` system property | `1000000` *(documented: `XmlSchemaPathFinder.java`)* | operator-tunable per-process limit | maximum previously traversed events replayed while backtracking through one document |
+| `org.apache.ws.commons.schema.walker.maxDepth` system property | `256` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum depth of nested elements, model groups and substitution group members while walking a schema, and separately of type derivation and of attribute group references; a deployment running the walker on threads with small stacks (under about 512 KB) should lower it |
 | `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
@@ -350,9 +355,13 @@ leave open.
   the limit is configurable with a JVM system property *(documented:
   `README.txt`)*.
 - Walker expansion cycles are rejected for type derivation, substitution
-  groups, model groups, and attribute groups. This prevents recursive
-  stack exhaustion for malformed but parseable schemas; it is not a general
-  limit on the size or cost of an acyclic schema.
+  groups, model groups, and attribute groups. The depth of an acyclic walk
+  is bounded by default to 256 nested elements, model groups and
+  substitution group members, and separately to 256 levels of type
+  derivation and of attribute group references; the limit is configurable
+  with a JVM system property *(documented: `README.txt`)*. Together these
+  prevent recursive stack exhaustion for malformed but parseable schemas;
+  they are not a general limit on the size or cost of an acyclic schema.
 - No rate limit on URL fetches when following `xs:import`; bounding
   fetch rate is a §10 caller responsibility *(maintainer — §14 Q12)*.
 - `XmlSchemaPathFinder` bounds decision points and replayed events per
@@ -440,7 +449,8 @@ leave open.
   `XmlSchemaWalker.walk(XmlSchemaElement)`.
 - **Property**: cyclic type derivation, substitution-group, model-group,
   and attribute-group expansions terminate with `XmlSchemaException` rather
-  than recursing indefinitely. Legal recursive content that passes through
+  than recursing indefinitely, as do acyclic chains of them nested beyond
+  the configurable walk depth. Legal recursive content that passes through
   an element declaration remains walkable.
 - **Violation symptom**: a parseable schema causes the walker to recurse
   until `StackOverflowError` or another resource-exhaustion failure.
@@ -550,8 +560,8 @@ matching disclaimer.
   `FEATURE_SECURE_PROCESSING=true`, but not universally.
 - **Schema-amplification DoS** — large or heavily-recursive acyclic schemas
   can exhaust memory or CPU within the documented resource limits;
-  structural nesting and cyclic walker expansion are rejected as described
-  in §8 P5 and §8 P6.
+  structural nesting and cyclic or over-deep walker expansion are rejected
+  as described in §8 P5 and §8 P6.
 - **Confused-deputy fetch via untrusted `baseUri` + relative
   `schemaLocation`** — the operator-supplied base URI is trusted.
 
