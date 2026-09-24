@@ -45,10 +45,7 @@ public abstract class XmlSchemaFacet extends XmlSchemaAnnotated {
 
     public static XmlSchemaFacet construct(Element el) {
         String name = el.getLocalName();
-        boolean fixed = false;
-        if (el.getAttribute("fixed").equals("true")) {
-            fixed = true;
-        }
+        boolean fixed = SchemaBuilder.parseBoolean(el.getAttribute("fixed"));
         XmlSchemaFacet facet;
         if ("enumeration".equals(name)) {
             facet = new XmlSchemaEnumerationFacet();
