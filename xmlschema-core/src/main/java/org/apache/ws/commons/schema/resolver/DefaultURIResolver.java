@@ -236,6 +236,9 @@ public class DefaultURIResolver implements CollectionURIResolver {
                                              + " working directory, which "
                                              + ALLOW_FILE_SYSTEM_PROPERTY + " has turned off.");
             }
+            // The parser opens this against the working directory, so it is as much a local read
+            // as a file: URL and needs the same check.
+            verifyRegularFile(new File(schemaLocation), schemaLocation);
             return new InputSource(schemaLocation);
         }
         return null;
@@ -572,7 +575,10 @@ public class DefaultURIResolver implements CollectionURIResolver {
      * @param schemaLocation the original schema location, for the error message.
      */
     private static void verifyRegularFile(String uri, String schemaLocation) {
-        final File file = toLocalFile(uri);
+        verifyRegularFile(toLocalFile(uri), schemaLocation);
+    }
+
+    private static void verifyRegularFile(File file, String schemaLocation) {
         if (file != null && file.exists() && !file.isFile()) {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
                                          + "\" is not a regular file. A schema document cannot be"

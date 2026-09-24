@@ -454,6 +454,26 @@ public class DefaultURIResolverTest extends Assert {
         assertSchemeRefused("jar:" + asFileUrl + "!/x.xsd", null, "not a regular file");
     }
 
+    /**
+     * With no base URI, a relative location is handed to the parser as-is and opened against the
+     * working directory, so it is a local read like any file: URL and gets the same check.
+     */
+    @Test
+    public void testARelativeLocationThatIsNotARegularFileIsRefused() {
+        assertTrue(new File(".").isDirectory());
+        assertSchemeRefused(".", null, "not a regular file");
+    }
+
+    @Test
+    public void testARelativeRegularOrMissingFileStillResolves() {
+        assertTrue(new File("pom.xml").isFile());
+        assertEquals("pom.xml",
+                     new DefaultURIResolver().resolveEntity("urn:x", "pom.xml", null).getSystemId());
+        assertEquals("no-such-schema.xsd",
+                     new DefaultURIResolver()
+                         .resolveEntity("urn:x", "no-such-schema.xsd", null).getSystemId());
+    }
+
     @Test
     public void testARegularFileStillResolves() throws Exception {
         File file = File.createTempFile("schema", ".xsd");
