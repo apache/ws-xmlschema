@@ -136,6 +136,17 @@ public class TestPathFinderFailureTypes extends Assert {
         }
     }
 
+    /**
+     * An attribute declared without a type is an xs:anySimpleType and accepts any value.
+     */
+    @Test
+    public void testUntypedAttributeAcceptsAnyValue() throws Exception {
+        walk("<xs:element name=\"root\"><xs:complexType>"
+             + "<xs:attribute name=\"x\"/>"
+             + "</xs:complexType></xs:element>",
+             "<root xmlns=\"urn:t\" x=\"1\"/>");
+    }
+
     @Test
     public void testValidDocumentStillWalks() throws Exception {
         walk("<xs:simpleType name=\"s\"><xs:restriction base=\"xs:string\">"

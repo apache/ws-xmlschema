@@ -403,6 +403,14 @@ final class XmlSchemaScope {
                 child = baseParticle;
             } else if (baseParticle == null) {
                 child = ext.getParticle();
+            } else if (!(baseParticle instanceof XmlSchemaSequenceMember)
+                       || !(ext.getParticle() instanceof XmlSchemaSequenceMember)) {
+                // Only an xs:all is not a sequence member, and XML Schema 1.0
+                // does not allow one to be combined with any other particle.
+                throw new XmlSchemaException("An extension of " + ext.getBaseTypeName()
+                                             + " adds content to it, but one of the two content"
+                                             + " models is an xs:all group, which cannot be"
+                                             + " combined with other particles.");
             } else {
                 XmlSchemaSequence seq = new XmlSchemaSequence();
                 seq.getItems().add((XmlSchemaSequenceMember)baseParticle);
@@ -420,8 +428,13 @@ final class XmlSchemaScope {
             } else if (ext.getAnyAttribute() == null) {
                 anyAttr = baseAnyAttr;
             } else {
-                String[] baseNamespaces = baseAnyAttr.getNamespace().split(" ");
-                String[] childNamespaces = ext.getAnyAttribute().getNamespace().split(" ");
+                // An absent namespace attribute means ##any, and a union with
+                // ##any is ##any.
+                final String baseNamespace = baseAnyAttr.getNamespace();
+                final String childNamespace = ext.getAnyAttribute().getNamespace();
+                final boolean unionIsAny = isAnyNamespace(baseNamespace) || isAnyNamespace(childNamespace);
+                String[] baseNamespaces = unionIsAny ? new String[0] : baseNamespace.split(" ");
+                String[] childNamespaces = unionIsAny ? new String[0] : childNamespace.split(" ");
 
                 HashSet<String> namespaces = new HashSet<String>();
                 for (String baseNs : baseNamespaces) {
@@ -441,7 +454,7 @@ final class XmlSchemaScope {
                 }
 
                 anyAttr = new XmlSchemaAnyAttribute();
-                anyAttr.setNamespace(nsAsString.toString());
+                anyAttr.setNamespace(unionIsAny ? "##any" : nsAsString.toString());
                 anyAttr.setProcessContent(ext.getAnyAttribute().getProcessContent());
                 anyAttr.setAnnotation(ext.getAnyAttribute().getAnnotation());
                 anyAttr.setId(ext.getAnyAttribute().getId());
@@ -823,6 +836,10 @@ final class XmlSchemaScope {
         }
 
         return (parent == null) ? null : parent.getUserRecognizedType();
+    }
+
+    private static boolean isAnyNamespace(String namespace) {
+        return (namespace == null) || "##any".equals(namespace.trim());
     }
 
     private static String getName(XmlSchemaNamed name, String defaultName) {
