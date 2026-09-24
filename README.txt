@@ -112,6 +112,26 @@ stack. The following JVM system property adjusts the limit:
       are unaffected either way, so this is not on its own a defence against
       an untrusted schema document - see the Security section below.
 
+    org.apache.ws.commons.schema.remote.checkAddresses
+      Whether the address a remote schema location resolves to is checked
+      before it is fetched. The default is true, which refuses the address
+      classes that can never legitimately serve a schema document: link-local
+      (cloud metadata services live at 169.254.169.254), multicast, the
+      wildcard address, IPv6 unique-local (fd00::/7, which holds IPv6
+      metadata endpoints such as fd00:ec2::254), and the IPv6 forms that
+      embed one of those IPv4 addresses. Every address the host name answers
+      with is checked, and so is every redirect hop.
+
+      Loopback and private (RFC 1918) addresses are permitted: a schema
+      served from localhost or an internal mirror is ordinary. This is a
+      denylist of never-legitimate classes, not a host allowlist, and it is
+      no defence against a hostile host at a routable address.
+
+      The check is skipped when the fetch would go through an HTTP proxy,
+      because the proxy resolves the host itself and the addresses this JVM
+      sees do not describe where the fetch lands; there the proxy is the
+      egress control. Set the property to false to skip it everywhere.
+
     org.apache.ws.commons.schema.remote.maxRedirects
       How many HTTP redirects one remote schema fetch may follow. The default
       is 5. Redirects are followed by the resolver rather than by the JDK, so

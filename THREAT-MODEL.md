@@ -154,7 +154,7 @@ A finding is in-model only if it reaches a row marked **yes**.
 | --- | --- | --- | --- |
 | B1 | Caller → `XmlSchemaCollection.read(InputSource | Reader | Source | Document | Element)` | none — caller is trusted | none |
 | B2 | `XmlSchemaCollection.read(InputSource, ...)` → hardened JDK `DocumentBuilder` | none | external DTD/entity resolution disabled unconditionally; DOCTYPE accepted |
-| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` allowlists the effective scheme (`http`, `https`, `file`, `jar`, judged through any `jar:` wrapper), and unconditionally refuses a `file:` location naming a non-local authority or a `jar:` archive fetched over the network; it also refuses a location that changes the scheme of a remote base; it does **no host filtering** on the `http(s)` targets it allows |
+| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` allowlists the effective scheme (`http`, `https`, `file`, `jar`, judged through any `jar:` wrapper), and unconditionally refuses a `file:` location naming a non-local authority or a `jar:` archive fetched over the network; it also refuses a location that changes the scheme of a remote base. A remote fetch is refused if the host resolves to a never-legitimate address class (§5a, `remote.checkAddresses`), checked again on each redirect hop; there is otherwise **no host filtering** on the `http(s)` targets it allows |
 | B4 | Resolved `InputSource` → `XmlSchemaCollection.read(InputSource, ...)` (recursive) | none | none |
 | B5 | `XmlSchema.write(...)` → JDK `TransformerFactory` (with `FEATURE_SECURE_PROCESSING=true` and external DTD/stylesheet access disabled where supported) | none | none |
 | B6 | `XmlSchemaCollection` ctor → `System.getProperty("org.apache.ws.commons.schema.extension_registry")` → `Class.forName()` | none | trusts system properties to be operator-controlled |
@@ -291,6 +291,7 @@ points*:
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
 | `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
 | `org.apache.ws.commons.schema.remote.allowNetwork` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments with no remote schema sets | when `false`, `DefaultURIResolver` refuses a location whose effective scheme is `http` or `https`; local `file:` / `jar:` reads are unaffected, so it closes the remote-fetch half of §9's SSRF disclaimer but not the local-read half |
+| `org.apache.ws.commons.schema.remote.checkAddresses` system property | `true` *(documented: `README.txt`)* | shipped default: refuse address classes that never serve a schema | before a remote fetch, and again on each redirect hop, every address the host resolves to is checked; link-local (`169.254.169.254`), multicast, wildcard, IPv6 unique-local (`fd00::/7`) and IPv6 forms embedding one are refused. Loopback and RFC 1918 are permitted. Skipped when a proxy would carry the fetch, since the proxy resolves the host |
 | `org.apache.ws.commons.schema.remote.maxRedirects` system property | `5` *(documented: `README.txt`)* | operator-tunable bound on one fetch's redirect chain | `DefaultURIResolver` follows redirects itself rather than leaving them to the JDK, so the chain is bounded, each hop is re-checked against the scheme and authority rules, and the chain shares one fetch deadline; `0` refuses a redirected location. A hop that changes scheme is refused |
 | `org.apache.ws.commons.schema.local.allowFileSystem` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments whose schema documents stand alone | when `false`, `DefaultURIResolver` refuses a `file:` location, a `jar:file:` one, and a relative location with no base URI; with `remote.allowNetwork=false` it leaves the resolver with nothing to fetch, which is the nearest the shipped resolver comes to the catalog-only default §14 Q12(b) declined to make the default |
 | `org.apache.ws.commons.schema.remote.connectTimeoutMillis` / `.readTimeoutMillis` / `.maxFetchMillis` / `.maxBytes` system properties | `5000` / `10000` / `30000` / `67108864` *(documented: `README.txt`)* | operator-tunable per-fetch bounds | bound one remote `DefaultURIResolver` fetch in wall-clock time and bytes; without them the JDK opens a `schemaLocation` with no timeout and no size limit, and a single import can hold a thread or its heap indefinitely |
@@ -488,12 +489,16 @@ matching disclaimer.
   host the schema author chose — and a `jar:` URL whose archive would be
   fetched over the network. Within the `http` and
   `https` targets it does allow, it applies **no host or address
-  filtering of any kind**: any
-  `http(s)` host is fetched on request, including loopback, link-local
-  (`169.254.169.254`) and RFC1918 addresses. Redirects are now followed by
-  the resolver rather than the JDK and each hop is re-checked, so a
-  destination rule *could* be enforced across a chain — but none is
-  applied, by host or by address, so the reach is unchanged. The caller is
+  filtering**, with one exception: the address classes that can never
+  legitimately serve a schema document — link-local (so
+  `169.254.169.254` and other cloud metadata services), multicast, the
+  wildcard address, IPv6 unique-local, and IPv6 forms embedding a
+  forbidden IPv4 address — are refused before the fetch and on every
+  redirect hop (§5a, `remote.checkAddresses`). That is a denylist of
+  never-legitimate classes, **not** a host allowlist: loopback, RFC 1918
+  and every routable host stay reachable, so a hostile host at an ordinary
+  address is fetched exactly as before, and an application that must
+  restrict *which* hosts may be reached still needs its own resolver. The caller is
   responsible for installing a restricting `URIResolver` if the input
   schema is attacker-controlled *(documented: `DefaultURIResolver.java`;
   ratified — §14 Q12)*. An operator with no remote schema sets can set
@@ -761,6 +766,20 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-24** — `DefaultURIResolver` now refuses, before a remote fetch
+  and again on each redirect hop, an address in a class that can never
+  serve a schema document: link-local, multicast, wildcard, IPv6
+  unique-local, and the IPv6 forms embedding a forbidden IPv4 address.
+  Operator-tunable through `remote.checkAddresses`, defaulting to on, and
+  skipped when a proxy would carry the fetch. A revision trigger under the
+  first bullet above; §4 B3, §5a and §9 are updated. This is the first
+  destination filtering the resolver has applied, so §9's flat "no host or
+  address filtering" no longer held — but it is a denylist of
+  never-legitimate classes rather than a host allowlist, so the §14 Q12(b)
+  ruling stands and a report that an ordinary host was fetched is still
+  `BY-DESIGN: property-disclaimed`. The classes and their rationale follow
+  `org.apache.neethi.PolicyReference` in `apache/ws-neethi`, which vets a
+  remote policy reference the same way.
 - **2026-09-17** — `DefaultURIResolver` now follows HTTP redirects itself
   instead of leaving them to the JDK, bounded by a new
   `org.apache.ws.commons.schema.remote.maxRedirects` property (default
