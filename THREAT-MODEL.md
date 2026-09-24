@@ -766,6 +766,18 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-24** — `DefaultURIResolver` now refuses a local location that
+  exists but is not a regular file. A remote fetch is bounded in time and
+  bytes by the properties in §5a; a local read is handed to the parser as a
+  system id and is bounded by nothing, so a named pipe held the parsing
+  thread for as long as nothing wrote to it (confirmed: an indefinite hang,
+  now a refusal). Directories, character devices and sockets go out of
+  reach with it. A location that does not exist is untouched, so a missing
+  schema still reports as it always has and the §9 existence oracle is
+  unchanged. A revision trigger under the first bullet above. Note that
+  this is not a size or time bound on local reads: §9 still records that a
+  single schema document has no size limit, and a large local one can still
+  exhaust the heap.
 - **2026-09-24** — `DefaultURIResolver` now refuses, before a remote fetch
   and again on each redirect hop, an address in a class that can never
   serve a schema document: link-local, multicast, wildcard, IPv6
