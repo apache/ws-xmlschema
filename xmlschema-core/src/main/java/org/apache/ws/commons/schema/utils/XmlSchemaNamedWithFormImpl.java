@@ -111,7 +111,11 @@ public class XmlSchemaNamedWithFormImpl extends XmlSchemaNamedImpl implements Xm
     @Override
     public void setName(String name) {
         super.setName(name);
-        if (getForm() == XmlSchemaForm.QUALIFIED) {
+        if (getName() == null) {
+            // No name, as for a ref= declaration: no wire name either, whatever the form.
+            // setForm() calls this too, and new QName("", null) would throw.
+            wireName = null;
+        } else if (getForm() == XmlSchemaForm.QUALIFIED) {
             wireName = getQName();
         } else {
             wireName = new QName("", getName());
