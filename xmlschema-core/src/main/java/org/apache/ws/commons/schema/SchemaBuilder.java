@@ -1167,7 +1167,10 @@ public class SchemaBuilder {
                 attrs.add(att);
                 String value = att.getValue();
 
-                if (value.indexOf(':') > -1) {
+                // A value starting with ':' is not a QName, so it has no prefix to declare; the
+                // empty prefix would otherwise resolve to the default namespace and "xmlns:" is
+                // not a legal attribute name.
+                if (value.indexOf(':') > 0) {
                     // there is a possibility of some namespace mapping
                     String prefix = value.substring(0, value.indexOf(':'));
                     if (ctx == null) {
