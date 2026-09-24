@@ -547,9 +547,59 @@ public class DefaultURIResolver implements CollectionURIResolver {
                                          + "\" would be read from the filesystem, which "
                                          + ALLOW_FILE_SYSTEM_PROPERTY + " has turned off.");
         }
-        if ("file".equals(scheme) && !isLocalFileUri(archive)) {
+        if ("file".equals(scheme)) {
+            if (!isLocalFileUri(archive)) {
+                throw new XmlSchemaException("The schema location \"" + schemaLocation
+                                             + "\" resolves to a file URL with a non-local"
+                                             + " authority.");
+            }
+            verifyRegularFile(archive, schemaLocation);
+        }
+    }
+
+    /**
+     * Refuse a local location that exists but is not a regular file. A remote fetch is bounded in
+     * time and bytes; a local read is handed to the parser as a system id and is bounded by
+     * nothing, so a named pipe holds the parsing thread for as long as nothing writes to it. A
+     * schema document is a regular file, so requiring one costs nothing and also puts directories,
+     * character devices and sockets out of reach.
+     * <p>
+     * A location that does not exist is left alone: that is an ordinary missing-schema error and
+     * the parser reports it as it always has.
+     * </p>
+     *
+     * @param uri the resolved location, or for a <code>jar:</code> URL the archive it names.
+     * @param schemaLocation the original schema location, for the error message.
+     */
+    private static void verifyRegularFile(String uri, String schemaLocation) {
+        final File file = toLocalFile(uri);
+        if (file != null && file.exists() && !file.isFile()) {
             throw new XmlSchemaException("The schema location \"" + schemaLocation
-                                         + "\" resolves to a file URL with a non-local authority.");
+                                         + "\" is not a regular file. A schema document cannot be"
+                                         + " a directory, a device or a pipe, and reading one can"
+                                         + " block the parse for as long as nothing writes to it.");
+        }
+    }
+
+    /**
+     * The local file a <code>file:</code> URL names, or <code>null</code> if it cannot be mapped to
+     * one. Null means the check above does not apply rather than that the location is safe; the
+     * scheme and authority rules have already run.
+     */
+    private static File toLocalFile(String uri) {
+        final URI parsed;
+        try {
+            parsed = new URI(uri.trim());
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        try {
+            return new File(parsed);
+        } catch (IllegalArgumentException e) {
+            // File(URI) refuses an authority, even "localhost", which isLocalFileUri allows. The
+            // path is the part that names the file.
+            final String path = parsed.getPath();
+            return path == null || path.length() == 0 ? null : new File(path);
         }
     }
 

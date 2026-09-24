@@ -436,4 +436,45 @@ public class DefaultURIResolverTest extends Assert {
                        expected.getMessage().contains(expectedMessageFragment));
         }
     }
+
+    /**
+     * A local read is handed to the parser as a system id and bounded by nothing, so a named pipe
+     * holds the parsing thread indefinitely. A directory exercises the same predicate portably --
+     * Java cannot create a FIFO -- and is refused for the same reason.
+     */
+    @Test
+    public void testALocalLocationThatIsNotARegularFileIsRefused() throws Exception {
+        File directory = existingDirectory();
+        assertTrue(directory.isDirectory());
+        String asFileUrl = directory.toURI().toString();
+
+        assertSchemeRefused(asFileUrl, null, "not a regular file");
+        assertSchemeRefused(asFileUrl, localBase(), "not a regular file");
+        // The archive of a jar: URL must be a regular file too.
+        assertSchemeRefused("jar:" + asFileUrl + "!/x.xsd", null, "not a regular file");
+    }
+
+    @Test
+    public void testARegularFileStillResolves() throws Exception {
+        File file = File.createTempFile("schema", ".xsd");
+        try {
+            assertEquals(file.toURI().toString(),
+                         new DefaultURIResolver()
+                             .resolveEntity("urn:x", file.toURI().toString(), null).getSystemId());
+        } finally {
+            assertTrue(file.delete() || !file.exists());
+        }
+    }
+
+    /**
+     * A location that does not exist is not this check's business: it is an ordinary missing-schema
+     * error, and refusing it here would change what the parser reports for a typo.
+     */
+    @Test
+    public void testAMissingLocalFileIsStillResolved() {
+        String missing = new File(existingDirectory(), "no-such-schema.xsd").toURI().toString();
+
+        assertEquals(missing,
+                     new DefaultURIResolver().resolveEntity("urn:x", missing, null).getSystemId());
+    }
 }
