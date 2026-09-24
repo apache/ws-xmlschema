@@ -144,6 +144,14 @@ final class XmlSchemaElementValidator {
                 continue;
             }
 
+            /*
+             * An attribute declared without a type is an xs:anySimpleType,
+             * which accepts any value; the walker leaves its type unset.
+             */
+            if (attribute.getType() == null) {
+                continue;
+            }
+
             if (attribute.getType().getType().equals(XmlSchemaTypeInfo.Type.COMPLEX)) {
 
                 throw new ValidationException("Attribute " + attrQName + " of element " + elemQName
