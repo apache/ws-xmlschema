@@ -188,6 +188,19 @@ public class TestXmlSchemaNamespaceContext {
         nsContext.addNamespace("avro", "");
     }
 
+    /**
+     * xmlns="" undeclares the default namespace for the scope of the mapping.
+     */
+    @Test
+    public void testUndeclareDefaultNamespace() {
+        XmlSchemaNamespaceContext nsContext = new XmlSchemaNamespaceContext();
+        nsContext.addNamespace("", "urn:outer");
+        nsContext.addNamespace("", "");
+        assertEquals("", nsContext.getNamespaceURI(""));
+        nsContext.removeNamespace("");
+        assertEquals("urn:outer", nsContext.getNamespaceURI(""));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testGetPrefixesWithNullNamespace() {
         XmlSchemaNamespaceContext nsContext = new XmlSchemaNamespaceContext();
