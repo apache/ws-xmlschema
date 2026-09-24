@@ -31,6 +31,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -237,8 +238,8 @@ public class DefaultURIResolver implements CollectionURIResolver {
                                              + ALLOW_FILE_SYSTEM_PROPERTY + " has turned off.");
             }
             // The parser opens this against the working directory, so it is as much a local read
-            // as a file: URL and needs the same check.
-            verifyRegularFile(new File(schemaLocation), schemaLocation);
+            // as a file: URL and needs the same check, made on the file the parser will open.
+            verifyRegularFile(relativeLocationFile(schemaLocation), schemaLocation);
             return new InputSource(schemaLocation);
         }
         return null;
@@ -584,6 +585,26 @@ public class DefaultURIResolver implements CollectionURIResolver {
                                          + "\" is not a regular file. A schema document cannot be"
                                          + " a directory, a device or a pipe, and reading one can"
                                          + " block the parse for as long as nothing writes to it.");
+        }
+    }
+
+    /**
+     * The file the parser opens for a relative location with no base URI. It resolves the location
+     * as a URI against the working directory and opens the path of the result, so escapes are
+     * decoded and a query or fragment is dropped: <code>pip%65.xsd</code>,
+     * <code>pipe.xsd#x</code> and <code>pipe.xsd?x</code> all name the file <code>pipe.xsd</code>.
+     * Taking the location as a file name instead would check a file the parser never opens.
+     */
+    private static File relativeLocationFile(String location) {
+        try {
+            final URL workingDirectory = new File("").getAbsoluteFile().toURI().toURL();
+            // The parser takes a backslash in a system id as a path separator.
+            final URL resolved = new URL(workingDirectory, location.replace('\\', '/'));
+            // URLDecoder would read '+' as a space, which a URL path does not.
+            return new File(URLDecoder.decode(resolved.getPath().replace("+", "%2B"), "UTF-8"));
+        } catch (IOException | IllegalArgumentException e) {
+            // A malformed escape: the parser cannot open the location either.
+            return new File(location);
         }
     }
 
