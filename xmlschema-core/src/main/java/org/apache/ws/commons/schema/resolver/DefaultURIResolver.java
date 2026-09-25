@@ -51,9 +51,11 @@ import org.xml.sax.InputSource;
  * <p>
  * This resolver is a convenience for trusted, operator-controlled schema sets. It restricts the URI
  * schemes it will resolve to <code>http</code>, <code>https</code>, <code>file</code> and
- * <code>jar</code>, and refuses a schema location that changes the scheme of a remote base URI,
- * names a non-local authority with the <code>file:</code> scheme, or reads a <code>jar:</code>
- * archive fetched over the network. A deployment with no remote schema sets can turn network
+ * <code>jar</code>, and refuses a schema location that takes a remote base URI to a local
+ * (<code>file:</code> or <code>jar:</code>) scheme, names a non-local authority with the
+ * <code>file:</code> scheme, or reads a <code>jar:</code> archive fetched over the network. A
+ * location may move a remote base between <code>http</code> and <code>https</code> in either
+ * direction; only a redirect that changes scheme is refused. A deployment with no remote schema sets can turn network
  * resolution off altogether with the {@link #ALLOW_NETWORK_PROPERTY} system property, and
  * filesystem resolution with {@link #ALLOW_FILE_SYSTEM_PROPERTY}, without supplying its own
  * resolver, and the address classes that only ever appear in an SSRF attempt are refused before

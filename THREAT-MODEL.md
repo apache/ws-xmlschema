@@ -154,7 +154,7 @@ A finding is in-model only if it reaches a row marked **yes**.
 | --- | --- | --- | --- |
 | B1 | Caller → `XmlSchemaCollection.read(InputSource | Reader | Source | Document | Element)` | none — caller is trusted | none |
 | B2 | `XmlSchemaCollection.read(InputSource, ...)` → hardened JDK `DocumentBuilder` | none | external DTD/entity resolution disabled unconditionally; DOCTYPE accepted |
-| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` allowlists the effective scheme (`http`, `https`, `file`, `jar`, judged through any `jar:` wrapper), and unconditionally refuses a `file:` location naming a non-local authority or a `jar:` archive fetched over the network; it also refuses a location that changes the scheme of a remote base. A remote fetch is refused if the host resolves to a never-legitimate address class (§5a, `remote.checkAddresses`), checked again on each redirect hop; there is otherwise **no host filtering** on the `http(s)` targets it allows |
+| B3 | Schema parser → `URIResolver.resolveEntity(namespace, schemaLocation, baseUri)` | none | bundled `DefaultURIResolver` allowlists the effective scheme (`http`, `https`, `file`, `jar`, judged through any `jar:` wrapper), and unconditionally refuses a `file:` location naming a non-local authority or a `jar:` archive fetched over the network; it also refuses a local (`file:` or `jar:`) location from a remote base, but not a move between `http` and `https` in either direction, so an `https` base can import over plain `http` (only a redirect that changes scheme is refused). A remote fetch is refused if the host resolves to a never-legitimate address class (§5a, `remote.checkAddresses`), checked again on each redirect hop; there is otherwise **no host filtering** on the `http(s)` targets it allows |
 | B4 | Resolved `InputSource` → `XmlSchemaCollection.read(InputSource, ...)` (recursive) | none | none |
 | B5 | `XmlSchema.write(...)` → JDK `TransformerFactory` (with `FEATURE_SECURE_PROCESSING=true` and external DTD/stylesheet access disabled where supported) | none | none |
 | B6 | `XmlSchemaCollection` ctor → `System.getProperty("org.apache.ws.commons.schema.extension_registry")` → `Class.forName()` | none | trusts system properties to be operator-controlled |
@@ -489,7 +489,11 @@ matching disclaimer.
   `InputSource` pointing at it. The JDK then fetches it on parse.
   The resolver restricts the *scheme* it will hand back — `http`,
   `https`, `file` and `jar`, judged through any `jar:` wrapper — and
-  refuses a location that changes the scheme of a remote base. It also
+  refuses a local (`file:` or `jar:`) location from a remote base. A move
+  between `http` and `https` is not refused for a location, in either
+  direction, so an `https` schema may import one over plain `http`; only
+  a redirect that changes scheme is refused (§5a `remote.maxRedirects`).
+  It also
   refuses, for every location and whatever the base, a `file:` URL that
   names a non-local host — in its authority, or as a path beginning
   `//`, which is a UNC path on Windows and so an SMB connection to a

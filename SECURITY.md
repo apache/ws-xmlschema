@@ -36,14 +36,17 @@ findings are triaged are documented in [THREAT-MODEL.md](./THREAT-MODEL.md).
 `XmlSchemaCollection` follows `xs:import` / `xs:include` /
 `xs:redefine` schema locations through a `URIResolver`. The bundled
 `DefaultURIResolver` restricts the URI schemes it will resolve; refuses a
-location that changes the scheme of a remote base, a `file:` location
+local (`file:` or `jar:`) location from a remote base, a `file:` location
 naming a remote host, a `jar:` archive fetched over the network, and a
 local location that is not a regular file; refuses remote addresses in
 classes that never serve a schema (link-local, which includes cloud
 metadata endpoints, multicast, wildcard and IPv6 unique-local; see
 `org.apache.ws.commons.schema.remote.checkAddresses`, which is skipped when
 a proxy carries the fetch); and bounds each remote fetch in time, bytes and
-redirects. It has no host allowlist:
+redirects. A location may move a remote base between `http` and `https`,
+in either direction, so an `https` schema can import one over plain
+`http`; only a redirect that changes scheme is refused. It has no host
+allowlist:
 any routable host, loopback or private address, or readable local file
 that a schema location names is fetched. An operator with no remote, or no
 local, schema sets can turn that transport off (see README.txt). The
