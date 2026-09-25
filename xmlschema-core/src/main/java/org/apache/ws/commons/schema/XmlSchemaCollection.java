@@ -874,6 +874,7 @@ public final class XmlSchemaCollection {
             docFac.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
             docFac.setNamespaceAware(true);
             hardenAgainstDtdProcessing(docFac);
+            limitElementDepth(docFac);
             final DocumentBuilder builder = docFac.newDocumentBuilder();
             builder.setEntityResolver(NO_OP_ENTITY_RESOLVER);
             Document doc = null;
@@ -884,6 +885,15 @@ public final class XmlSchemaCollection {
         } catch (IOException e) {
             throw new XmlSchemaException(e.getMessage(), e);
         } catch (SAXException e) {
+            if (e.getMessage() != null && e.getMessage().contains(ELEMENT_DEPTH_ERROR)) {
+                // Name the property that governs the limit: raising jdk.xml.maxElementDepth alone
+                // has no effect, as limitElementDepth() lowers it again.
+                throw new XmlSchemaException("The schema document is nested too deeply to parse ("
+                                             + e.getMessage() + "). The limit is twice the"
+                                             + " org.apache.ws.commons.schema.maxNestingDepth system"
+                                             + " property plus 64, unless jdk.xml.maxElementDepth"
+                                             + " sets a lower one.", e);
+            }
             throw new XmlSchemaException(e.getMessage(), e);
         }
     }
@@ -941,6 +951,62 @@ public final class XmlSchemaCollection {
      * runs away.
      * </p>
      */
+    /**
+     * The JDK parser's element-depth limit, <code>jdk.xml.maxElementDepth</code>, under the name
+     * JDK 8 onwards accepts on a factory.
+     */
+    private static final String MAX_ELEMENT_DEPTH =
+        "http://www.oracle.com/xml/jaxp/properties/maxElementDepth";
+
+    /** The code the JDK parser's message carries when that limit is exceeded. */
+    private static final String ELEMENT_DEPTH_ERROR = "JAXP00010006";
+
+    /**
+     * Bound the element depth of the parse itself. An internal DTD subset is accepted, and the JDK
+     * builds an entity's replacement markup recursively: a 35 KB schema whose entity expands to
+     * elements nested a few thousand deep overflowed the thread stack inside the parser, before
+     * the schema builder's own nesting bound could see it. The builder never accepts a document
+     * deeper than about twice its structural bound, maxNestingDepth, since each counted level (an
+     * element, a type, a model group) is at most two XML levels deep, so refusing deeper markup
+     * in the parser costs nothing. A lower limit already set, by jdk.xml.maxElementDepth or by the
+     * JDK's own default, is left in place.
+     */
+    private static void limitElementDepth(DocumentBuilderFactory docFac) {
+        final long limit = Math.min(Integer.MAX_VALUE, 2L * SchemaBuilder.MAX_NESTING_DEPTH + 64L);
+        final long existing = currentElementDepthLimit(docFac);
+        if (existing > 0 && existing <= limit) {
+            return;
+        }
+        try {
+            docFac.setAttribute(MAX_ELEMENT_DEPTH, String.valueOf(limit));
+        } catch (IllegalArgumentException e) {
+            // A parser other than the JDK's, which does not recognize the property.
+        }
+    }
+
+    /**
+     * The element-depth limit already in force, or 0 for none. Only some JDKs report it through
+     * the factory: JDK 21 does; JDK 8 throws IllegalArgumentException, and JDK 17 reports only
+     * attributes set on the factory itself, returning null or throwing NullPointerException. When
+     * the factory gives no value, the system property the parser takes it from is read instead.
+     */
+    private static long currentElementDepthLimit(DocumentBuilderFactory docFac) {
+        Object current = null;
+        try {
+            current = docFac.getAttribute(MAX_ELEMENT_DEPTH);
+        } catch (RuntimeException e) {
+            // Not reported by this JDK's factory.
+        }
+        if (current != null) {
+            try {
+                return Long.parseLong(current.toString().trim());
+            } catch (NumberFormatException e) {
+                // Fall back to the system property.
+            }
+        }
+        return getIntProperty("jdk.xml.maxElementDepth", 0);
+    }
+
     private static void hardenAgainstDtdProcessing(DocumentBuilderFactory docFac) {
         trySetFeature(docFac, "http://xml.org/sax/features/external-general-entities", false);
         trySetFeature(docFac, "http://xml.org/sax/features/external-parameter-entities", false);

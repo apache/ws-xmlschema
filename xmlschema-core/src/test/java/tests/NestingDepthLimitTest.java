@@ -219,6 +219,77 @@ public class NestingDepthLimitTest extends Assert {
         return schema.toString();
     }
 
+    /**
+     * An internal DTD subset is accepted, and the JDK parser builds an entity's replacement markup
+     * recursively, so a small document whose entity expands to deeply nested elements used to
+     * overflow the stack inside the parser, before the schema builder saw any of it.
+     */
+    @Test
+    public void testEntityExpandingToDeepMarkupIsRejected() throws Exception {
+        assertRejectedAsNested("<!DOCTYPE xs:schema [<!ENTITY deep \"" + repeat("<m>", 5000)
+                               + repeat("</m>", 5000) + "\">]>"
+                               + "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">&deep;</xs:schema>");
+    }
+
+    @Test
+    public void testNestedEntitiesExpandingToDeepMarkupAreRejected() throws Exception {
+        StringBuilder dtd = new StringBuilder("<!DOCTYPE xs:schema [<!ENTITY e0 \"<m/>\">");
+        for (int i = 1; i < 100; i++) {
+            dtd.append("<!ENTITY e").append(i).append(" \"").append(repeat("<m>", 50)).append("&e")
+                .append(i - 1).append(';').append(repeat("</m>", 50)).append("\">");
+        }
+        dtd.append("]>");
+        assertRejectedAsNested(dtd + "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">&e99;"
+                               + "</xs:schema>");
+    }
+
+    /**
+     * Each counted level of structure is at most two XML levels deep, so the deepest schema the
+     * builder accepts is still parsed: here 510 nested anonymous simple types, 1025 elements deep.
+     */
+    @Test
+    public void testDeepestAcceptedSchemaStillParses() throws Exception {
+        StringBuilder schema = new StringBuilder("<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
+                                                 + " targetNamespace=\"urn:deepest\">"
+                                                 + "<xs:simpleType name=\"T\"><xs:restriction>");
+        schema.append(repeat("<xs:simpleType><xs:restriction>", 510))
+            .append("<xs:simpleType><xs:restriction base=\"xs:string\"/></xs:simpleType>")
+            .append(repeat("</xs:restriction></xs:simpleType>", 510))
+            .append("</xs:restriction></xs:simpleType></xs:schema>");
+        assertNotNull(new XmlSchemaCollection().read(new StringReader(schema.toString())));
+    }
+
+    /**
+     * A lower element-depth limit already in force is kept rather than raised.
+     */
+    @Test
+    public void testLowerParserDepthLimitIsKept() throws Exception {
+        System.setProperty(MAX_ELEMENT_DEPTH, "20");
+        try {
+            new XmlSchemaCollection().read(new StringReader(buildNestedSchema(10)));
+            fail("A schema 30 elements deep should be refused under a parser limit of 20.");
+        } catch (XmlSchemaException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains("nested"));
+        }
+    }
+
+    private static void assertRejectedAsNested(String schema) {
+        try {
+            new XmlSchemaCollection().read(new StringReader(schema));
+            fail("The deeply nested schema should be rejected.");
+        } catch (XmlSchemaException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains("nested"));
+        }
+    }
+
+    private static String repeat(String s, int count) {
+        StringBuilder b = new StringBuilder(s.length() * count);
+        for (int i = 0; i < count; i++) {
+            b.append(s);
+        }
+        return b.toString();
+    }
+
     private String buildNestedSchema(int depth) {
         return buildNestedSchema(depth, "urn:nesting");
     }
