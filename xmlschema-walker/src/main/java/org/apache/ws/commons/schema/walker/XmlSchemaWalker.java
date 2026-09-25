@@ -220,6 +220,16 @@ public final class XmlSchemaWalker {
     }
 
     private void walkElement(XmlSchemaElement element) {
+        if (getElementQName(element) == null) {
+            /*
+             * Neither a name nor a reference, which the schema reader accepts: it keeps only the
+             * type of a declaration carrying both ref and type, which XML Schema forbids. There
+             * is no element to walk, and a visitor keeping its books by QName cannot take one.
+             */
+            throw new XmlSchemaException("An element declaration has neither a name nor a ref, so it"
+                                         + " cannot be walked. A declaration carrying both ref and"
+                                         + " type, which XML Schema forbids, is read as having neither.");
+        }
         element = getElement(element, false);
 
         final XmlSchemaElement substGroupElem = element;
