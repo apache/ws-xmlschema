@@ -335,14 +335,24 @@ public class DefaultURIResolver implements CollectionURIResolver {
                     target = nextHop(target, redirectedTo);
                 }
             }
-            // A declared length is a courtesy: it is absent for a chunked response and is in any
-            // case whatever the host chose to claim. The running count below is the real limit.
-            if (connection.getContentLengthLong() > maxBytes) {
-                throw new IOException("The schema location \"" + systemId
-                                      + "\" declared a length above the maximum of "
-                                      + maxBytes + " bytes.");
+            try {
+                // A declared length is a courtesy: it is absent for a chunked response and is in
+                // any case whatever the host chose to claim. The running count below is the real
+                // limit.
+                if (connection.getContentLengthLong() > maxBytes) {
+                    throw new IOException("The schema location \"" + systemId
+                                          + "\" declared a length above the maximum of "
+                                          + maxBytes + " bytes.");
+                }
+                delegate = connection.getInputStream();
+            } catch (IOException | RuntimeException e) {
+                // Nothing else holds the connection, so close it here: left alone, its socket
+                // stays open until the connection is garbage collected.
+                if (connection instanceof HttpURLConnection) {
+                    ((HttpURLConnection)connection).disconnect();
+                }
+                throw e;
             }
-            delegate = connection.getInputStream();
         }
 
         private boolean isRedirect(int code) {
