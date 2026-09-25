@@ -59,9 +59,10 @@ source must install a restricting resolver via
 See [THREAT-MODEL.md](./THREAT-MODEL.md) section 10 for the full set of
 downstream responsibilities.
 
-The parser `XmlSchemaCollection` reads schema documents with never
-resolves external DTDs or external entities, and bounds the element depth
-of what it parses, including markup that an entity expands to. That depth
+The parser that `XmlSchemaCollection` reads schema documents with never
+resolves external DTDs or external entities. It allows at most 1000 entity
+expansions per document, and bounds the element depth of what it parses,
+including markup that an entity expands to. That depth
 limit is set by `org.apache.ws.commons.schema.maxNestingDepth`: twice its
 value plus 64, which is 1088 by default. A lower `jdk.xml.maxElementDepth`
 is kept (on JDK 8, 11 and 17, only when set as a system property rather

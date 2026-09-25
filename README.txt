@@ -76,14 +76,19 @@ stack. The following JVM system property adjusts the limit:
   The DOCTYPE declaration itself is accepted: an internal DTD subset is a
   legitimate part of many real schema documents - the W3C's own XML
   Signature, XML Encryption and XKMS schemas declare their target namespace
-  as an entity in one - and FEATURE_SECURE_PROCESSING bounds entity
-  expansion by both count and accumulated size.
+  as an entity in one - and entity expansion is bounded.
+  FEATURE_SECURE_PROCESSING bounds its accumulated size, and the parser
+  allows at most 1000 entity expansions per document, since the JDK expands
+  nested entities recursively and a long chain of them would otherwise
+  exhaust the thread stack. A lower jdk.xml.entityExpansionLimit is kept,
+  subject to the same jaxp.properties caveat as jdk.xml.maxElementDepth
+  below; raising it has no effect.
 
   The same parser also bounds the element depth of the document, including
   markup an entity expands to, so deep markup is refused before it can
   exhaust the thread stack. The limit is set by maxNestingDepth above:
   twice its value plus 64, which is 1088 by default, since the schema build
-  never accepts a document deeper than that. A lower jdk.xml.maxElementDepth,
+  never accepts a document deeper than that. A lower jdk.xml.maxElementDepth
   is kept, except that on JDK 8, 11 and 17 only a system property is seen:
   a lower limit set just in the JDK's jaxp.properties file is raised to
   this one there, so set -Djdk.xml.maxElementDepth instead. Raising
