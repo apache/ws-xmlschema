@@ -875,6 +875,11 @@ public final class XmlSchemaCollection {
             docFac.setNamespaceAware(true);
             hardenAgainstDtdProcessing(docFac);
             limitElementDepth(docFac);
+            limitEntityExpansion(docFac);
+            // The deferred DOM saves nothing when the whole document is built into a schema, and
+            // its time grows with the square of the number of entities an internal DTD subset
+            // declares: 60,000 declarations, 1.5 MB, took 20 seconds with it and 0.25 without.
+            trySetFeature(docFac, "http://apache.org/xml/features/dom/defer-node-expansion", false);
             final DocumentBuilder builder = docFac.newDocumentBuilder();
             builder.setEntityResolver(NO_OP_ENTITY_RESOLVER);
             Document doc = null;
@@ -893,6 +898,12 @@ public final class XmlSchemaCollection {
                                              + " org.apache.ws.commons.schema.maxNestingDepth system"
                                              + " property plus 64, unless jdk.xml.maxElementDepth"
                                              + " sets a lower one.", e);
+            }
+            if (e.getMessage() != null && e.getMessage().startsWith(ENTITY_EXPANSION_ERROR + ":")) {
+                throw new XmlSchemaException("The schema document expands too many entities to parse ("
+                                             + e.getMessage() + "). The limit is "
+                                             + MAX_ENTITY_EXPANSIONS + ", unless"
+                                             + " jdk.xml.entityExpansionLimit sets a lower one.", e);
             }
             throw new XmlSchemaException(e.getMessage(), e);
         }
@@ -953,16 +964,52 @@ public final class XmlSchemaCollection {
      * deeper than about twice its structural bound, maxNestingDepth, since each counted level (an
      * element, a type, a model group) is at most two XML levels deep, so refusing deeper markup
      * in the parser costs nothing. A lower limit already set, by jdk.xml.maxElementDepth or by the
-     * JDK's own default, is left in place where it can be seen: see currentElementDepthLimit.
+     * JDK's own default, is left in place where it can be seen: see currentLimit.
      */
     private static void limitElementDepth(DocumentBuilderFactory docFac) {
-        final long limit = elementDepthLimit(SchemaBuilder.MAX_NESTING_DEPTH);
-        final long existing = currentElementDepthLimit(docFac);
+        keepLowerLimit(docFac, MAX_ELEMENT_DEPTH, "jdk.xml.maxElementDepth",
+                       elementDepthLimit(SchemaBuilder.MAX_NESTING_DEPTH));
+    }
+
+    /**
+     * The JDK parser's entity-expansion limit, <code>jdk.xml.entityExpansionLimit</code>, under
+     * the name JDK 8 onwards accepts on a factory.
+     */
+    private static final String ENTITY_EXPANSION_LIMIT =
+        "http://www.oracle.com/xml/jaxp/properties/entityExpansionLimit";
+
+    /** The code that starts the JDK parser's message when that limit is exceeded. */
+    private static final String ENTITY_EXPANSION_ERROR = "JAXP00010001";
+
+    /** The most entity expansions one schema document may make. */
+    static final long MAX_ENTITY_EXPANSIONS = 1000;
+
+    /**
+     * Bound the number of entity expansions in the parse. The JDK unwinds nested entities
+     * recursively, one level of its own stack per level of nesting, so a chain of internal
+     * entities each referring to the next overflowed the thread stack on JDK 8 to 21: the
+     * default limit of 64,000 expansions (2,500 on JDK 25) allows a chain far deeper than a
+     * thread stack holds. A chain that also adds text at each level ran out of memory instead.
+     * Schema documents that use an internal DTD subset declare a few entities for namespace
+     * names and make a handful of references to them, so 1,000 costs nothing. A lower limit
+     * already set, by jdk.xml.entityExpansionLimit, is left in place where it can be seen.
+     */
+    private static void limitEntityExpansion(DocumentBuilderFactory docFac) {
+        keepLowerLimit(docFac, ENTITY_EXPANSION_LIMIT, "jdk.xml.entityExpansionLimit",
+                       MAX_ENTITY_EXPANSIONS);
+    }
+
+    /**
+     * Set a JDK parser limit on the factory, unless a lower one is already in force.
+     */
+    private static void keepLowerLimit(DocumentBuilderFactory docFac, String attribute,
+                                       String property, long limit) {
+        final long existing = currentLimit(docFac, attribute, property);
         if (existing > 0 && existing <= limit) {
             return;
         }
         try {
-            docFac.setAttribute(MAX_ELEMENT_DEPTH, String.valueOf(limit));
+            docFac.setAttribute(attribute, String.valueOf(limit));
         } catch (IllegalArgumentException e) {
             // A parser other than the JDK's, which does not recognize the property.
         }
@@ -978,17 +1025,18 @@ public final class XmlSchemaCollection {
     }
 
     /**
-     * The element-depth limit already in force, or 0 for none. Only some JDKs report it through
-     * the factory: JDK 21 does; JDK 8 and 11 throw IllegalArgumentException, and JDK 17 reports
-     * only attributes set on the factory itself, returning null or throwing NullPointerException.
-     * When the factory gives no value, the system property the parser takes it from is read
-     * instead. On those JDKs a limit set only in the JDK's jaxp.properties file is not seen, and
-     * is raised to this library's own.
+     * The limit already in force for a JDK parser property, or 0 for none. Only some JDKs report
+     * it through the factory: JDK 21 does; JDK 8 and 11 throw IllegalArgumentException, and JDK 17
+     * reports only attributes set on the factory itself, returning null or throwing
+     * NullPointerException. When the factory gives no value, the system property the parser takes
+     * it from is read instead. On those JDKs a limit set only in the JDK's jaxp.properties file is
+     * not seen, and is raised to this library's own.
      */
-    private static long currentElementDepthLimit(DocumentBuilderFactory docFac) {
+    private static long currentLimit(DocumentBuilderFactory docFac, String attribute,
+                                     String property) {
         Object current = null;
         try {
-            current = docFac.getAttribute(MAX_ELEMENT_DEPTH);
+            current = docFac.getAttribute(attribute);
         } catch (RuntimeException e) {
             // Not reported by this JDK's factory.
         }
@@ -999,7 +1047,7 @@ public final class XmlSchemaCollection {
                 // Fall back to the system property.
             }
         }
-        return getIntProperty("jdk.xml.maxElementDepth", 0);
+        return getIntProperty(property, 0);
     }
 
     /**
@@ -1013,9 +1061,9 @@ public final class XmlSchemaCollection {
      * normative schemas (XML Signature, XML Encryption, XKMS) declare the
      * entities they use for their target namespace in one - and refusing it
      * closes no attack path that is still open here: it holds no external
-     * reference, and {@code FEATURE_SECURE_PROCESSING} bounds entity expansion
-     * by both count and accumulated size, so neither nested nor flat expansion
-     * runs away.
+     * reference, {@code FEATURE_SECURE_PROCESSING} bounds the accumulated size of
+     * entity expansion, and limitEntityExpansion bounds their number tightly
+     * enough that a chain of nested entities cannot exhaust the thread stack.
      * </p>
      */
     private static void hardenAgainstDtdProcessing(DocumentBuilderFactory docFac) {

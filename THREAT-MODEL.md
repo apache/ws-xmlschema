@@ -93,7 +93,7 @@ filesystem IO** when it follows `<xs:include>` / `<xs:import>` /
 | **`ExtensionRegistry` implementation** | trusted | Pluggable via system property `org.apache.ws.commons.schema.extension_registry` *(documented: `xmlschema-core/src/main/java/org/apache/ws/commons/schema/XmlSchemaCollection.java` line 361)*. |
 | **Producer of the schema bytes** (`Reader`, `InputStream`, `InputSource`, `Source`, `Document`, `Element`) | **variable** — see §6 trust table | The *only* attacker-controllable input position; in many embeddings the schema bytes come from a WSDL fetched off the wire. |
 | **Producer of imported / included schemas** (resolved by the `URIResolver`) | **variable** — typically as untrusted as the parent schema, but can be a *different* origin if the parent's `<xs:import schemaLocation="http://attacker/evil.xsd">` points elsewhere | Following an `xs:import` is a **second, possibly cross-origin, fetch**. This is the principal SSRF surface. |
-| **JDK XML platform** (`DocumentBuilderFactory`, `TransformerFactory`, `SchemaFactory`) | trusted upstream | XMLSchema sets `FEATURE_SECURE_PROCESSING=true` on the factories it constructs. Its internal schema parser also disables external DTD and external entity resolution. DOCTYPE declarations are accepted (an internal DTD subset is legitimate in real schema documents, and FSP bounds entity expansion by count and accumulated size). |
+| **JDK XML platform** (`DocumentBuilderFactory`, `TransformerFactory`, `SchemaFactory`) | trusted upstream | XMLSchema sets `FEATURE_SECURE_PROCESSING=true` on the factories it constructs. Its internal schema parser also disables external DTD and external entity resolution. DOCTYPE declarations are accepted (an internal DTD subset is legitimate in real schema documents; FSP bounds the accumulated size of entity expansion, and the parser caps their number at 1000). |
 
 ### Component-family table
 
@@ -169,8 +169,10 @@ A finding is in-model only if it reaches a row marked **yes**.
   entities, external parameter entities, and external DTD loading, and
   installs a no-op SAX `EntityResolver`. A DOCTYPE declaration is
   accepted: an internal DTD subset carries no external reference, and
-  entity expansion stays bounded by `FEATURE_SECURE_PROCESSING` on both
-  count and accumulated size. The parse is bounded in element depth too,
+  entity expansion stays bounded, in accumulated size by
+  `FEATURE_SECURE_PROCESSING` and in number at 1000 per document, low
+  enough that a chain of nested entities cannot exhaust the thread stack
+  (§8 P2). The parse is bounded in element depth too,
   expanded entity markup included, at twice `maxNestingDepth` plus 64
   (§5a, §8 P6). There is no property to relax the
   external-resolution controls, and none to tighten the DOCTYPE posture.
@@ -417,9 +419,11 @@ leave open.
 - **Property**: external general entities, external parameter entities,
   external DTD loading, and JAXP external-DTD access are disabled; a
   no-op `EntityResolver` is installed as a fallback. DOCTYPE declarations
-  are accepted, with internal entity expansion bounded by
-  `FEATURE_SECURE_PROCESSING` on both expansion count
-  (`JAXP00010001`) and accumulated entity size (`JAXP00010004`).
+  are accepted, with internal entity expansion bounded in number at 1000
+  per document, or a lower `jdk.xml.entityExpansionLimit` (`JAXP00010001`),
+  and in accumulated size by `FEATURE_SECURE_PROCESSING` (`JAXP00010004`).
+  The JDK expands nested entities recursively, so the count also bounds
+  how deep a chain of entities can nest.
 - **Violation symptom**: attacker-controlled schema bytes cause the
   internal parser to fetch external DTD/entity content, or to expand
   entities past those limits.
@@ -574,8 +578,10 @@ matching disclaimer.
   `read(Element)`. XMLSchema's internal parser path disables external
   DTD/entity resolution.
 - **SSRF via `xs:import schemaLocation`** — see §9 first bullet.
-- **Billion-laughs / quadratic blowup** — partially mitigated by
-  `FEATURE_SECURE_PROCESSING=true`, but not universally.
+- **Billion-laughs / quadratic blowup** — partially mitigated on the
+  internal parser path by `FEATURE_SECURE_PROCESSING=true` and the
+  1000-expansion cap (§8 P2), but not universally: a caller that parses
+  the DOM it hands to `read(Document)` sets its own limits.
 - **Schema-amplification DoS** — large or heavily-recursive acyclic schemas
   can exhaust memory or CPU within the documented resource limits;
   structural nesting and cyclic or over-deep walker expansion are rejected
@@ -777,6 +783,18 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-25** — a change to an existing resource limit, a revision
+  trigger under the fourth bullet above: the internal parser now allows at
+  most 1000 entity expansions per document, keeping a lower
+  `jdk.xml.entityExpansionLimit`. The JDK's own limit of 64,000 (2,500 on
+  JDK 25) allowed a chain of internal entities, each referring to the next,
+  deep enough to overflow the thread stack inside the JDK parser, which
+  unwinds nested entities recursively: about 30,000 at the default stack
+  size on JDK 8 to 21, and 2,000 on a 256 KB stack on every JDK. A chain
+  adding text at each level ran out of memory instead. The parser also no
+  longer defers DOM node expansion, whose cost grew with the square of the
+  number of entities declared. §1, §4 reachability, §8 P2 and §9 are
+  updated.
 - **2026-09-25** — a new resource limit, a revision trigger under the
   fourth bullet above: the internal parser now bounds the element depth of
   the document it parses, at twice `maxNestingDepth` plus 64 (#179). A
