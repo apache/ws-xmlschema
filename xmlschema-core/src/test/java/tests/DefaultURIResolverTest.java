@@ -144,11 +144,31 @@ public class DefaultURIResolverTest extends Assert {
         }
     }
 
+    /**
+     * Refused, without requiring a particular reason. Which layer refuses a location depends on the
+     * running JDK: composing a base URI with a scheme the JDK has no handler for fails in
+     * {@link java.net.URL} before this resolver's own checks see it. Both outcomes are a refusal,
+     * which is what matters here.
+     */
+    private static void assertRefused(String schemaLocation, String baseUri) {
+        DefaultURIResolver resolver = new DefaultURIResolver();
+        try {
+            resolver.resolveEntity("urn:x", schemaLocation, baseUri);
+            fail("The location \"" + schemaLocation + "\" must be refused.");
+        } catch (XmlSchemaException expected) {
+            // expected, whichever layer refused it
+        }
+    }
+
     @Test
     public void testDisallowedSchemesAreRefusedFromALocalBase() {
         assertSchemeRefused("mailto:someone@example.com", localBase());
-        assertSchemeRefused("jrt:/java.base/java/lang/Object.class", localBase());
         assertSchemeRefused("ftp://attacker.example/x.xsd", localBase());
+        // jrt: has no URL handler before Java 9, where composing it with the base fails in
+        // java.net.URL rather than reaching the scheme check, so only require the refusal.
+        assertRefused("jrt:/java.base/java/lang/Object.class", localBase());
+        // A scheme no JDK has a handler for, to cover that path on every JDK.
+        assertRefused("nosuchscheme:/x.xsd", localBase());
     }
 
     @Test
