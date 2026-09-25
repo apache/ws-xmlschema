@@ -56,6 +56,16 @@ source must install a restricting resolver via
 See [THREAT-MODEL.md](./THREAT-MODEL.md) section 10 for the full set of
 downstream responsibilities.
 
+The parser `XmlSchemaCollection` reads schema documents with never
+resolves external DTDs or external entities, and bounds the element depth
+of what it parses, including markup that an entity expands to. That depth
+limit is set by `org.apache.ws.commons.schema.maxNestingDepth`: twice its
+value plus 64, which is 1088 by default. A lower `jdk.xml.maxElementDepth`
+is kept (on JDK 8, 11 and 17, only when set as a system property rather
+than in `jaxp.properties`), but raising `jdk.xml.maxElementDepth` alone has
+no effect. The
+library's resource limits and how to set them are listed in README.txt.
+
 A report that the bundled default resolver dereferenced an attacker-supplied
 `schemaLocation` is a documented property of that default, not a
 vulnerability in the library (THREAT-MODEL.md section 9 and section 14

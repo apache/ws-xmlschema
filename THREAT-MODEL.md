@@ -170,7 +170,9 @@ A finding is in-model only if it reaches a row marked **yes**.
   installs a no-op SAX `EntityResolver`. A DOCTYPE declaration is
   accepted: an internal DTD subset carries no external reference, and
   entity expansion stays bounded by `FEATURE_SECURE_PROCESSING` on both
-  count and accumulated size. There is no property to relax the
+  count and accumulated size. The parse is bounded in element depth too,
+  expanded entity markup included, at twice `maxNestingDepth` plus 64
+  (§5a, §8 P6). There is no property to relax the
   external-resolution controls, and none to tighten the DOCTYPE posture.
 - **`xmlschema-core` URI resolver** (`DefaultURIResolver`): in-model
   for SSRF / cross-origin fetch when the input schema is attacker-
@@ -289,7 +291,7 @@ points*:
 | `org.apache.ws.commons.schema.walker.maxDepth` system property | `256` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum depth of nested elements, model groups and substitution group members while walking a schema, and separately of type derivation and of attribute group references; a deployment running the walker on threads with small stacks (under about 512 KB) should lower it |
 | `org.apache.ws.commons.schema.maxImportDepth` system property | `64` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum import/include resolution depth for one schema read |
 | `org.apache.ws.commons.schema.maxSchemaResolutions` system property | `1000` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum schema documents resolved during one top-level read |
-| `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions |
+| `org.apache.ws.commons.schema.maxNestingDepth` system property | `512` *(documented: `README.txt`)* | operator-tunable per-process limit | maximum structural nesting depth while building the schema model, including nested include/import/redefine document resolutions. It also sets the internal parser's element-depth limit, `2 × maxNestingDepth + 64` (`1088` by default, and never below `1`); a lower `jdk.xml.maxElementDepth` is kept (on JDK 8, 11 and 17 only when set as a system property: one set only in the JDK's `jaxp.properties` is not visible to the library there and is raised to this limit), and raising `jdk.xml.maxElementDepth` alone has no effect |
 | `org.apache.ws.commons.schema.remote.allowNetwork` system property | `true` *(documented: `README.txt`)* | operator opt-out for deployments with no remote schema sets | when `false`, `DefaultURIResolver` refuses a location whose effective scheme is `http` or `https`; local `file:` / `jar:` reads are unaffected, so it closes the remote-fetch half of §9's SSRF disclaimer but not the local-read half |
 | `org.apache.ws.commons.schema.remote.checkAddresses` system property | `true` *(documented: `README.txt`)* | shipped default: refuse address classes that never serve a schema | before a remote fetch, and again on each redirect hop, every address the host resolves to is checked; link-local (`169.254.169.254`), multicast, wildcard, IPv6 unique-local (`fd00::/7`) and IPv6 forms embedding one are refused. Loopback and RFC 1918 are permitted. Skipped when a proxy would carry the fetch, since the proxy resolves the host |
 | `org.apache.ws.commons.schema.remote.maxRedirects` system property | `5` *(documented: `README.txt`)* | operator-tunable bound on one fetch's redirect chain | `DefaultURIResolver` follows redirects itself rather than leaving them to the JDK, so the chain is bounded, each hop is re-checked against the scheme and authority rules, and the chain shares one fetch deadline; `0` refuses a redirected location. A hop that changes scheme is refused |
@@ -465,9 +467,14 @@ leave open.
   to `XmlSchemaCollection.read(...)`.
 - **Property**: deeply nested schema structure, including depth split across
   nested include/import/redefine document resolutions, terminates with
-  `XmlSchemaException` instead of exhausting the Java thread stack.
-- **Violation symptom**: a parseable schema causes `SchemaBuilder` to recurse
-  until `StackOverflowError` or another resource-exhaustion failure.
+  `XmlSchemaException` instead of exhausting the Java thread stack. Before
+  the build starts, the internal parser refuses markup deeper than twice
+  `maxNestingDepth` plus 64, the most any schema the build accepts can
+  need, so markup an entity in the internal DTD subset expands to cannot
+  exhaust the stack inside the JDK parser either.
+- **Violation symptom**: a parseable schema causes `SchemaBuilder` or the
+  internal parser to recurse until `StackOverflowError` or another
+  resource-exhaustion failure.
 - **Severity**: **medium** availability impact when the embedding
   application accepts untrusted schemas.
 
@@ -766,6 +773,18 @@ Revise this document when any of the following lands:
   rule as first written: it tested only the URI authority, so
   `file:////host/share/x.xsd`, which parses with no authority and
   carries the host in its path instead, was not caught.
+- **2026-09-25** — a new resource limit, a revision trigger under the
+  fourth bullet above: the internal parser now bounds the element depth of
+  the document it parses, at twice `maxNestingDepth` plus 64 (#179). A
+  35 KB schema whose internal-subset entity expanded to markup a few
+  thousand elements deep overflowed the stack inside the JDK parser, before
+  `SchemaBuilder`'s own bound could see it. The limit is derived from
+  `maxNestingDepth` rather than given its own property, and never falls
+  below `1`. A lower `jdk.xml.maxElementDepth` is kept where the library
+  can see it: always on JDK 21 and later, and only as a system property on
+  JDK 8, 11 and 17, which do not report a `jaxp.properties` setting; there
+  such a setting is raised to this limit, which is still safe on ordinary
+  thread stacks. §4 reachability, §5a and §8 P6 are updated.
 - **2026-09-24** — `DefaultURIResolver` now refuses a local location that
   exists but is not a regular file. A remote fetch is bounded in time and
   bytes by the properties in §5a; a local read is handed to the parser as a
@@ -1042,7 +1061,7 @@ the JavaDoc / source comments. The project website is
 | `RELEASE-NOTE.txt` (2.3.0) | Java 17 minimum, Java 7 dropped | §5 environment |
 | `xmlschema-core/src/main/java/org/apache/ws/commons/schema/XmlSchemaCollection.java` line 361 | `org.apache.ws.commons.schema.extension_registry` system property loaded via `Class.forName` | §5a, §6, §11 |
 | `xmlschema-core/src/main/java/org/apache/ws/commons/schema/SchemaBuilder.java` | `org.apache.ws.commons.schema.maxNestingDepth` structural descent limit | §5, §5a, §6, §8 P6 |
-| `XmlSchemaCollection.java` | internal parser sets `FEATURE_SECURE_PROCESSING` and disables external DTD/entity resolution unconditionally; DOCTYPE declarations are accepted | §5a, §8 P2 |
+| `XmlSchemaCollection.java` | internal parser sets `FEATURE_SECURE_PROCESSING` and disables external DTD/entity resolution unconditionally; DOCTYPE declarations are accepted; element depth bounded at `2 × maxNestingDepth + 64` | §5a, §8 P2, §8 P6 |
 | `XmlSchemaCollection.java` line 745 | `AccessController.doPrivileged` wrapper for the SAX parse | §5 |
 | `XmlSchema.java` | serializer `TransformerFactory` sets `FEATURE_SECURE_PROCESSING` and disables external DTD/stylesheet access where supported | §5a, §8 P2 |
 | `XmlSchemaSerializer.java` lines 1566-1567 | `DocumentBuilderFactory` sets `FEATURE_SECURE_PROCESSING`; used only via `newDocument()`, so it never parses input and carries no XXE surface | §5a, §8 P2 |

@@ -885,7 +885,7 @@ public final class XmlSchemaCollection {
         } catch (IOException e) {
             throw new XmlSchemaException(e.getMessage(), e);
         } catch (SAXException e) {
-            if (e.getMessage() != null && e.getMessage().contains(ELEMENT_DEPTH_ERROR)) {
+            if (e.getMessage() != null && e.getMessage().startsWith(ELEMENT_DEPTH_ERROR + ":")) {
                 // Name the property that governs the limit: raising jdk.xml.maxElementDepth alone
                 // has no effect, as limitElementDepth() lowers it again.
                 throw new XmlSchemaException("The schema document is nested too deeply to parse ("
@@ -936,29 +936,13 @@ public final class XmlSchemaCollection {
     }
 
     /**
-     * Blocks the external-resolution half of DTD processing, which is what makes
-     * DTDs dangerous: external general entities, external parameter entities and
-     * the external DTD subset are never fetched, so a schema document cannot read
-     * local files or reach the network through its DOCTYPE.
-     * <p>
-     * The DOCTYPE declaration itself is accepted. An internal DTD subset is a
-     * legitimate and widely used part of real schema documents - the W3C's own
-     * normative schemas (XML Signature, XML Encryption, XKMS) declare the
-     * entities they use for their target namespace in one - and refusing it
-     * closes no attack path that is still open here: it holds no external
-     * reference, and {@code FEATURE_SECURE_PROCESSING} bounds entity expansion
-     * by both count and accumulated size, so neither nested nor flat expansion
-     * runs away.
-     * </p>
-     */
-    /**
      * The JDK parser's element-depth limit, <code>jdk.xml.maxElementDepth</code>, under the name
      * JDK 8 onwards accepts on a factory.
      */
     private static final String MAX_ELEMENT_DEPTH =
         "http://www.oracle.com/xml/jaxp/properties/maxElementDepth";
 
-    /** The code the JDK parser's message carries when that limit is exceeded. */
+    /** The code that starts the JDK parser's message when that limit is exceeded. */
     private static final String ELEMENT_DEPTH_ERROR = "JAXP00010006";
 
     /**
@@ -969,10 +953,10 @@ public final class XmlSchemaCollection {
      * deeper than about twice its structural bound, maxNestingDepth, since each counted level (an
      * element, a type, a model group) is at most two XML levels deep, so refusing deeper markup
      * in the parser costs nothing. A lower limit already set, by jdk.xml.maxElementDepth or by the
-     * JDK's own default, is left in place.
+     * JDK's own default, is left in place where it can be seen: see currentElementDepthLimit.
      */
     private static void limitElementDepth(DocumentBuilderFactory docFac) {
-        final long limit = Math.min(Integer.MAX_VALUE, 2L * SchemaBuilder.MAX_NESTING_DEPTH + 64L);
+        final long limit = elementDepthLimit(SchemaBuilder.MAX_NESTING_DEPTH);
         final long existing = currentElementDepthLimit(docFac);
         if (existing > 0 && existing <= limit) {
             return;
@@ -985,10 +969,21 @@ public final class XmlSchemaCollection {
     }
 
     /**
+     * The parser element-depth limit for a given maxNestingDepth: twice it plus 64, kept between
+     * 1 and Integer.MAX_VALUE so that no setting of maxNestingDepth, however extreme, turns the
+     * limit off (the JDK reads 0 or less as no limit).
+     */
+    static long elementDepthLimit(int maxNestingDepth) {
+        return Math.max(1L, Math.min(Integer.MAX_VALUE, 2L * maxNestingDepth + 64L));
+    }
+
+    /**
      * The element-depth limit already in force, or 0 for none. Only some JDKs report it through
-     * the factory: JDK 21 does; JDK 8 throws IllegalArgumentException, and JDK 17 reports only
-     * attributes set on the factory itself, returning null or throwing NullPointerException. When
-     * the factory gives no value, the system property the parser takes it from is read instead.
+     * the factory: JDK 21 does; JDK 8 and 11 throw IllegalArgumentException, and JDK 17 reports
+     * only attributes set on the factory itself, returning null or throwing NullPointerException.
+     * When the factory gives no value, the system property the parser takes it from is read
+     * instead. On those JDKs a limit set only in the JDK's jaxp.properties file is not seen, and
+     * is raised to this library's own.
      */
     private static long currentElementDepthLimit(DocumentBuilderFactory docFac) {
         Object current = null;
@@ -1007,6 +1002,22 @@ public final class XmlSchemaCollection {
         return getIntProperty("jdk.xml.maxElementDepth", 0);
     }
 
+    /**
+     * Blocks the external-resolution half of DTD processing, which is what makes
+     * DTDs dangerous: external general entities, external parameter entities and
+     * the external DTD subset are never fetched, so a schema document cannot read
+     * local files or reach the network through its DOCTYPE.
+     * <p>
+     * The DOCTYPE declaration itself is accepted. An internal DTD subset is a
+     * legitimate and widely used part of real schema documents - the W3C's own
+     * normative schemas (XML Signature, XML Encryption, XKMS) declare the
+     * entities they use for their target namespace in one - and refusing it
+     * closes no attack path that is still open here: it holds no external
+     * reference, and {@code FEATURE_SECURE_PROCESSING} bounds entity expansion
+     * by both count and accumulated size, so neither nested nor flat expansion
+     * runs away.
+     * </p>
+     */
     private static void hardenAgainstDtdProcessing(DocumentBuilderFactory docFac) {
         trySetFeature(docFac, "http://xml.org/sax/features/external-general-entities", false);
         trySetFeature(docFac, "http://xml.org/sax/features/external-parameter-entities", false);
