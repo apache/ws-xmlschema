@@ -83,7 +83,7 @@ public class SchemaBuilder {
      * counts one level toward the same bound (see resolveXmlSchema), which
      * also bounds a chain of distinct single-hop documents.
      */
-    private static final int MAX_NESTING_DEPTH =
+    static final int MAX_NESTING_DEPTH =
         getIntProperty("org.apache.ws.commons.schema.maxNestingDepth", 512);
     XmlSchemaCollection collection;
     Document currentDocument;
