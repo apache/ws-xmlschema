@@ -79,6 +79,17 @@ stack. The following JVM system property adjusts the limit:
   as an entity in one - and FEATURE_SECURE_PROCESSING bounds entity
   expansion by both count and accumulated size.
 
+  The same parser also bounds the element depth of the document, including
+  markup an entity expands to, so deep markup is refused before it can
+  exhaust the thread stack. The limit is set by maxNestingDepth above:
+  twice its value plus 64, which is 1088 by default, since the schema build
+  never accepts a document deeper than that. A lower jdk.xml.maxElementDepth,
+  is kept, except that on JDK 8, 11 and 17 only a system property is seen:
+  a lower limit set just in the JDK's jaxp.properties file is raised to
+  this one there, so set -Djdk.xml.maxElementDepth instead. Raising
+  jdk.xml.maxElementDepth alone has no effect; raise maxNestingDepth
+  instead.
+
   When the DefaultURIResolver fetches a schema over http or https, the fetch
   is bounded: left to the JDK it has no timeout and no size limit, so one
   schemaLocation naming a slow or endless host can hold a parsing thread or

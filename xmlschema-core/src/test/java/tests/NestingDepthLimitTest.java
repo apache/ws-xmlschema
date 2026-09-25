@@ -273,6 +273,21 @@ public class NestingDepthLimitTest extends Assert {
         }
     }
 
+    /**
+     * Only the parser's own depth error is reworded: a malformed document whose element is named
+     * after the error code keeps the parser's message.
+     */
+    @Test
+    public void testUnrelatedErrorNamingTheDepthCodeIsNotReworded() throws Exception {
+        try {
+            new XmlSchemaCollection().read(new StringReader(
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"><JAXP00010006></xs:schema>"));
+            fail("A malformed schema should be refused.");
+        } catch (XmlSchemaException expected) {
+            assertFalse(expected.getMessage(), expected.getMessage().contains("nested too deeply"));
+        }
+    }
+
     private static void assertRejectedAsNested(String schema) {
         try {
             new XmlSchemaCollection().read(new StringReader(schema));
