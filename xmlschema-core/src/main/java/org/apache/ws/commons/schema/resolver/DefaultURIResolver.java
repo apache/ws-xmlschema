@@ -622,6 +622,11 @@ public class DefaultURIResolver implements CollectionURIResolver {
         } catch (URISyntaxException e) {
             return null;
         }
+        if (parsed.isOpaque()) {
+            // "file:x", with no slash after the scheme, has no path as a URI, but the JDK opens it
+            // as x in the working directory, as it does a relative location with no base.
+            return relativeLocationFile(parsed.getRawSchemeSpecificPart());
+        }
         try {
             return new File(parsed);
         } catch (IllegalArgumentException e) {

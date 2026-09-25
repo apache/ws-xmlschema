@@ -476,6 +476,28 @@ public class DefaultURIResolverTest extends Assert {
         assertSchemeRefused("src?query", null, "not a regular file");
     }
 
+    /**
+     * "file:src", with no slash after the scheme, is an opaque URI with no path, but the JDK opens
+     * it as src in the working directory, so it must be checked as that file.
+     */
+    @Test
+    public void testAFileLocationRelativeToTheWorkingDirectoryIsChecked() {
+        assertTrue(new File("src").isDirectory());
+        assertSchemeRefused("file:src", null, "not a regular file");
+        assertSchemeRefused("file:./src", null, "not a regular file");
+        assertSchemeRefused("FILE:src", null, "not a regular file");
+        assertSchemeRefused("file:sr%63?query", null, "not a regular file");
+        assertSchemeRefused("jar:file:src!/x.xsd", null, "not a regular file");
+    }
+
+    @Test
+    public void testAFileLocationRelativeToTheWorkingDirectoryStillResolves() {
+        assertTrue(new File("pom.xml").isFile());
+        assertEquals("file:pom.xml",
+                     new DefaultURIResolver().resolveEntity("urn:x", "file:pom.xml", null)
+                         .getSystemId());
+    }
+
     @Test
     public void testARelativeRegularFileWithAFragmentStillResolves() {
         assertEquals("pom.xml#fragment",
