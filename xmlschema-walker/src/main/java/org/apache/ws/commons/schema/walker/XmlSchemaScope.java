@@ -247,24 +247,25 @@ final class XmlSchemaScope {
         } else if (content instanceof XmlSchemaSimpleTypeUnion) {
             XmlSchemaSimpleTypeUnion union = (XmlSchemaSimpleTypeUnion)content;
             QName[] namedBaseTypes = union.getMemberTypesQNames();
-            List<XmlSchemaSimpleType> baseTypes = union.getBaseTypes();
+
+            /*
+             * A copy of the inline members, to which the named ones are added. Adding them to the
+             * union's own list would change the schema model, and again on every walk of it.
+             */
+            final List<XmlSchemaSimpleType> baseTypes = new ArrayList<XmlSchemaSimpleType>();
+            if (union.getBaseTypes() != null) {
+                baseTypes.addAll(union.getBaseTypes());
+            }
 
             if (namedBaseTypes != null) {
-                if (baseTypes == null) {
-                    baseTypes = new ArrayList<XmlSchemaSimpleType>(namedBaseTypes.length);
-                }
-
                 for (QName namedBaseType : namedBaseTypes) {
                     baseTypes.add(simpleTypeByName(namedBaseType, "member type of union",
                                                    getName(simpleType, "{Anonymous Union Type}")));
                 }
             }
 
-            /*
-             * baseTypes cannot be null at this point; there must be a union of
-             * types.
-             */
-            if ((baseTypes == null) || baseTypes.isEmpty()) {
+            // There must be a union of types.
+            if (baseTypes.isEmpty()) {
                 throw new XmlSchemaException("The union "
                                              + getName(simpleType, "{Anonymous Union Type}")
                                              + " has no member types.");
