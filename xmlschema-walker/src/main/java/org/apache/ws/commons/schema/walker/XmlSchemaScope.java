@@ -199,6 +199,20 @@ final class XmlSchemaScope {
         return (XmlSchemaSimpleType)type;
     }
 
+    /**
+     * The base type of a simple content extension or restriction. Unlike complex content, simple
+     * content takes its value type from the base, so there is no type to walk without it.
+     */
+    private XmlSchemaType simpleContentBase(QName baseTypeName) {
+        final XmlSchemaType baseType =
+            (baseTypeName == null) ? null : schemasByNamespace.getTypeByName(baseTypeName);
+        if (baseType == null) {
+            throw new XmlSchemaException("The simple content base type " + baseTypeName
+                                         + " does not resolve to a type in this collection.");
+        }
+        return baseType;
+    }
+
     private void walk(XmlSchemaType type) {
         if (type instanceof XmlSchemaSimpleType) {
             walk((XmlSchemaSimpleType)type);
@@ -530,17 +544,14 @@ final class XmlSchemaScope {
             XmlSchemaSimpleContentExtension ext = (XmlSchemaSimpleContentExtension)content;
             attributes = createAttributeMap(ext.getAttributes());
 
-            XmlSchemaType baseType = schemasByNamespace.getTypeByName(ext.getBaseTypeName());
+            final XmlSchemaType baseType = simpleContentBase(ext.getBaseTypeName());
+            final XmlSchemaScope parentScope = getScope(baseType);
+            typeInfo = parentScope.getTypeInfo();
 
-            if (baseType != null) {
-                final XmlSchemaScope parentScope = getScope(baseType);
-                typeInfo = parentScope.getTypeInfo();
-
-                if (attributes == null) {
-                    attributes = parentScope.attributes;
-                } else if (parentScope.attributes != null) {
-                    attributes.putAll(parentScope.attributes);
-                }
+            if (attributes == null) {
+                attributes = parentScope.attributes;
+            } else if (parentScope.attributes != null) {
+                attributes.putAll(parentScope.attributes);
             }
 
             anyAttr = ext.getAnyAttribute();
@@ -553,17 +564,15 @@ final class XmlSchemaScope {
             if (rstr.getBaseType() != null) {
                 baseType = rstr.getBaseType();
             } else {
-                baseType = schemasByNamespace.getTypeByName(rstr.getBaseTypeName());
+                baseType = simpleContentBase(rstr.getBaseTypeName());
             }
 
-            if (baseType != null) {
-                XmlSchemaScope parentScope = getScope(baseType);
-                typeInfo = restrictTypeInfo(parentScope.getTypeInfo(),
-                                            mergeFacets(parentScope.getTypeInfo().getFacets(),
-                                                        rstr.getFacets()));
+            XmlSchemaScope parentScope = getScope(baseType);
+            typeInfo = restrictTypeInfo(parentScope.getTypeInfo(),
+                                        mergeFacets(parentScope.getTypeInfo().getFacets(),
+                                                    rstr.getFacets()));
 
-                attributes = mergeAttributes(parentScope.attributes, attributes);
-            }
+            attributes = mergeAttributes(parentScope.attributes, attributes);
 
             anyAttr = rstr.getAnyAttribute();
         }
@@ -628,6 +637,12 @@ final class XmlSchemaScope {
     }
 
     private XmlSchemaAttrInfo getAttribute(XmlSchemaAttribute attribute, boolean forceCopy) {
+
+        if (!attribute.isRef() && (attribute.getQName() == null)) {
+            // Accepted by the schema reader, but there is no attribute to walk.
+            throw new XmlSchemaException("An attribute declaration has neither a name nor a ref,"
+                                         + " so it cannot be walked.");
+        }
 
         if (!attribute.isRef() && (attribute.getSchemaType() != null) && !forceCopy) {
 

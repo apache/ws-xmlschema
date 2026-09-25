@@ -103,6 +103,66 @@ public class DanglingReferenceWalkerTest extends Assert {
     }
 
     @Test
+    public void testAttributeWithNeitherNameNorRefIsRejected() {
+        assertRejected("<xs:complexType name=\"t\">"
+                       + "<xs:attribute type=\"xs:int\"/>"
+                       + "</xs:complexType>"
+                       + "<xs:element name=\"root\" type=\"tns:t\"/>",
+                       "neither a name nor a ref");
+    }
+
+    @Test
+    public void testAttributeWithInlineTypeAndNoNameIsRejected() {
+        assertRejected("<xs:complexType name=\"t\">"
+                       + "<xs:attribute><xs:simpleType><xs:restriction base=\"xs:int\"/>"
+                       + "</xs:simpleType></xs:attribute>"
+                       + "</xs:complexType>"
+                       + "<xs:element name=\"root\" type=\"tns:t\"/>",
+                       "neither a name nor a ref");
+    }
+
+    @Test
+    public void testDanglingSimpleContentExtensionBaseIsRejected() {
+        assertRejected("<xs:complexType name=\"c\"><xs:simpleContent>"
+                       + "<xs:extension base=\"tns:missing\"/>"
+                       + "</xs:simpleContent></xs:complexType>"
+                       + "<xs:element name=\"root\" type=\"tns:c\"/>",
+                       "simple content base type");
+    }
+
+    @Test
+    public void testRestrictionOfADanglingSimpleContentExtensionIsRejected() {
+        assertRejected("<xs:complexType name=\"c\"><xs:simpleContent>"
+                       + "<xs:extension base=\"tns:missing\"/>"
+                       + "</xs:simpleContent></xs:complexType>"
+                       + "<xs:complexType name=\"d\"><xs:simpleContent>"
+                       + "<xs:restriction base=\"tns:c\"/>"
+                       + "</xs:simpleContent></xs:complexType>"
+                       + "<xs:element name=\"root\" type=\"tns:d\"/>",
+                       "simple content base type");
+    }
+
+    @Test
+    public void testDanglingSimpleContentRestrictionBaseIsRejected() {
+        assertRejected("<xs:complexType name=\"d\"><xs:simpleContent>"
+                       + "<xs:restriction base=\"tns:missing\"/>"
+                       + "</xs:simpleContent></xs:complexType>"
+                       + "<xs:element name=\"root\" type=\"tns:d\"/>",
+                       "simple content base type");
+    }
+
+    @Test
+    public void testResolvedSimpleContentStillWalks() {
+        walkRoot("<xs:complexType name=\"c\"><xs:simpleContent>"
+                 + "<xs:extension base=\"xs:int\"><xs:attribute name=\"a\" type=\"xs:string\"/>"
+                 + "</xs:extension></xs:simpleContent></xs:complexType>"
+                 + "<xs:complexType name=\"d\"><xs:simpleContent>"
+                 + "<xs:restriction base=\"tns:c\"><xs:maxInclusive value=\"10\"/></xs:restriction>"
+                 + "</xs:simpleContent></xs:complexType>"
+                 + "<xs:element name=\"root\" type=\"tns:d\"/>");
+    }
+
+    @Test
     public void testResolvableReferencesStillWalk() {
         walkRoot("<xs:attributeGroup name=\"ag\">"
                  + "<xs:attribute name=\"a\" type=\"xs:string\"/>"
