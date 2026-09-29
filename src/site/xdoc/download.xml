@@ -7,7 +7,7 @@
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+      https://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,24 +29,24 @@ schemas from scratch.
 Use the links below to download a distribution of Apache XMLSchema from one of
 our mirrors. It is good practice to verify the integrity of the distribution
 files. Apache XMLSchema releases are available under the 
-<a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the 
+<a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the 
 LICENSE.txt and NOTICE.txt files contained in each release artifact.
 </p>
 </subsection>
 <subsection name="Current official release (closest mirror site selected automatically)">
 <p>
-The current stable release is Apache XMLSchema 2.3.2:
+The current stable release is Apache XMLSchema 2.3.3:
 </p>
 <ul>
 <li>
-<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.3.2/xmlschema-2.3.2-source-release.zip">xmlschema-2.3.2-source-release.zip</a>
-(<a href="https://downloads.apache.org/ws/xmlschema/2.3.2/xmlschema-2.3.2-source-release.zip.asc">PGP</a>)
-(<a href="https://downloads.apache.org/ws/xmlschema/2.3.2/xmlschema-2.3.2-source-release.zip.sha512">SHA-512</a>)
+<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.3.3/xmlschema-2.3.3-source-release.zip">xmlschema-2.3.3-source-release.zip</a>
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.3/xmlschema-2.3.3-source-release.zip.asc">PGP</a>)
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.3/xmlschema-2.3.3-source-release.zip.sha512">SHA-512</a>)
 </li>
 <li>
-<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.3.2/xmlschema-core-2.3.2-bin.zip">xmlschema-core-2.3.2-bin.zip</a>
-(<a href="https://downloads.apache.org/ws/xmlschema/2.3.2/xmlschema-core-2.3.2-bin.zip.asc">PGP</a>)
-(<a href="https://downloads.apache.org/ws/xmlschema/2.3.2/xmlschema-core-2.3.2-bin.zip.sha512">SHA-512)</a>
+<a href="https://www.apache.org/dyn/closer.lua/ws/xmlschema/2.3.3/xmlschema-core-2.3.3-bin.zip">xmlschema-core-2.3.3-bin.zip</a>
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.3/xmlschema-core-2.3.3-bin.zip.asc">PGP</a>)
+(<a href="https://downloads.apache.org/ws/xmlschema/2.3.3/xmlschema-core-2.3.3-bin.zip.sha512">SHA-512)</a>
 </li>
 </ul>
 </subsection>

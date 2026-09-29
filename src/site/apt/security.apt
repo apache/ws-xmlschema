@@ -1,0 +1,98 @@
+~~ Licensed to the Apache Software Foundation (ASF) under one
+~~ or more contributor license agreements. See the NOTICE file
+~~ distributed with this work for additional information
+~~ regarding copyright ownership. The ASF licenses this file
+~~ to you under the Apache License, Version 2.0 (the
+~~ "License"); you may not use this file except in compliance
+~~ with the License. You may obtain a copy of the License at
+~~
+~~ http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing,
+~~ software distributed under the License is distributed on an
+~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~~ KIND, either express or implied. See the License for the
+~~ specific language governing permissions and limitations
+~~ under the License.
+
+           ------------------------
+           Apache XMLSchema - Security
+           ------------------------
+
+Security and CVE Tracking
+
+  This page tracks known vulnerabilities (CVEs) for Apache XMLSchema.
+
+  For reporting a new vulnerability, see
+  {{{https://www.apache.org/security/}Apache Security Team}}.
+
+Apache XMLSchema CVEs
+
+  * {{{https://www.cve.org/CVERecord?id=CVE-2026-102495}CVE-2026-102495}}:
+    Apache XMLSchema: Denial of service through unbounded recursion when
+    resolving schema imports and includes
+
+    * Severity: Low
+
+    * Affected versions:
+
+      - Apache XMLSchema before 2.3.3
+
+    * Description:
+
+      Apache XmlSchema doesn't limit how deeply schema imports and includes
+      can be nested, so a malicious schema can make parsing recurse until the
+      stack overflows. This causes a denial of service. Users are recommended
+      to upgrade to version 2.3.3, which fixes this issue.
+
+    * Credit:
+
+      This issue was found using Claude agents to study the security of
+      open-source projects (finder)
+
+  * {{{https://www.cve.org/CVERecord?id=CVE-2026-102496}CVE-2026-102496}}:
+    Apache XMLSchema: Denial of service through deeply nested schema
+    structures
+
+    * Severity: Low
+
+    * Affected versions:
+
+      - Apache XMLSchema before 2.3.3
+
+    * Description:
+
+      Apache XmlSchema doesn't limit how deeply schema structures can be
+      nested when it builds its schema model, so a malicious schema can make
+      parsing recurse until the stack overflows. This causes a denial of
+      service. Users are recommended to upgrade to version 2.3.3, which fixes
+      this issue.
+
+    * Credit:
+
+      This issue was found using Claude agents to study the security of
+      open-source projects (finder)
+
+  * {{{https://www.cve.org/CVERecord?id=CVE-2026-102497}CVE-2026-102497}}:
+    Apache XMLSchema: Denial of service through cyclic schema definitions in
+    the schema walker
+
+    * Severity: Low
+
+    * Affected versions:
+
+      - Apache XMLSchema before 2.3.3
+
+    * Description:
+
+      The Apache XmlSchema walker (xmlschema-walker) doesn't detect cycles in
+      type derivation, substitution groups, model groups or attribute groups.
+      A malicious schema with such a cycle can make the walker recurse until
+      the stack overflows, causing a denial of service. Users are recommended
+      to upgrade to version 2.3.3, which fixes this issue.
+
+    * Credit:
+
+      This issue was found using Claude agents to study the security of
+      open-source projects (finder)
+

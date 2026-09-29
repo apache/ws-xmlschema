@@ -5,12 +5,12 @@ Overview
    into memory and analyze or modify them, or to create entirely new schemas from
    scratch.
 
-   XMLSchema 2.0 is a major revision that takes advantage of the facilities of Java 1.5.  XMLSchema 2.3.x requires Java8 or higher.
+   Apache XMLSchema 2.0 is a major revision that takes advantage of the facilities of Java 1.5.  XMLSchema 2.3.x requires Java8 or higher.
 
    For information on how to use the XmlSchema API, please
    see the {{{./xmlschema-core/apidocs/index.html}javadocs}} or the {{{./xmlschema-core/schematutorial.html}tutorial}}.
 
-   XmlSchema eagerly welcomes suggestions, documentation,
+   Apache XmlSchema eagerly welcomes suggestions, documentation,
    and most of all code. Please join our dev list, submit JIRA entries, and
    attach patches.
 
@@ -22,6 +22,4 @@ Issues
 Downloads
 
    Most users incorporate XML Schema via maven. You can also download release packages
-   from {{{./download.html}downloads}}.
-
-  -The XMLSchema Development Team (dev at ws.apache.org)
+   from {{{./download.html}downloads}}. The latest release is 2.3.3. Note that this release fixes three CVEs, please see {{{./security.html}Security Advisories (CVEs)}}.

@@ -8,7 +8,7 @@
   ~ "License"); you may not use this file except in compliance
   ~ with the License. You may obtain a copy of the License at
   ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~ https://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing,
   ~ software distributed under the License is distributed on an
@@ -25,19 +25,20 @@
         <version>2.0.0-M11</version>
     </skin>
     <bannerRight>
-        <src>http://ws.apache.org/images/project-logo.jpg</src>
-        <href>http://ws.apache.org/</href>
+        <src>https://ws.apache.org/images/project-logo.jpg</src>
+        <href>https://ws.apache.org/</href>
     </bannerRight>
     <version position="none" />
 
     <body>
         <links>
-            <item name="Apache" href="http://www.apache.org/"/>
-            <item name="WebServices" href="http://ws.apache.org/"/>
+            <item name="Apache" href="https://www.apache.org/"/>
+            <item name="WebServices" href="https://ws.apache.org/"/>
         </links>
         <menu name="XML Schema">
             <item name="Home" href="index.html"/>
             <item name="Downloads" href="download.html"/>
+            <item name="Security" href="security.html"/>
             <item name="Source Code" href="scm.html"/>
             <item name="Project Information" href="project-info.html">
                 <item name="Mailing Lists" href="mailing-lists.html"/>
@@ -46,13 +47,10 @@
             <item name="License" href="licenses.html"/>
         </menu>
         <menu name="Apache">
-            <item name="License" href="http://www.apache.org/licenses/"/>
-            <item name="Sponsorship" href="http://www.apache.org/foundation/sponsorship.html"/>
-            <item name="Thanks" href="http://www.apache.org/foundation/thanks.html"/>
-            <item name="Security" href="http://apache.org/security/"/>
+            <item name="License" href="https://www.apache.org/licenses/"/>
+            <item name="Sponsorship" href="https://www.apache.org/foundation/sponsorship.html"/>
+            <item name="Thanks" href="https://www.apache.org/foundation/thanks.html"/>
+            <item name="Security" href="https://apache.org/security/"/>
         </menu>
     </body>
 </project>
-
-
-
