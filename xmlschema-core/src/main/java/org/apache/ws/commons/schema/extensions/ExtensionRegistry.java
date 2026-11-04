@@ -29,7 +29,7 @@ import org.apache.ws.commons.schema.XmlSchemaObject;
 
 /**
  * The task of the extension serializer is to delegate the serilization of the extensions. The extension
- * serializers/deserializers are retained in seperate maps and there are also two seperate references to
+ * serializers/deserializers are retained in separate maps and there are also two separate references to
  * default serializers and deserializers which would jump into action when there are no specifically attached
  * serializers/deserializers
  */
