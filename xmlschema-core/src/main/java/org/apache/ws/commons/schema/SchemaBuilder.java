@@ -1004,7 +1004,7 @@ public class SchemaBuilder {
 
         XmlSchemaAll all = new XmlSchemaAll();
 
-        // handle min and max occurences
+        // handle min and max occurrences
         all.setMinOccurs(getMinOccurs(allEl));
         all.setMaxOccurs(getMaxOccurs(allEl));
 
